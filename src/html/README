@@ -1,0 +1,88 @@
+This folder contains the HTML/DOM implementation of the
+"Simple Game Framework" engine. To test, fire up 'index.htm'
+to play the example games (found in the "examples" folder in
+the root).
+
+There are a few key things to note about
+how to implement this engine on a webpage:
+
+    - The engine files themselves and the page launching the
+      engine don't necessarily have to be on the same server.
+
+    - Your game files need to be accessible on a web-accessible
+      server (HTTP most likely), but they don't necessarily have
+      to be on the save server as either the engine files, nor
+      the page launching the engine.
+
+    - In short, your game, the SGF engine files, and the
+      executing page, can all theoretically be on distinct servers,
+      since all remote JavaScript is loaded through <script> nodes
+      and are therefore exempt from the Same Origin Policy.
+
+To implement the game engine into a DIV on your page, you must
+generate a <script> node and place it somewhere on the page (the
+<head> most likely). This can be done at page load or any time after.
+The "src" needs to be the relative (same server) or absolute (remote
+server) path to the "SimpleGameFramework.js" file. This file dynamically
+loads the rest of the required *.js files that are the game engine.
+Here's what an example <script> node might look like:
+
+    <script src="engine/SimpleGameFramework.js?screen=screen&debug=true" type="text/javascript">
+
+If you notice, the engine can also accept optional query string
+parameters following the path to the "SimpleGameFramework.js" file.
+The accepted parameters are:
+
+    - game : The absolute or relative (to your page) path to the game to load
+             once the game engine finished loading all required files. It
+             basically adds an engine "load" event that calls
+             SGF.Game.load(gamePath). If this param is omitted, then no game is
+             loaded at engine load, and the Screen is set black until a game is
+             loaded via some other JavaScript on the page (a "Start Game"
+             button?).
+
+    - screen : The id of the DIV element that the engine should use
+               as the game screen. The DIV needs to be a CSS container
+               (have layout), and set to the size you prefer. If this
+               param is omitted, then document.body is used instead,
+               making games fill the viewport (fullscreen), but this
+               requires a faster processor. Should be ok for simple
+               games though.
+
+    - scale : The scale of the game relative to it's native size. This value
+              should be a number. Default is "1.0", meaning 100% scale. Specify
+              "2" to get double size scale.
+
+    - debug : If this is "true", then the engine will be set to Debug
+              Mode, which enables logging to the console for development
+              and debugging purposes. If this param is omitted, then Debug
+              Mode is set to off. Debug Mode can be enabled at any time
+              via SGF.debugMode = true|false.
+
+    - Prototype : The absolute or relative path to the "prototype.js" file.
+                  The Prototype JS library is required for the engine, and
+                  is automatically loaded if it is not prior to the engine
+                  initializing. The default behavior is to look for
+                  "prototype.js" in:  engineRoot/lib/prototype.js
+                  However, if this parameter is supplied then that is overriden.
+
+    - s2 : The absolute or relative path to the "s2.js" file. Scripty2 is used
+           in the engine for various tweening and measuring operations. The
+           default behavior is to look for this file in:  engineRoot/lib/s2.js
+           However, if this parameter is supplied, then that is overriden.
+
+Here's a complex example of a <script> node:
+
+    <script src="engine/SimpleGameFramework.js?
+        game=mygame&
+        screen=sgfScreen&
+        prototype=http://ajax.googleapis.com/ajax/libs/prototype/1.6.1.0/prototype.js&
+        debug=true"
+    type="text/javascript">
+
+
+So here, the engine will load from a relative path, the engine files are on the
+same server as the page itself. The Screen is set to a DIV on the page with id
+"sgfScreen". The Prototype library will be loaded from Google's hosting (absolute
+path). Debug Mode will be enabled for console.log style output. And when the
+engine finishes loading, the game at pageRoot/myGame will be loaded (relative path).

@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>"Simple Game Framework" HTML/DOM Engine</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <!-- A few basic styles. These are NOT mandatory for SGF. The only
+         styling rule is that the "Screen" element must be a CSS container. -->
+    <link href="styles.css" type="text/css" rel="stylesheet" />
+
+    <script type="text/javascript">
+        var loaderFile = "engine/SimpleGameFramework.js"; // Relative or absolute path to SGF bootstrap file.
+        var params = {
+            screen: "screen", // id of HTML element that will be the screen.
+            //scale: 2, // Numeric scale of the screen. 1 = full size, 2 = double size, etc.
+            game: document.location.href.substring(0, document.location.href.lastIndexOf("Simple-Game-Framework")) + "Simple-Game-Framework/examples/sprite-follow-mouse", // The root url of the initial game
+            //Prototype: "http://ajax.googleapis.com/ajax/libs/prototype/1.6.1.0/prototype.js",
+            //s2: "http://scripty2.com/doc/javascripts/s2.js",
+            debug: true
+        };
+        var paramStr = "";
+        for (var i in params) {
+            paramStr += i + '=' + params[i] + '&';
+        }
+        paramStr = paramStr.substring(0, paramStr.lastIndexOf('&'));
+ 
+        // Now we can write the script tag via document.write
+        document.write('<script type="text/javascript" src="'+loaderFile+'?'+paramStr+'"><\/script>');
+    </script>
+  </head>
+  <body>
+      <div id="screen"></div>
+      <center>
+          <div>FPS: <span id="fps"></span></div>
+          <div>UPS: <span id="ups"></span></div>
+          <div>Time in Game: <span id="timeInGame"></span></div>
+      </center>
+  </body>
+</html>
