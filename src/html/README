@@ -86,3 +86,10 @@ same server as the page itself. The Screen is set to a DIV on the page with id
 "sgfScreen". The Prototype library will be loaded from Google's hosting (absolute
 path). Debug Mode will be enabled for console.log style output. And when the
 engine finishes loading, the game at pageRoot/myGame will be loaded (relative path).
+
+A note on browser compatibility:
+    I'm currently developing the engine and test in Firefox, Safari, and Chrome. Only
+    at this point. The main reason is because those are the only browsers that currently
+    support border-radius, and thus the SGF.Circle class. Another reason is because of
+    pure JavaScript speed. These browsers are vastly ahead of IE in terms of JS speed,
+    and therefore these games PROBABLY wouldn't work too well in it, but I'm not testing.
