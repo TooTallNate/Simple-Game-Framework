@@ -13,9 +13,10 @@ var SGF = (function() {
         engineRoot = getEngineRoot(scriptNode),
         params = getScriptParams(scriptNode),
         engineScripts = {
+            "Game":     null,
             "Screen":   null,
             "Input":    null,
-            "Game":     null,
+            "Component":null,
             "Spriteset":null,
             "Sprite":   null,
             "Layer":    null,

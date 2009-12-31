@@ -1,23 +1,31 @@
-SGF.Screen = {
-    scale: 1,
-    element: null,
+SGF.Screen = (function() {
+    var REQUIRED_OVERFLOW = "hidden",
+        scale = 1;
     
-    bind: function(element) {
-        if (element.getStyle("overflow") != "hidden")
-            element.style.overflow = "hidden";
+    function bind(element) {
+        if (element.getStyle("overflow") != REQUIRED_OVERFLOW)
+            element.style.overflow = REQUIRED_OVERFLOW;
 
+        element.innerHTML = "";
         SGF.Screen.element = element;
-    },
+    }
 
-    getScale: function() {
-        return SGF.Screen.scale;
-    },
+    function getScale() {
+        return scale;
+    }
 
-    setScale: function(scale) {
-        SGF.Screen.scale = scale;
-    },
+    function setScale(newScale) {
+        scale = newScale;
 
-    showNativeCursor: function(bool) {
+        if (SGF.Game.current instanceof SGF.Game) {
+            var c = SGF.Game.current.components, i=0;
+            for (; i < c.length; i++) {
+                c[i].scale(scale);
+            }
+        }
+    }
+
+    function showNativeCursor(bool) {
         if (typeof(bool) != 'boolean') {
             throw "SGF.Screen.showNativeCursor expects a 'boolean' "+
                   "argument, got '" + typeof(bool) + "'";
@@ -28,21 +36,28 @@ SGF.Screen = {
             SGF.Screen.element.style.cursor = val;
     }
 
-
-};
+    return {
+        element: null,
+        bind: bind,
+        getScale: getScale,
+        setScale: setScale,
+        showNativeCursor: showNativeCursor
+    }
+})();
 
 // This inline function checks the SGF.params property for
 // any params relating to the Screen (i.e. screen, scale).
 (function(screen) {
+
+    // Bind the 'screen' param. document.body by default.
     var screenElement = document.body;
     if ("screen" in SGF.params) {
         screenElement = $(SGF.params.screen);
     }
     screen.bind(screenElement);
 
-    var initialScale = 1;
+    // Set the initial scale, if 'scale' was given
     if ("scale" in SGF.params) {
-        initialScale = parseFloat(SGF.params.scale);
+        screen.setScale(parseFloat(SGF.params.scale));
     }
-    screen.setScale(initialScale);
 })(SGF.Screen);
