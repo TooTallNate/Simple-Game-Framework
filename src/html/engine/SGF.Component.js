@@ -25,6 +25,11 @@ SGF.Component = Class.create({
     render: function(interpolation) {
         var scale = SGF.Screen.getScale();
 
+        if (this.__zIndex != this.zIndex) {
+            this.element.style.zIndex = this.zIndex;
+            this.__zIndex = this.zIndex;
+        }
+
         if (this.__width != this.width) {
             this.element.style.width = (this.width * scale) + "px";
             this.__width = this.width;
@@ -78,5 +83,6 @@ SGF.Component.DEFAULTS = {
     x:      0,
     y:      0,
     dx:     0,
-    dy:     0
+    dy:     0,
+    zIndex: 0
 };
