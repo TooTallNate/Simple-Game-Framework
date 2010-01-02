@@ -10,6 +10,18 @@ SGF.Component = Class.create({
     toElement: function() {
         return this.element;
     },
+    left: function() {
+        return this.x;
+    },
+    top: function() {
+        return this.y;
+    },
+    right: function() {
+        return this.x + this.width;
+    },
+    bottom: function() {
+        return this.y + this.height;
+    },
     render: function(interpolation) {
         var scale = SGF.Screen.getScale();
 

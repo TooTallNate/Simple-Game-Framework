@@ -9,23 +9,25 @@
     <link href="styles.css" type="text/css" rel="stylesheet" />
 
     <script type="text/javascript">
-        var loaderFile = "engine/SimpleGameFramework.js"; // Relative or absolute path to SGF bootstrap file.
-        var params = {
-            screen: "screen", // id of HTML element that will be the screen.
-            //scale: 2, // Numeric scale of the screen. 1 = full size, 2 = double size, etc.
-            game: document.location.href.substring(0, document.location.href.lastIndexOf("Simple-Game-Framework")) + "Simple-Game-Framework/examples/sprite-follow-mouse", // The root url of the initial game
-            //Prototype: "http://ajax.googleapis.com/ajax/libs/prototype/1.6.1.0/prototype.js",
-            //s2: "http://scripty2.com/doc/javascripts/s2.js",
-            debug: true
-        };
-        var paramStr = "";
-        for (var i in params) {
-            paramStr += i + '=' + params[i] + '&';
-        }
-        paramStr = paramStr.substring(0, paramStr.lastIndexOf('&'));
- 
-        // Now we can write the script tag via document.write
-        document.write('<script type="text/javascript" src="'+loaderFile+'?'+paramStr+'"><\/script>');
+        (function() {
+            var loaderFile = "engine/SimpleGameFramework.js"; // Relative or absolute path to SGF bootstrap file.
+            var params = {
+                screen: "screen", // id of HTML element that will be the screen.
+                //scale: 2, // Numeric scale of the screen. 1 = full size, 2 = double size, etc.
+                game: document.location.href.substring(0, document.location.href.lastIndexOf("Simple-Game-Framework")) + "Simple-Game-Framework/examples/brick-breaker", // The root url of the initial game
+                //Prototype: "http://ajax.googleapis.com/ajax/libs/prototype/1.6.1.0/prototype.js",
+                //s2: "http://scripty2.com/doc/javascripts/s2.js",
+                debug: true
+            };
+            var paramStr = "";
+            for (var i in params) {
+                paramStr += i + '=' + params[i] + '&';
+            }
+            paramStr = paramStr.substring(0, paramStr.lastIndexOf('&'));
+
+            // Now we can write the script tag via document.write
+            document.write('<script type="text/javascript" src="'+loaderFile+'?'+paramStr+'"><\/script>');
+        })();
     </script>
   </head>
   <body>

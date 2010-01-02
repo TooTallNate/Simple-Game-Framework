@@ -7,7 +7,18 @@ SGF.Screen = (function() {
             element.style.overflow = REQUIRED_OVERFLOW;
 
         element.innerHTML = "";
+        element.makePositioned();
+
+        var oldScreen = SGF.Screen.element;
+        if (oldScreen !== null && Object.isElement(oldScreen)) {
+            oldScreen.immediateDescendants().invoke("remove").each(element.insert, element);
+        }
         SGF.Screen.element = element;
+
+        if (SGF.Input && SGF.Input.grabbed) {
+            SGF.Input.release();
+            SGF.Input.grab();
+        }
     }
 
     function getScale() {
@@ -36,11 +47,29 @@ SGF.Screen = (function() {
             SGF.Screen.element.style.cursor = val;
     }
 
+    function getPixelWidth() {
+        return SGF.Screen.element.measure("width");
+    }
+
+    function getPixelHeight() {
+        return SGF.Screen.element.measure("height");
+    }
+
+    function getGameWidth() {
+        return getPixelWidth() / getScale();
+    }
+
+    function getGameHeight() {
+        return getPixelHeight() / getScale();
+    }
+
     return {
-        element: null,
-        bind: bind,
+        element:  null,
+        bind:     bind,
         getScale: getScale,
         setScale: setScale,
+        getWidth: getGameWidth,
+        getHeight: getGameHeight,
         showNativeCursor: showNativeCursor
     }
 })();

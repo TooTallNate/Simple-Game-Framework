@@ -5,17 +5,17 @@ SGF.Spriteset = Class.create({
         this.spriteHeight = spriteHeight;
         this.width = this.height = -1; // Not loaded yet.
 
+        this.loadListeners = [];
+
         this.image = new Image();
         this.image.onload = this.imageLoaded.bind(this);
         this.image.src = SGF.Game.current.root + imgPath;
         this.image.style.position = "absolute";
-
-        this.loadListeners = [];
     },
     imageLoaded: function(loadEvent) {
+        this.width = this.image.width;
+        this.height = this.image.height;
         this.loaded = true;
-        this.width = this.image.naturalWidth;
-        this.height = this.image.naturalHeight;
         for (var i=0; i < this.loadListeners.length; i++) {
             this.loadListeners[i](this);
         }

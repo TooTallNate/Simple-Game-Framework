@@ -4,9 +4,14 @@
   * JavaScript implementor to use native code.  The Core API contains object
   * oriented drawing classes, sound management and input hooks.
   **/
-  
 
-
+/** section: Core API
+ * SGF
+ * The main namespace. All SGF related objects are placed directly in here,
+ * purely for organization. It is recommended that games developed use their
+ * own namespace, or find some other way of minimizing pollution to the global
+ * namespace.
+ **/
 var SGF = (function() {
     var fileRegexp = /SimpleGameFramework\.js(\?.*)?$/,
         scriptNode = findScriptNode(),
@@ -20,7 +25,8 @@ var SGF = (function() {
             "Spriteset":null,
             "Sprite":   null,
             "Layer":    null,
-            "Rectangle":null
+            "Rectangle":null,
+            "Circle":   null
         },
         eventListeners = {
             "load" : []
@@ -35,7 +41,7 @@ var SGF = (function() {
     loadLibPrototype(function() {
         loadLibScripty(function() {});
     });
-    //loadSoundManager();
+    // TODO: loadSoundManager();
 
 
 
@@ -45,7 +51,7 @@ var SGF = (function() {
 
 
 
-    /* private
+    /*
      * Expects a <script> node reference, and removes it from the DOM, and
      * destroys the object in a memory leak free manner.
      **/
@@ -68,7 +74,7 @@ var SGF = (function() {
      * Called by engineScriptLoaded once ALL required engine scripts have
      * finished loading. This method notifies all "load" observers that the
      * engine is loaded and ready to load a game.
-     */
+     **/
     function engineLoaded() {
         // Set the 'loaded' flag to 'true'
         SGF.loaded = true;
@@ -91,7 +97,7 @@ var SGF = (function() {
      * and if so calls engineLoaded(). This method is called as many times
      * as there are required scripts, but engineLoaded() will only be called
      * once, and at the end.
-     */
+     **/
     function engineScriptLoaded(loadEvent) {
         //console.log(loadEvent.target.src + " finished loading!");
         
@@ -106,7 +112,7 @@ var SGF = (function() {
         if (engineFinishedLoading) engineLoaded();
     }
 
-    /* private
+    /*
      * Finds the script node that is executing this code.
      **/
     function findScriptNode() {
@@ -117,7 +123,7 @@ var SGF = (function() {
         return null;
     }
 
-    /* private
+    /*
      * Returns the path to the root of the game engine. This
      * is the folder in which "SimpleGameFramework" resides.
      **/
@@ -125,10 +131,10 @@ var SGF = (function() {
         return script.src.replace(fileRegexp, '');
     }
 
-    /* private
+    /*
      * Gets the query string found after the src in the script node,
      * and packages the items into an object for reusal.
-     */
+     **/
     function getScriptParams(script) {
         var index = script.src.indexOf('?'), i=0, rtn = {};
         if (index > -1) {
@@ -143,12 +149,12 @@ var SGF = (function() {
         return rtn;
     }
 
-    /* private
+    /*
      * Called after each library file is loaded, or confirmed previously loaded.
      * The method checks if ALL libraries are loaded, and if they are, proceeds
      * to load the engine. Parsing parameters and then loading required engine
      * core scripts.
-     */
+     **/
     function libraryFileLoaded() {
         if (typeof Prototype !== 'undefined' &&
             typeof S2 !== 'undefined') {
@@ -167,7 +173,7 @@ var SGF = (function() {
      * absolute URL to use for the script. The parameter needs to be only the
      * single word that the script file is relevant to. engineScriptLoaded()
      * is called after the loaded engine script finishes loading.
-     */
+     **/
     function loadEngineScript(scriptName) {
         return loadScript(engineRoot + "SGF." + scriptName + ".js", engineScriptLoaded);
     }
@@ -206,7 +212,7 @@ var SGF = (function() {
     /*
      * Dynamically load a script element, calling an optional callback function
      * when the script finishes loading.
-     */
+     **/
     function loadScript(scriptUrl, onComplete) {
         // Replace onComplete with an empty function if none was given.
         onComplete = typeof onComplete === 'function' ? onComplete : e;
@@ -215,6 +221,7 @@ var SGF = (function() {
         var script = document.createElement("script");
         script.type = "text/javascript";
         script.loaded = false;
+        script.setAttribute("async", "true");
 
         script.onload = script.onreadystatechange = function() {
             if (!this.readyState || this.readyState == "loaded" || this.readyState == "complete") {
@@ -233,8 +240,13 @@ var SGF = (function() {
     }
 
     /*
-     * TODO Add PDoc comments
-     */
+     * SGF.observe(eventName, handler) -> undefined
+     * - eventName (String): One of the valid event names to attach a handler to.
+     * - handler (Function): The function to call when the specified event occurs.
+     *
+     * Used to observe engine-specific events. This should rarely be used in your
+     * games' code.
+     **/
     function observe(eventName, handler) {
         if (!(eventName in eventListeners)) throw "'" + eventName + "' is an invalid eventName";
         if (typeof(handler) !== 'function') throw "func must be a Function."
@@ -252,6 +264,6 @@ var SGF = (function() {
     };
 })();
 
-//SGF.observe("load", function() {
-//    console.log("engine loaded");
-//})
+SGF.observe("load", function() {
+    console.log("engine loaded");
+});
