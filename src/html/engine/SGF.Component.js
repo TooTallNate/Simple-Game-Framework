@@ -4,26 +4,64 @@ SGF.Component = Class.create({
         this.element = this.getElement();
         this.scale(SGF.Screen.getScale());
     },
-    getElement: function() {
-        throw "abstract";
-    },
+    /*
+     * SGF.Component#getElement() -> Element
+     * Internal method. Game developers need not be aware.
+     **/
+    getElement: Function.ABSTRACT,
     toElement: function() {
         return this.element;
     },
+    /**
+     * SGF.Component#left() -> Number
+     * Returns the number of pixels from left side of the screen to the left
+     * side of the Component.
+     */
     left: function() {
         return this.x;
     },
+    /**
+     * SGF.Component#top() -> Number
+     * Returns the number of pixels from the top of the screen to the top
+     * of the Component.
+     **/
     top: function() {
         return this.y;
     },
+    /**
+     * SGF.Component#left() -> Number
+     * Returns the number of pixels from left side of the screen to the right
+     * side of the Component.
+     */
     right: function() {
         return this.x + this.width;
     },
+    /**
+     * SGF.Component#bottom() -> Number
+     * Returns the number of pixels from the top side of the screen to the
+     * bottom of the Component.
+     **/
     bottom: function() {
         return this.y + this.height;
     },
+    /**
+     * SGF.Component#render() -> undefined
+     * Renders the individual Component.
+     */
     render: function(interpolation) {
         var scale = SGF.Screen.getScale();
+
+        if (this.__opacity != this.opacity) {
+            this.element.setOpacity(this.opacity);
+            this.__opacity = this.opacity;
+        }
+
+        if (this.__rotation != this.rotation) {
+            this.element.transform({
+                rotation: this.rotation * (Math.PI/180) // Convert from Deg to Rad
+            });
+            this.__rotation = this.rotation;
+        }
 
         if (this.__zIndex != this.zIndex) {
             this.element.style.zIndex = this.zIndex;
@@ -78,11 +116,13 @@ SGF.Component = Class.create({
 });
 
 SGF.Component.DEFAULTS = {
-    width:  10,
-    height: 10,
-    x:      0,
-    y:      0,
-    dx:     0,
-    dy:     0,
-    zIndex: 0
+    width:    10,
+    height:   10,
+    x:        0,
+    y:        0,
+    dx:       0,
+    dy:       0,
+    opacity:  1.0,
+    rotation: 0,
+    zIndex:   0
 };

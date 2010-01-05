@@ -5,8 +5,8 @@ body {
 }
 
 #screen {
-    width:320px;
-    height:240px;
+    width:400px;
+    height:300px;
     position:relative;
     border:Solid 1px #000000;
     margin:0 auto;

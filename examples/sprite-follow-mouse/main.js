@@ -16,15 +16,42 @@ SpriteFollow = {};
 // automatically instantiates the Spriteset class with our custom cursor image.
 // A sub-update() method relocates the cursor to where the pointer is currently.
 SpriteFollow.CursorClass = Class.create(SGF.Sprite, {
-    initialize: function($super, options) {
+    initialize: function($super) {
         $super(
             new SGF.Spriteset("hand_32x32.png", 32, 32),
-            options
+            { zIndex:1 }
         );
+
+        SGF.Input.observe("mousedown", this.createDrop.bind(this));
     },
-    update: function($super) {
+    update: function() {
         this.x = SGF.Input.pointerX;
         this.y = SGF.Input.pointerY;
+    },
+    createDrop: function() {
+        SGF.Game.current.addComponent(new SpriteFollow.Drop({
+            x: this.x,
+            y: this.y
+        }));
+    }
+});
+
+// A "drop" that gets created when the user clicks a mouse key. It just falls
+// down off the screen, and fades away as it falls. An instance is removed from
+// the game loop when it falls below the screen.
+SpriteFollow.Drop = Class.create(SGF.Circle, {
+    initialize: function($super, options) {
+        $super(Object.extend({
+            radius:2.5,
+            dy:5
+        }, options));
+        this.startY = this.y;
+    },
+    update: function($super) {
+        this.opacity = (240 - this.y) / (240 - this.startY);
+        if (this.top() >= 240) {
+            SGF.Game.current.removeComponent(this);
+        }
         $super();
     }
 });
@@ -38,7 +65,7 @@ SGF.Game.current.addComponent(SpriteFollow.cursor);
 // Clean up what we've added to the global namespace when the game is stopping.
 // This is not mandatory, but good for tidiness sake.
 SGF.Game.current.observe("stopping", function() {
-    delete window.SpriteFollow;
+    delete SpriteFollow;
 });
 
 // Hide the native mouse cursor. This is for custom game mouse cursors

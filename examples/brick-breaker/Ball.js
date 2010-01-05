@@ -18,7 +18,6 @@ BB.Ball = Class.create(SGF.Circle, {
             this.followPaddle();
         }
 
-
         $super();
     },
 
@@ -28,7 +27,7 @@ BB.Ball = Class.create(SGF.Circle, {
         BB.newBall();
     },
     followPaddle: function() {
-        this.y = this.paddle.top() - this.height + 2;
+        this.y = this.paddle.top() - this.height + 1;
         this.x = this.paddle.x + (this.paddle.width/2) - (this.width/2);
     },
 

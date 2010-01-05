@@ -20,18 +20,22 @@ SGF.Screen.showNativeCursor(false);
 BB.bg = new SGF.Rectangle({
     width: BB.GAME_WIDTH,
     height: BB.GAME_HEIGHT,
-    color: "000000",
+    color: "292929", // Dark Grey
     zIndex: 0
 });
 BB.game.addComponent(BB.bg);
 
 // First load some dependencies.
-SGF.Game.current.loadScript("Paddle.js", function() {
-    SGF.Game.current.loadScript("Ball.js", function() {
+BB.game.loadScript("Paddle.js", function() {
+    BB.game.loadScript("Ball.js", function() {
         
         BB.newBall = function() {
             // The ball. A new one is created each life.
-            BB.ball = new BB.Ball({ paddle : BB.paddle, color:"Red" });
+            BB.ball = new BB.Ball({
+                paddle : BB.paddle,
+                color  : "f47111"
+            });
+            // Add it onto the screen and into the game loop.
             BB.game.addComponent(BB.ball);
         };
 
@@ -40,10 +44,10 @@ SGF.Game.current.loadScript("Paddle.js", function() {
         BB.paddle = new BB.Paddle();
         this.addComponent(BB.paddle);
 
-
+        // Start the game with a new ball.
         BB.newBall();
 
-
+        // Track mouse button presses to launch the ball.
         SGF.Input.observe("mousedown", function() {
             BB.ball.launch();
         });

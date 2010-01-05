@@ -15,6 +15,7 @@ SGF.Sprite = Class.create(SGF.Component, {
     },
     scale: function($super, newScale) {
         $super(newScale);
+        
         var scaleSpriteset = (function() {
             var spritesetImg = this.element.firstDescendant();
             spritesetImg.style.width = (this.spriteset.width * newScale) + "px";

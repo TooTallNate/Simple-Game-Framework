@@ -2,8 +2,8 @@ BB.Paddle = Class.create(SGF.Rectangle, {
     initialize: function($super) {
         $super({
             width: 70,
-            height: 15,
-            color: "blue"
+            height: 12,
+            color: "1184e5"
         });
         this.y = BB.GAME_HEIGHT - this.height - 10;
     },
