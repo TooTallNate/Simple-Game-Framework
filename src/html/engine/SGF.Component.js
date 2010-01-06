@@ -34,7 +34,7 @@ SGF.Component = Class.create({
      * side of the Component.
      */
     right: function() {
-        return this.x + this.width;
+        return this.x + this.width - 1;
     },
     /**
      * SGF.Component#bottom() -> Number
@@ -42,7 +42,7 @@ SGF.Component = Class.create({
      * bottom of the Component.
      **/
     bottom: function() {
-        return this.y + this.height;
+        return this.y + this.height - 1;
     },
     /**
      * SGF.Component#render() -> undefined

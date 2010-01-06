@@ -6,12 +6,12 @@ SGF.Rectangle = Class.create(SGF.Component, {
         this.__color = this.color;
         return new Element("div").setStyle({
             position: "absolute",
-            backgroundColor: this.color
+            backgroundColor: "#" + this.color
         });
     },
     render: function($super, interpolation) {
         if (this.__color != this.color) {
-            this.element.style.backgroundColor = this.color;
+            this.element.style.backgroundColor = "#" + this.color;
             this.__color = this.color;
         }
         $super(interpolation);
@@ -19,5 +19,5 @@ SGF.Rectangle = Class.create(SGF.Component, {
 });
 
 SGF.Rectangle.DEFAULTS = {
-    color: "#000000"
+    color: "000000"
 };
