@@ -6,7 +6,6 @@
  * subclass, for simplicity.
  */
 
-
 // Firstly, it's always a good idea to namespace you games. This is because
 // we don't like polluting the global namespace, since you could potentially
 // overwrite important native objects.
@@ -17,10 +16,12 @@ SpriteFollow = {};
 // A sub-update() method relocates the cursor to where the pointer is currently.
 SpriteFollow.CursorClass = Class.create(SGF.Sprite, {
     initialize: function($super) {
-        $super(
-            new SGF.Spriteset("hand_32x32.png", 32, 32),
-            { zIndex:1 }
-        );
+        var spriteset = new SGF.Spriteset("hand_32x32.png", 32, 32);
+        $super(spriteset, {
+            width: spriteset.spriteWidth,
+            height: spriteset.spriteHeight,
+            zIndex: 2
+        });
 
         SGF.Input.observe("mousedown", this.createDrop.bind(this));
     },
@@ -39,17 +40,24 @@ SpriteFollow.CursorClass = Class.create(SGF.Sprite, {
 // A "drop" that gets created when the user clicks a mouse key. It just falls
 // down off the screen, and fades away as it falls. An instance is removed from
 // the game loop when it falls below the screen.
-SpriteFollow.Drop = Class.create(SGF.Circle, {
+SpriteFollow.Drop = Class.create(SGF.Rectangle, {
     initialize: function($super, options) {
         $super(Object.extend({
-            radius:2.5,
-            dy:5
+            //radius:2.5,
+            dy:5,
+            // Appear below the Cursor
+            zIndex: 1,
+            // Generate some random color
+            color: (Math.random()*255).round().toColorPart() +
+                   (Math.random()*255).round().toColorPart() +
+                   (Math.random()*255).round().toColorPart()
         }, options));
         this.startY = this.y;
     },
     update: function($super) {
-        this.opacity = (240 - this.y) / (240 - this.startY);
-        if (this.top() >= 240) {
+        var screenHeight = SGF.Screen.height;
+        this.opacity = (screenHeight - this.y) / (screenHeight - this.startY);
+        if (this.top() >= screenHeight) {
             SGF.Game.current.removeComponent(this);
         }
         $super();
@@ -62,13 +70,10 @@ SpriteFollow.cursor = new SpriteFollow.CursorClass();
 // Add the 'cursor' as a top-level component to the game.
 SGF.Game.current.addComponent(SpriteFollow.cursor);
 
-// Clean up what we've added to the global namespace when the game is stopping.
-// This is not mandatory, but good for tidiness sake.
-SGF.Game.current.observe("stopping", function() {
-    delete SpriteFollow;
-});
+// Set the background color.
+SGF.Screen.color = "123456";
 
 // Hide the native mouse cursor. This is for custom game mouse cursors
 // or games that don't use the mouse at all, and want it hidden.
 // Note that all mouse movement and button actions are still fired.
-SGF.Screen.showNativeCursor(false);
+SGF.Screen.useNativeCursor(false);

@@ -7,7 +7,9 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.HashMap;
 import java.util.Vector;
+import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 public class Input extends ScriptableObject implements KeyListener, MouseListener, MouseMotionListener {
@@ -41,6 +43,12 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
     public int jsGet_MOUSE_MIDDLE() { return MouseEvent.BUTTON2; }
     public int jsGet_MOUSE_SECONDARY() { return MouseEvent.BUTTON3; }
 
+    public int jsGet_KEY_DOWN() { return KeyEvent.VK_DOWN; }
+    public int jsGet_KEY_LEFT() { return KeyEvent.VK_LEFT; }
+    public int jsGet_KEY_RIGHT() { return KeyEvent.VK_RIGHT; }
+    public int jsGet_KEY_UP() { return KeyEvent.VK_UP; }
+    public int jsGet_KEY_1() { return KeyEvent.VK_SPACE; }
+
     public int jsGet_pointerX() { return this.pointerX; }
     public int jsGet_pointerY() { return this.pointerY; }
 
@@ -55,7 +63,8 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
      * @param handler
      */
     public void jsFunction_observe(String eventName, Function handler) {
-        if (!this.observers.containsKey(eventName)) return;
+        if (!this.observers.containsKey(eventName))
+            return;
 
         Vector<Function> handlers = this.observers.get(eventName);
         handlers.add(handler);
@@ -68,15 +77,52 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
         if (Boolean.TRUE.equals(this.keysDown.get(e.getKeyCode()))) return;
 
         this.keysDown.put(e.getKeyCode(), Boolean.TRUE);
+
+        Context cx = Context.enter();
+        Scriptable arg = cx.newObject(this);
+        arg.put("keyCode", arg, e.getKeyCode());
+        try {
+            for (Function func : this.observers.get("keydown")) {
+                func.call(cx, func, func, new Object[] { arg });
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            Context.exit();
+        }
     }
 
     public void keyReleased(KeyEvent e) {
         this.keysDown.put(e.getKeyCode(), Boolean.FALSE);
+        Context cx = Context.enter();
+        Scriptable arg = cx.newObject(this);
+        arg.put("keyCode", arg, e.getKeyCode());
+        try {
+            for (Function func : this.observers.get("keyup")) {
+                func.call(cx, func, func, new Object[] { arg });
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            Context.exit();
+        }
     }
 
     // MouseListener Implementation ////////////////////////////////////////////
     public void mousePressed(MouseEvent e) {
-        //System.out.println(e.getButton() + ": Pressed");
+        Context cx = Context.enter();
+        Scriptable arg = cx.newObject(this);
+        arg.put("x", arg, e.getX());
+        arg.put("y", arg, e.getY());
+        try {
+            for (Function func : this.observers.get("mousedown")) {
+                func.call(cx, func, func, new Object[] { arg });
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            Context.exit();
+        }
     }
 
     public void mouseReleased(MouseEvent e) {

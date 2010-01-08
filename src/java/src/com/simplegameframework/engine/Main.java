@@ -17,7 +17,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -117,13 +116,20 @@ public class Main extends JFrame implements ActionListener, WindowListener {
             resource = this.getClass().getResource("js/SGF.Component.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
 
+            // Add SGF.Shape
+            resource = this.getClass().getResource("js/SGF.Shape.js");
+            cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
+
             // Add SGF.Rectangle
             resource = this.getClass().getResource("js/SGF.Rectangle.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
 
-            
-            resource = this.getClass().getResource("js/SimpleGameFramework.js");
+            // Add SGF.Rectangle
+            resource = this.getClass().getResource("js/SGF.Sprite.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
+
+            // Add SGF.Spriteset
+            ScriptableObject.defineClass(this.sgfObj, Spriteset.class);
 
         } catch(Exception ex) {
             ex.printStackTrace();

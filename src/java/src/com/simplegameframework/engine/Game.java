@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeJavaObject;
@@ -34,7 +35,7 @@ public class Game extends ScriptableObject implements Runnable {
      * A <tt>Vector</tt> containing all the {@link Component}s that this game
      * should update/render in the game loop.
      */
-    private Vector<Component> componentsArray;
+    private CopyOnWriteArrayList<Component> componentsArray;
     private Scriptable globalScope;
 
     private double gameSpeed; // Or Updates Per Second
@@ -61,20 +62,22 @@ public class Game extends ScriptableObject implements Runnable {
         game.put("current", game, this);
 
 
-        this.defineFunctionProperties(new String[] {"addComponent", "removeComponent", "setGameSpeed"}, this.getClass(), PERMANENT);
+        this.defineFunctionProperties(new String[] {"addComponent", "removeComponent", "setGameSpeed", "loadScript"}, this.getClass(), PERMANENT);
 
         this.setScreen(screen);
-        this.componentsArray = new Vector<Component>();
+        this.componentsArray = new CopyOnWriteArrayList<Component>();
         this.setGameSpeed(30);
         this.maxFrameSkips = 5;
         this.running = this.loaded = false;
         this.root = root;
         
         try {
-            this.jsFunction_loadScript("main.js", null);
+            this.loadScript("main.js", null);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+        this.loaded = true;
     }
 
     // Scriptable Methods //////////////////////////////////////////////////////
@@ -83,21 +86,18 @@ public class Game extends ScriptableObject implements Runnable {
         return "Game";
     }
 
-    public double jsGet_renderCount() {
-        return this.renderCount;
-    }
-
-    public double jsGet_updateCount() {
-        return this.updateCount;
-    }
-
-    public Object jsGet_components() {
-        return this.componentsArray;
-    }
-
-    public String jsGet_root() {
-        return this.root.toString();
-    }
+    //public double jsGet_renderCount() {
+    //    return this.renderCount;
+    //}
+    //public double jsGet_updateCount() {
+    //    return this.updateCount;
+    //}
+    //public Object jsGet_components() {
+    //    return this.componentsArray;
+    //}
+    //public String jsGet_root() {
+    //    return this.getRoot().toString();
+    //}
 
     public void addComponent(Scriptable o) {
         Object javaComponent = o.get("__component", o);
@@ -123,22 +123,19 @@ public class Game extends ScriptableObject implements Runnable {
         throw Context.reportRuntimeError("Object is not an instance of SGF.Component!");
     }
 
-    public void jsFunction_loadScript(String name, Function loadedHandler) throws IOException {
-        File fileToLoad = new File(this.root + File.separator + name);
-        Context c = Context.getCurrentContext();
-        //System.out.println(fileToLoad.toURI().toURL());
-        InputStreamReader r = new InputStreamReader(fileToLoad.toURI().toURL().openStream());
-        if (c == null) {
-            c = Context.enter();
-            try {
-                c.evaluateReader(this.globalScope, r, fileToLoad.toString(), 1, null);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                Context.exit();
-            }
-        } else {
+    public void loadScript(String name, Function loadedHandler) throws IOException {
+        Context c = Context.enter();
+        try {
+            File fileToLoad = new File(this.root + File.separator + name);
+            InputStreamReader r = new InputStreamReader(fileToLoad.toURI().toURL().openStream());
             c.evaluateReader(this.globalScope, r, fileToLoad.toString(), 1, null);
+            if (loadedHandler != null) {
+                loadedHandler.call(c, loadedHandler, this, new Object[] {name});
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            Context.exit();
         }
     }
 
@@ -149,16 +146,18 @@ public class Game extends ScriptableObject implements Runnable {
         }
     }
 
+    public File getRoot() {
+        return this.root;
+    }
+
     public void setGameSpeed(double newGameSpeed) {
         this.gameSpeed = newGameSpeed;
         this.period = 1000000000d / newGameSpeed; // 1000000000 -> Nanoseconds Per Second
     }
 
-    public Game jsFunction_stop() {
+    public void stop() {
         this.running = false;
         this.runner = null;
-        //System.out.println(this + " stopped");
-        return this;
     }
 
 
@@ -173,7 +172,7 @@ public class Game extends ScriptableObject implements Runnable {
         double interpolation;
         int loops;
 
-        while (this.running) {
+        while (this.running && !Thread.interrupted()) {
 
             // The first order of buisiness every time around the game loop is
             // to check if we need to execute any calls to 'update()'
@@ -186,8 +185,8 @@ public class Game extends ScriptableObject implements Runnable {
 
             // Get the Graphics2D object we're going to draw onto
             Graphics2D g = (Graphics2D) screen.strategy.getDrawGraphics();
-            g.setColor(Color.black);
-            g.fillRect(0,0,this.screen.getWidth(), this.screen.getHeight());
+            g.setColor(screen.getBackgroundColor());
+            g.fillRect(0, 0, screen.getWidth(), screen.getHeight());
 
             // Render all Components. Taking the interpolation value into account
             interpolation = (System.nanoTime() + this.period - nextGamePeriod) / this.period;
@@ -196,9 +195,11 @@ public class Game extends ScriptableObject implements Runnable {
             // DEBUG
             g.setColor(Color.white);
             double duration =  (double)System.nanoTime() - (double)this.startTime;
-            g.drawString(String.valueOf((double)this.renderCount/duration * 1000000000), 0, 20);
-            g.drawString(String.valueOf((double)this.updateCount/duration * 1000000000), 0, 50);
-            g.drawString(String.valueOf((System.nanoTime() - this.startTime) / 1000000000), 0, 80);
+            g.drawString("FPS: " + (int)((double)this.renderCount/duration * 1000000000), 0, 20);
+            g.drawString("UPS: " + (int)((double)this.updateCount/duration * 1000000000), 0, 40);
+            g.drawString("Time in Game: " + ((System.nanoTime() - this.startTime) / 1000000000), 0, 60);
+            g.drawString("Frames Rendered: " + this.renderCount, 0, 80);
+            g.drawString("Updates Processed: " + this.updateCount, 0, 100);
             
             // Now that all rendering is done for this frame, dispose our
             // reference and show what was drawn on the 'screen'.
@@ -214,8 +215,8 @@ public class Game extends ScriptableObject implements Runnable {
      * Updates the state of the game once.
      */
     private void update() {
-        for (Component c : this.componentsArray) {
-            c.doUpdate(this.updateCount);
+        for (Component c : componentsArray) {
+            c.doUpdate(this.renderCount);
         }
         this.updateCount++;
     }
@@ -227,7 +228,7 @@ public class Game extends ScriptableObject implements Runnable {
      *                      next frame that we are attempting to draw.
      */
     private void render(Graphics2D g, double interpolation) {
-        for (Component c : this.componentsArray) {
+        for (Component c : componentsArray) {
             c.doRender(g, interpolation, this.renderCount);
         }
         this.renderCount++;

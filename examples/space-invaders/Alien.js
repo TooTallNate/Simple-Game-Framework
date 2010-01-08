@@ -6,22 +6,21 @@ SI.Alien = Class.create(SGF.Sprite, {
         SI.Alien.instances.push(this);
     },
     update: function($super) {
-        if (SI.gameOver) return;
-
-        if (this.right() >= 320) {
-            SI.Alien.setMoveSpeed(-3);
-            SI.Alien.moveDown();
-        } else if (this.left() <= 0) {
-            SI.Alien.setMoveSpeed(3);
-            SI.Alien.moveDown();
-        }
-        if (this.bottom() >= 240) {
-            SI.endGame();
+        if (!SI.gameOver) {
+            if (this.right() >= SGF.Screen.width) {
+                SI.Alien.setMoveSpeed(-3);
+                SI.Alien.moveDown();
+            } else if (this.left() <= 0) {
+                SI.Alien.setMoveSpeed(3);
+                SI.Alien.moveDown();
+            }
+            if (this.bottom() >= SGF.Screen.height) {
+                SI.endGame();
+            }
         }
         $super();
     },
     render: function($super, interpolation) {
-        if (SI.gameOver) return;
         $super(interpolation);
     },
     die: function() {

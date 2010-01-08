@@ -1,8 +1,6 @@
 package com.simplegameframework.engine;
 
 import java.awt.Graphics2D;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
 
 /**
  * Represents an individual component that gets updated/rendered in the game
@@ -12,39 +10,46 @@ import org.mozilla.javascript.Scriptable;
  */
 public abstract class Component {
 
-    /**
-     * The <tt>Scriptable</tt> object that represents this <tt>Component</tt>.
-     */
-    protected Scriptable thisInstance;
+    public abstract void __render(double interpolation, long renderCount);
+    public abstract void __update(long updateCount);
 
-    protected double width, height, x, y, dx, dy, opacity;
-    protected int zIndex;
+    public abstract double __getWidth();
+    public abstract double __getHeight();
+    public abstract double __getX();
+    public abstract double __getY();
+    public abstract double __getDx();
+    public abstract double __getDy();
+    public abstract double __getOpacity();
+    public abstract int __getZIndex();
 
-    public abstract void render();
-    public abstract void render(double interpolation, long renderCount);
-    
-    public abstract void update();
-    public abstract void update(long updateCount);
+    protected double currentFrameX, currentFrameY;
+
 
 
     /**
      * Called by the game loop for each call to 'render()'.
+     * @param g The Graphics2D object to draw onto.
      * @param interpolation The interpolation value, percentage in between current
      *                      update() calls this render() call is taking place.
      * @param renderCount The total number of time render() has been called by
      *                    the game loop.
      */
     public void doRender(Graphics2D g, double interpolation, long renderCount) {
-        render(interpolation, renderCount);
+        // Call the JS object's "render" function.
+        __render(interpolation, renderCount);
 
-        width = Context.toNumber(thisInstance.get("width", thisInstance));
-        height = Context.toNumber(thisInstance.get("height", thisInstance));
-        x = Context.toNumber(thisInstance.get("x", thisInstance));
-        y = Context.toNumber(thisInstance.get("y", thisInstance));
-        dx = Context.toNumber(thisInstance.get("dx", thisInstance));
-        dy = Context.toNumber(thisInstance.get("dy", thisInstance));
-        opacity = Context.toNumber(thisInstance.get("opacity", thisInstance));
-        zIndex = (int)Context.toNumber(thisInstance.get("zIndex", thisInstance));
+        double dx = __getDx();
+        if (dx != 0) {
+            currentFrameX = __getX() + (interpolation * dx);
+        } else {
+            currentFrameX = __getX();
+        }
+        double dy = __getDy();
+        if (dy != 0) {
+            currentFrameY = __getY() + (interpolation * dy);
+        } else {
+            currentFrameY = __getY();
+        }
     }
 
     /**
@@ -53,14 +58,7 @@ public abstract class Component {
      *                    the game loop.
      */
     public void doUpdate(long updateCount) {
-        update(updateCount);
-    }
-
-    /**
-     * Binds the JavaScript <tt>Scriptable</tt> and this <tt>Component</tt>.
-     * @param obj
-     */
-    public void setJsObj(Scriptable obj) {
-        this.thisInstance = obj;
+        // Call the JS object's "update" function.
+        __update(updateCount);
     }
 }

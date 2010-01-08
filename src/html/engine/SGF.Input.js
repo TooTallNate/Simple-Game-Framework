@@ -33,7 +33,7 @@ SGF.Input = (function() {
             .observe("mousemove", mousemoveHandler)
             .observe("mousedown", mousedownHandler)
             .observe("mouseup", mouseupHandler)
-            .observe("contextmenu", stopEvent);
+            .observe("contextmenu", contextmenuHandler);
 
         SGF.Input.grabbed = true;
     }
@@ -47,12 +47,12 @@ SGF.Input = (function() {
             .stopObserving("mousemove", mousemoveHandler)
             .stopObserving("mousedown", mousedownHandler)
             .stopObserving("mouseup", mouseupHandler)
-            .stopObserving("contextmenu", stopEvent);
+            .stopObserving("contextmenu", contextmenuHandler);
         
         SGF.Input.grabbed = false;
     }
 
-    function stopEvent(event) {
+    function contextmenuHandler(event) {
         event.stop();
     }
 

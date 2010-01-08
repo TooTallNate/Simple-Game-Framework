@@ -1,4 +1,4 @@
-SGF.Rectangle = Class.create(SGF.Component, {
+SGF.Rectangle = Class.create(SGF.Shape, {
     initialize: function($super, options) {
         $super(Object.extend(Object.clone(SGF.Rectangle.DEFAULTS), options || {}));
     },
@@ -8,5 +8,5 @@ SGF.Rectangle = Class.create(SGF.Component, {
 });
 
 SGF.Rectangle.DEFAULTS = {
-    color: "000000"
+    //color: "000000"
 };

@@ -14,7 +14,7 @@ BB.GAME_WIDTH = 320;
 BB.GAME_HEIGHT = 240;
 
 // Hide the native cursor.
-SGF.Screen.showNativeCursor(false);
+SGF.Screen.useNativeCursor(false);
 
 // Create a background
 BB.bg = new SGF.Rectangle({

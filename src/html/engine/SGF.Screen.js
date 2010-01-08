@@ -36,13 +36,30 @@ SGF.Screen = (function() {
         }
     }
 
-    function showNativeCursor(bool) {
-        if (typeof(bool) != 'boolean') {
-            throw "SGF.Screen.showNativeCursor expects a 'boolean' "+
-                  "argument, got '" + typeof(bool) + "'";
+    function useNativeCursor(cursor) {
+        var val = null;
+        if (Boolean(cursor) == false) {
+            val = "none";
+        }
+        if (Object.isString(cursor)) {
+            cursor = cursor.toLowerCase();
+            if ("default".equals(cursor)) {
+                val = "default";
+            } else if ("crosshair".equals(cursor)) {
+                val = "crosshair";
+            } else if ("hand".equals(cursor)) {
+                val = "pointer";
+            } else if ("move".equals(cursor)) {
+                val = "move";
+            } else if ("text".equals(cursor)) {
+                val = "text";
+            } else if ("wait".equals(cursor)) {
+                val = "wait";
+            } else if ("none".equals(cursor)) {
+                val = "none";
+            }
         }
 
-        var val = bool === true ? "default" : "none";
         if (SGF.Screen.element.getStyle("cursor") != val)
             SGF.Screen.element.style.cursor = val;
     }
@@ -63,14 +80,22 @@ SGF.Screen = (function() {
         return getPixelHeight() / getScale();
     }
 
+    function remeasure() {
+        SGF.Screen.width = getGameWidth();
+        SGF.Screen.height = getGameHeight();
+    }
+
     return {
         element:  null,
+        width:    0,
+        height:   0,
         bind:     bind,
         getScale: getScale,
         setScale: setScale,
-        getWidth: getGameWidth,
-        getHeight: getGameHeight,
-        showNativeCursor: showNativeCursor
+        //getWidth: getGameWidth,
+        //getHeight: getGameHeight,
+        remeasure: remeasure,
+        useNativeCursor: useNativeCursor
     }
 })();
 

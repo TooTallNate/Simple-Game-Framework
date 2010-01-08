@@ -1,9 +1,8 @@
- /**
-  * == Core API ==
-  * The lowest level functions and classes, often requiring the use of the
-  * JavaScript implementor to use native code.  The Core API contains object
-  * oriented drawing classes, sound management and input hooks.
-  **/
+/**
+ * == Core API ==
+ * The lowest level functions and classes. The Core API contains objects
+ * automatically generated when the engine and game are loaded.
+ **/
 
 /** section: Core API
  * SGF
@@ -24,7 +23,6 @@ var SGF = (function() {
             "Component":null,
             "Spriteset":null,
             "Sprite":   null,
-            "Layer":    null,
             "Rectangle":null,
             "Circle":   null
         },
@@ -66,7 +64,7 @@ var SGF = (function() {
     }
 
     /*
-     * Empty function
+     * Empty function, assuming Prototype hasn't loaded yet.
      **/
     function e() {}
 

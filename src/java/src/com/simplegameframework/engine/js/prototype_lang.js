@@ -89,8 +89,6 @@ var Try = {
   }
 };
 
-// Loading order for ORPG Javascript Scope
-// ["global","lang","object","enumerable","array","class","function","date","regexp","periodical_executer","string","template","hash","number","range"]
 /** section: Language
  * class Object
  *

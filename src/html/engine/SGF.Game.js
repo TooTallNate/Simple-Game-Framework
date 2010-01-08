@@ -1,12 +1,29 @@
 /** section: Core API
  * class SGF.Game
- * Represents your game itself. That is, there's one instance of SGF.Game at a
- * time, but every game is it's own instance, and creation of this object is
+ *
+ * Represents your game itself. That is, there's one instance of [[SGF.Game]] at
+ * a time, but every game is it's own instance, and creation of this object is
  * automatic and behind the scenes. Most importantly, this class is in
  * charge of the "game loop". The methods you (as a game developer) will
- * probably be interested in are SGF.Game#addComponent(), SGF.Game#loadScript(),
- * 
+ * probably be interested in are [[SGF.Game#addComponent]],
+ * [[SGF.Game#removeComponent]], and [[SGF.Game#loadScript]]. But there are some
+ * more advances features for the adventurous.
  **/
+
+/**
+ * SGF.Game#updateCount -> Number
+ *
+ * The total number of times that [[SGF.Game#update]] has been called for this
+ * game.
+ **/
+
+/**
+ * SGF.Game#renderCount -> Number
+ *
+ * The total number of times that [[SGF.Game#render]] has been called for this
+ * game.
+ **/
+
 SGF.Game = Class.create({
     initialize: function(rootUrl, options) {
         SGF.Game.current = this;
@@ -44,36 +61,54 @@ SGF.Game = Class.create({
     },
 
     /**
-     * SGF.Game#addComponent(component) -> undefined
-     * - component (SGF.Component): The top-level drawable object to display on
-     *                              the screen and include in the game loop.
-     * 
+     * SGF.Game#addComponent(component) -> SGF.Game
+     * - component (SGF.Component): The top-level component to add to the game
+     *                              loop and begin rendering.
+     *                              
      * Adds a top-level component to the game. A top-level component is expected
      * to both update() and render(). It will be placed onto the drawing screen,
-     * and considered in the game loop.
+     * and considered in the game loop. Returns the [[SGF.Game]] object (this),
+     * for chaining.
      **/
     addComponent: function(component) {
         if (!this.components.include(component)) {
             this.components.push(component);
             SGF.Screen.element.insert(component);
         }
+        return this;
     },
 
+    /**
+     * SGF.Game#removeComponent(component) -> SGF.Game
+     * - component (SGF.Component): The top-level component to remove from the
+     *                              game loop and stop rendering.
+     *                              
+     * Removes a SGF.Component that has been added to the game loop via
+     * [[SGF.Game#addComponent]].
+     **/
     removeComponent: function(component) {
         if (this.components.include(component)) {
             this.components = this.components.without(component);
             component.toElement().remove();
         }
+        return this;
     },
 
-    /*
+    /**
+     * SGF.Game#loadScript(filePath, onLoad) -> SGF.Game
+     * - filePath (String): The relative path, including filename of the game
+     *                      script file to load.
+     * - onLoad (Function): The Function to invoke when the script file
+     *                      has finished loading and executing.
+     *                      
      * Loads a script file in the game's folder. The script is immediately
      * executed once it has finished loading. Afterwards, the optional
-     * 'onComplete' function is called.
+     * [[onLoad]] function is called.
      **/
     loadScript: function(relativeUrl, onComplete) {
-        return SGF.loadScript(this.root + relativeUrl,
+        SGF.loadScript(this.root + relativeUrl,
             Object.isFunction(onComplete) ? onComplete.bind(SGF.Game.current) : Prototype.emptyFunction);
+        return this;
     },
 
     mainFileLoaded: function() {
@@ -106,10 +141,19 @@ SGF.Game = Class.create({
         this.statsTime = this.now();
     },
 
-    /*
-     * The regular render loop. Calls render() on all components added through
-     * SGF.Game#addComponent(). Afterwards updates the count of total render()
-     * calls for statistics.
+    /**
+     * SGF.Game#render(interpolation) -> undefined
+     * - interpolation (Number): The percentage (value between 0.0 and 1.0)
+     *                           between the last call to update and the next
+     *                           call to update this call to render is taking place.
+     *                           This number is used to "predict" locations of
+     *                           Components when the FPS are higher than UPS.
+     *                           
+     * The game render function that gets called automatically during each pass
+     * in the game loop. Calls [[SGF.Component#render]] on all components added
+     * through [[SGF.Game#addComponent]]. Afterwards, increments the
+     * [[SGF.Game#renderCount]] value by 1. Game code should never have to call
+     * this method, however.
      **/
     render: function(interpolation) {
         for (var i=0; i < this.components.length; i++) {
@@ -119,11 +163,15 @@ SGF.Game = Class.create({
         this.fpsCount++;
     },
 
-    /*
-     * Sets the "Game Speed", or attempted times update() gets called per
-     * second. This can be called during gameplay. Note that playing sounds
-     * and music do not get affected by this value.
-     */
+    /**
+     * SGF.Game#setGameSpeed(updatesPerSecond) -> SGF.Game
+     * - updatesPerSecond (Number): The number of updates per second to set this
+     *                              game.
+     *                              
+     * Sets the "Game Speed", or attempted times [[SGF.Game#update]] gets called
+     * per second. This can be changed at any point during gameplay. Note that
+     * playing sounds and music speed do not get affected by changing this value.
+     **/
     setGameSpeed: function(updatesPerSecond) {
         this.options.gameSpeed = updatesPerSecond;
 
@@ -206,15 +254,21 @@ SGF.Game = Class.create({
         return this;
     },
 
-    /*
-     * The regular update loop. Calls update() on all components added through
-     * SGF.Game#addComponent(). Afterwards updates the count of total update()
-     * calls for statistics.
+    /**
+     * SGF.Game#update() -> undefined
+     * The update function for the game loop. Calls SGF.Component#update on all
+     * components added through [[SGF.Game#addComponent]]. Afterwards, increments
+     * the [[SGF.Game#updateCount]] value by 1. Game code should never have to call
+     * this method, however.
      **/
     update: function() {
         for (var i=0; i<this.components.length; i++) {
             this.components[i].update(this.updateCount);
         }
+        if (this.updateCount % this.options.gameSpeed == 0) {
+            SGF.Screen.remeasure();
+        }
+
         this.updateCount++;
         this.upsCount++;
     }
@@ -234,10 +288,12 @@ Object.extend(SGF.Game, {
         maxFrameSkips: 5    // The maximum allowed number of updates to call in between render calls if hardware requires
     },
 
-    /*
-     * The currently running game, or null if there is none running.
-     * Value is (re)set with SGF.Game.load().
-     */
+    /**
+     * SGF.Game.current -> SGF.Game
+     * 
+     * The currently running game, or [[null]] if there is none running. This global
+     * reference is how to access your [[SGF.Game]] object inside your game code.
+     **/
     current: null,
 
     /*
