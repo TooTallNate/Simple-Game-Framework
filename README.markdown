@@ -45,6 +45,30 @@ Game Engine Clients
    can be implemented! That's the beauty of developing your game in an
    interpreted language. (I'm thinking PSP, Android, iPhone, who knows!)
 
+Game Development
+----------------
 
-SGF itself is licensed under an MIT license.
+A good supply of example games ranging from really simple, to show the basics
+of the API, to more complex, to show off the power of JavaScript and the SGF
+API itself. The example games can be found in the `examples/` folder.
 
+An SGF game starts with a folder with a `main.js` file inside. `main.js` is
+the first file loaded when your game starts. That is the only requirement to
+load an SGF game.
+
+Additional game resources like more `*.js` files, image and sound files can
+be placed inside that same folder, or any number of folders inside your root
+game folder (the folder where `main.js` is located).
+
+License
+-------
+
+SGF itself isn't really a code base, more like a concept or abstraction.
+If you know Java, then SGF itself is an abstract class, and all the game
+engine clients are the concrete implementations. As such, it doesn't really
+make sense to license SGF itself, but rather each game engine client should
+specify a license for its own code.
+
+Furthermore, every game that is written with the SGF API and released to
+the masses should specify its own license. This is more related to software
+development in general, and not specifically SGF.
