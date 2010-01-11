@@ -1,8 +1,7 @@
 Simple Game Framework
 =====================
 
-#### An object-oriented JavaScript framework to develop simple, shape and
-sprite based games ####
+#### An object-oriented JavaScript framework to develop simple, shape and sprite based games ####
 
 `Simple Game Framework`, or SGF for short, aims to be an abstract JavaScript
 based API to develop 2D shape and/or sprite based games. The idea is that
