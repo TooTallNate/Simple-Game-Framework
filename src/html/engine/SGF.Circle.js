@@ -1,6 +1,14 @@
-SGF.Circle = Class.create(SGF.Rectangle, {
+SGF.Circle = Class.create(SGF.Shape, {
     initialize: function($super, options) {
         $super(Object.extend(Object.clone(SGF.Circle.DEFAULTS), options || {}));
+    },
+    
+    getElement: function() {
+        this.__color = this.color;
+        return new Element("div").setStyle({
+            position: "absolute",
+            backgroundColor: "#" + this.color
+        });
     },
     
     update: function($super) {
@@ -29,5 +37,5 @@ SGF.Circle = Class.create(SGF.Rectangle, {
 
 
 SGF.Circle.DEFAULTS = {
-    radius: 5
+    radius: 10
 };

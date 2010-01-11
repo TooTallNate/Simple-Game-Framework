@@ -227,6 +227,9 @@ SGF.Game = Class.create({
             loops++;
         }
 
+        // Sets the background color, only if it has changed in game code.
+        SGF.Screen.resetColor();
+
         // The interpolation value describes where in between update() calls
         // this render() call is taking place.
         var interpolation = (this.now() + this.period - this.nextGamePeriod)

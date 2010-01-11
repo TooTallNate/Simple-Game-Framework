@@ -1,4 +1,9 @@
-SGF.Rectangle = Class.create(SGF.Component, {
+/** section: Components API
+ * class SGF.Rectangle < SGF.Shape
+ *
+ * A [[SGF.Component]] that renders a rectangle onto the screen.
+ **/
+SGF.Rectangle = Class.create(SGF.Shape, {
     initialize: function($super, options) {
         $super(Object.extend(Object.clone(SGF.Rectangle.DEFAULTS), options || {}));
     },
@@ -8,16 +13,8 @@ SGF.Rectangle = Class.create(SGF.Component, {
             position: "absolute",
             backgroundColor: "#" + this.color
         });
-    },
-    render: function($super, interpolation) {
-        if (this.__color != this.color) {
-            this.element.style.backgroundColor = "#" + this.color;
-            this.__color = this.color;
-        }
-        $super(interpolation);
     }
 });
 
 SGF.Rectangle.DEFAULTS = {
-    color: "000000"
 };

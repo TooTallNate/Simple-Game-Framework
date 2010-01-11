@@ -1,6 +1,7 @@
 SGF.Screen = (function() {
     var REQUIRED_OVERFLOW = "hidden",
-        scale = 1;
+        scale = 1,
+        lastColor = null;
     
     function bind(element) {
         if (element.getStyle("overflow") != REQUIRED_OVERFLOW)
@@ -43,19 +44,19 @@ SGF.Screen = (function() {
         }
         if (Object.isString(cursor)) {
             cursor = cursor.toLowerCase();
-            if ("default".equals(cursor)) {
+            if ("default" == (cursor)) {
                 val = "default";
-            } else if ("crosshair".equals(cursor)) {
+            } else if ("crosshair" == (cursor)) {
                 val = "crosshair";
-            } else if ("hand".equals(cursor)) {
+            } else if ("hand" == (cursor)) {
                 val = "pointer";
-            } else if ("move".equals(cursor)) {
+            } else if ("move" == (cursor)) {
                 val = "move";
-            } else if ("text".equals(cursor)) {
+            } else if ("text" == (cursor)) {
                 val = "text";
-            } else if ("wait".equals(cursor)) {
+            } else if ("wait" == (cursor)) {
                 val = "wait";
-            } else if ("none".equals(cursor)) {
+            } else if ("none" ==(cursor)) {
                 val = "none";
             }
         }
@@ -81,8 +82,17 @@ SGF.Screen = (function() {
     }
 
     function remeasure() {
+        //console.log("remeasuring screen");
         SGF.Screen.width = getGameWidth();
         SGF.Screen.height = getGameHeight();
+    }
+
+    function resetColor() {
+        if (SGF.Screen.color != lastColor) {
+            //console.log("Screen color changed!");
+            SGF.Screen.element.style.backgroundColor = "#" + SGF.Screen.color;
+            lastColor = SGF.Screen.color;
+        }
     }
 
     return {
@@ -92,9 +102,10 @@ SGF.Screen = (function() {
         bind:     bind,
         getScale: getScale,
         setScale: setScale,
+        remeasure: remeasure,
+        resetColor: resetColor,
         //getWidth: getGameWidth,
         //getHeight: getGameHeight,
-        remeasure: remeasure,
         useNativeCursor: useNativeCursor
     }
 })();

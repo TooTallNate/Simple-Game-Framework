@@ -24,10 +24,42 @@ SGF.Spriteset = Class.create({
      * to pass the reference to this [[SGF.Spriteset]] to new [[SGF.Sprite]]s.
      **/
     initialize: function(imgPath, spriteWidth, spriteHeight) {
-        this.loaded = false;
+        /**
+         * SGF.Spriteset#spriteWidth -> Number
+         *
+         * Read-only. The width of each sprite on this [[SGF.Spriteset]]. This
+         * is the value that was set in the constructor.
+         **/
         this.spriteWidth = spriteWidth;
+        /**
+         * SGF.Spriteset#spriteHeight -> Number
+         *
+         * Read-only. The height of each sprite on this [[SGF.Spriteset]]. This
+         * is the value that was set in the constructor.
+         **/
         this.spriteHeight = spriteHeight;
+        /**
+         * SGF.Spriteset#width -> Number
+         *
+         * Read-only. The total width of this [[SGF.Spriteset]]. The value of this
+         * property is `-1` before it has loaded completely
+         * (i.e. [[SGF.Spriteset#loaded]] == false).
+         **/
+        /**
+         * SGF.Spriteset#height -> Number
+         *
+         * Read-only. The total height of this [[SGF.Spriteset]]. The value of this
+         * property is `-1` before it has loaded completely
+         * (i.e. [[SGF.Spriteset#loaded]] == false).
+         **/
         this.width = this.height = -1; // Not loaded yet.
+        /**
+         * SGF.Spriteset#loaded -> Boolean
+         *
+         * `false` immediately after instantiation, `true` once the Image file
+         * has been completely loaded into memory.
+         **/
+        this.loaded = false;
 
         this.loadListeners = [];
 

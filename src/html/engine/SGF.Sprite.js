@@ -23,9 +23,9 @@ SGF.Sprite = Class.create(SGF.Component, {
      *         initialize: function($super, options) {
      *             $super(AlienClass.sharedSpriteset, options);
      *         },
-     *         update: function($super, updateCount) {
+     *         update: function($super) {
      *             // Some cool game logic here...
-     *             $super(updateCount);
+     *             $super();
      *         }
      *     });
      *
@@ -56,7 +56,7 @@ SGF.Sprite = Class.create(SGF.Component, {
         }
     },
     render: function($super, interpolation, renderCount) {
-        if (this.__width != this.width) {
+        if (this.__spriteX != this.spriteX || this.__spriteY != this.spriteY) {
             if (this.spriteset.loaded) {
                 this.resetSpriteset();
             } else {
@@ -69,8 +69,10 @@ SGF.Sprite = Class.create(SGF.Component, {
         var scale = SGF.Screen.getScale();
         this.spritesetImg.style.width = ((this.spriteset.width * (this.width/this.spriteset.spriteWidth)) * scale) + "px";
         this.spritesetImg.style.height = ((this.spriteset.height * (this.height/this.spriteset.spriteHeight)) * scale) + "px";
-        //this.spritesetImg.style.top = -((this.height * this.spriteY) * scale) + "px";
-        //this.spritesetImg.style.top = -((this.height * this.spriteY) * scale) + "px";
+        this.spritesetImg.style.top = -((this.height * this.spriteY) * scale) + "px";
+        this.spritesetImg.style.left = -((this.width * this.spriteX) * scale) + "px";
+        this.__spriteX = this.spriteX;
+        this.__spriteY = this.spriteY;
     }
 });
 
@@ -79,7 +81,7 @@ SGF.Sprite = Class.create(SGF.Component, {
  *
  * The default values used when creating [[SGF.Sprite]]s. These values, as well
  * as the values from [[SGF.Component.DEFAULTS]] are copied onto the [[SGF.Sprite]],
- * if they are not found in the **options** argument.
+ * if they are not found in the `options` argument.
  *
  * The [[SGF.Sprite.DEFAULTS]] object contains the default values:
  * 

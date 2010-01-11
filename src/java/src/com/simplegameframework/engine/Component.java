@@ -20,6 +20,7 @@ public abstract class Component {
     public abstract double __getDx();
     public abstract double __getDy();
     public abstract double __getOpacity();
+    public abstract double __getRotation();
     public abstract int __getZIndex();
 
     protected double currentFrameX, currentFrameY;

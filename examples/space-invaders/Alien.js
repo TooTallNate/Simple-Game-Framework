@@ -1,7 +1,10 @@
 SI.Alien = Class.create(SGF.Sprite, {
-    initialize: function($super, options) {
+    initialize: function($super) {
         this.alive = true;
-        $super(SI.Alien.sharedSpriteset, options);
+        $super(SI.Alien.sharedSpriteset, {
+            width: SI.Alien.sharedSpriteset.spriteWidth,
+            height: SI.Alien.sharedSpriteset.spriteHeight
+        });
         this.dx = SI.Alien.moveSpeed;
         SI.Alien.instances.push(this);
     },

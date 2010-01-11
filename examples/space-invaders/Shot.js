@@ -1,6 +1,8 @@
 SI.Shot = Class.create(SGF.Sprite, {
     initialize: function($super, options) {
         $super(SI.Shot.sharedSpriteset, Object.extend({
+            width: SI.Shot.sharedSpriteset.spriteWidth,
+            height: SI.Shot.sharedSpriteset.spriteHeight,
             dy: -10
         }, options));
         this.used = false;

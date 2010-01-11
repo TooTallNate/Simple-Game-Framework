@@ -21,8 +21,10 @@ var SGF = (function() {
             "Screen":   null,
             "Input":    null,
             "Component":null,
+            "Container":null,
             "Spriteset":null,
             "Sprite":   null,
+            "Shape":    null,
             "Rectangle":null,
             "Circle":   null
         },
@@ -198,6 +200,11 @@ var SGF = (function() {
         }
     }
 
+    /*
+     * Checks for Scripty2, and calls "onComplete" if it is already loaded.
+     * If not, then this loads it. The init parameter 's2' can
+     * override where Scripty2 is loaded from.
+     **/
     function loadLibScripty(onComplete) {
         if (typeof S2 === 'undefined') {
             loadLib("s2" in params ? params.s2 : engineRoot + "lib/s2.js", onComplete);

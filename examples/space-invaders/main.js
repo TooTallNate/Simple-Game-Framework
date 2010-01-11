@@ -34,9 +34,8 @@ SI.game.loadScript("Shot.js", function() {
     }
 
 
-    SI.player = new SI.Ship({
-        x: SGF.Screen.width/2
-    });
+    SI.player = new SI.Ship();
+    SI.player.x = SGF.Screen.width / 2;
     this.addComponent(SI.player);
 
     for (var i=5; i>0; i--) {

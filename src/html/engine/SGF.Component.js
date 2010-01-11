@@ -184,7 +184,7 @@ SGF.Component.DEFAULTS = {
      *
      * To double the current width of the [[SGF.Component]].
      **/
-    width:    10,
+    width: 10,
     /**
      * SGF.Component#height -> Number
      *
@@ -197,7 +197,7 @@ SGF.Component.DEFAULTS = {
      * To set the height of this [[SGF.Component]] to the current height of the
      * game screen.
      **/
-    height:   10,
+    height: 10,
     /**
      * SGF.Component#x -> Number
      *
@@ -214,18 +214,18 @@ SGF.Component.DEFAULTS = {
      * This will smoothly pan the [[SGF.Component]] across the game screen at
      * the [[SGF.Game]]'s set game speed.
      **/
-    x:        0,
+    x: 0,
     /**
      * SGF.Component#y -> Number
      *
      * The Y coordinate of the top-left point of the [[SGF.Component]] from the
      * top-left of the game screen.
      **/
-    y:        0,
+    y: 0,
     /**
      * SGF.Component#dx -> Number
      *
-     * The delta ("change in") X each time around the game loop. Basically,
+     * The &#916; (delta, or "change in") X each time around the game loop. Basically,
      * this value is the X-speed of the the [[SGF.Component]]. Setting it to
      * 1 will increment the [[SGF.Component#x]] value by 1 each call to
      * [[SGF.Component#update]]. It's important to note that you could have
@@ -238,13 +238,13 @@ SGF.Component.DEFAULTS = {
      * In short, using this value to control constant speed can give smoother
      * game experience on faster hardware.
      **/
-    dx:       0,
+    dx: 0,
     /**
      * SGF.Component#dy -> Number
      *
      * Same as [[SGF.Component#dx]], but for the Y coordinate.
      **/
-    dy:       0,
+    dy: 0,
     /**
      * SGF.Component#opacity -> Number
      *
@@ -254,7 +254,7 @@ SGF.Component.DEFAULTS = {
      * fully transparent, or invisible. Setting to 0.5 will make it 50% transparent.
      * You get the idea...
      **/
-    opacity:  1.0,
+    opacity: 1.0,
     /**
      * SGF.Component#rotation -> Number
      *
@@ -273,5 +273,5 @@ SGF.Component.DEFAULTS = {
      * other [[SGF.Component]]s will render this [[SGF.Component]] above ones
      * with a lower **zIndex**.
      **/
-    zIndex:   0
+    zIndex: 0
 };

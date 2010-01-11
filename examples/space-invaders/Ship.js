@@ -1,6 +1,10 @@
 SI.Ship = Class.create(SGF.Sprite, {
-    initialize: function($super, options) {
-        $super(new SGF.Spriteset("ship.gif", 30, 22), options);
+    initialize: function($super) {
+        var s = new SGF.Spriteset("ship.gif", 30, 22);
+        $super(s, {
+            width: s.spriteWidth,
+            height: s.spriteHeight
+        });
         this.y = SGF.Screen.height - this.height - 5;
         this.shotsFired = 0;
         SGF.Input.observe("keydown", this.keyDown.bind(this));

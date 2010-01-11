@@ -6,6 +6,8 @@
  * subclass, for simplicity.
  */
 
+
+
 // Firstly, it's always a good idea to namespace you games. This is because
 // we don't like polluting the global namespace, since you could potentially
 // overwrite important native objects.
@@ -30,34 +32,35 @@ SpriteFollow.CursorClass = Class.create(SGF.Sprite, {
         this.y = SGF.Input.pointerY;
     },
     createDrop: function() {
-        SGF.Game.current.addComponent(new SpriteFollow.Drop({
+        new SpriteFollow.Drop({
             x: this.x,
             y: this.y
-        }));
+        });
     }
 });
 
 // A "drop" that gets created when the user clicks a mouse key. It just falls
 // down off the screen, and fades away as it falls. An instance is removed from
-// the game loop when it falls below the screen.
+// the game loop when it becomes completely invisible.
 SpriteFollow.Drop = Class.create(SGF.Rectangle, {
     initialize: function($super, options) {
         $super(Object.extend({
-            //radius:2.5,
-            dy:5,
-            // Appear below the Cursor
+            // Make it move down the screen at a random speed (between 1 and 10)
+            dy: (Math.random()*9)+1,
+            // Appear below the CursorClass
             zIndex: 1,
             // Generate some random color
             color: (Math.random()*255).round().toColorPart() +
                    (Math.random()*255).round().toColorPart() +
                    (Math.random()*255).round().toColorPart()
         }, options));
-        this.startY = this.y;
+        this.startY = this.bottom();
+        SGF.Game.current.addComponent(this);
     },
     update: function($super) {
-        var screenHeight = SGF.Screen.height;
-        this.opacity = (screenHeight - this.y) / (screenHeight - this.startY);
-        if (this.top() >= screenHeight) {
+        this.opacity = (SGF.Screen.height - this.bottom()) / (SGF.Screen.height - this.startY);
+        this.rotation += 10;
+        if (this.opacity <= 0) {
             SGF.Game.current.removeComponent(this);
         }
         $super();
@@ -75,5 +78,5 @@ SGF.Screen.color = "123456";
 
 // Hide the native mouse cursor. This is for custom game mouse cursors
 // or games that don't use the mouse at all, and want it hidden.
-// Note that all mouse movement and button actions are still fired.
+// Note that all mouse movement and button events are still fired.
 SGF.Screen.useNativeCursor(false);

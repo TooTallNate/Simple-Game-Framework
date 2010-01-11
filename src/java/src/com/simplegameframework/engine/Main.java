@@ -34,6 +34,7 @@ public class Main extends JFrame implements ActionListener, WindowListener {
     private Scriptable globalScope;
     private Scriptable sgfObj;
 
+    private Game currentGame;
     private Screen screen;
     private ScriptableScreen scriptableScreen;
     private Input input;
@@ -116,6 +117,10 @@ public class Main extends JFrame implements ActionListener, WindowListener {
             resource = this.getClass().getResource("js/SGF.Component.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
 
+            // Add SGF.Container
+            resource = this.getClass().getResource("js/SGF.Container.js");
+            cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
+
             // Add SGF.Shape
             resource = this.getClass().getResource("js/SGF.Shape.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
@@ -124,7 +129,7 @@ public class Main extends JFrame implements ActionListener, WindowListener {
             resource = this.getClass().getResource("js/SGF.Rectangle.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
 
-            // Add SGF.Rectangle
+            // Add SGF.Sprite
             resource = this.getClass().getResource("js/SGF.Sprite.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
 
@@ -139,8 +144,8 @@ public class Main extends JFrame implements ActionListener, WindowListener {
     }
 
     private void loadGame(File root) {
-        Game g = new Game(root, this.globalScope, this.screen);
-        g.jsFunction_start();
+        this.currentGame = new Game(root, this.globalScope, this.screen);
+        this.currentGame.start();
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -166,6 +171,9 @@ public class Main extends JFrame implements ActionListener, WindowListener {
     }
 
     public void windowClosing(WindowEvent e) {
+        if (this.currentGame != null) {
+            this.currentGame.stop();
+        }
         this.dispose();
     }
 
