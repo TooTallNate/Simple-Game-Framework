@@ -144,6 +144,10 @@ public class Main extends JFrame implements ActionListener, WindowListener {
     }
 
     private void loadGame(File root) {
+        if (this.currentGame != null) {
+            this.currentGame.stop();
+        }
+
         this.currentGame = new Game(root, this.globalScope, this.screen);
         this.currentGame.start();
     }

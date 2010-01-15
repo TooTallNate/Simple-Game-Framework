@@ -62,12 +62,13 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
      * @param eventName
      * @param handler
      */
-    public void jsFunction_observe(String eventName, Function handler) {
+    public Input jsFunction_observe(String eventName, Function handler) {
         if (!this.observers.containsKey(eventName))
-            return;
+            return null;
 
         Vector<Function> handlers = this.observers.get(eventName);
         handlers.add(handler);
+        return this;
     }
 
     // KeyListener Implementation //////////////////////////////////////////////
@@ -140,6 +141,19 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
     private void mouseMove(MouseEvent e) {
         this.pointerX = e.getX();
         this.pointerY = e.getY();
+        Context cx = Context.enter();
+        Scriptable arg = cx.newObject(this);
+        arg.put("x", arg, this.pointerX);
+        arg.put("y", arg, this.pointerY);
+        try {
+            for (Function func : this.observers.get("mousemove")) {
+                func.call(cx, func, func, new Object[] { arg });
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            Context.exit();
+        }
 
     }
 

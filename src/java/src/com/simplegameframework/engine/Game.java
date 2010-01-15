@@ -90,7 +90,6 @@ public class Game extends ScriptableObject implements Runnable {
      * running.
      */
     private Thread runner;
-    private Comparator<Component> zIndexComparator;
 
     // Constructors ////////////////////////////////////////////////////////////
     public Game(File root, Scriptable globalScope, Screen screen) {
@@ -211,8 +210,8 @@ public class Game extends ScriptableObject implements Runnable {
     public void run() {
         this.running = true;
         this.startTime = System.nanoTime();
+        
         long nextGamePeriod = this.startTime;
-        double interpolation;
         int loops;
 
         while (this.running) {
@@ -220,10 +219,10 @@ public class Game extends ScriptableObject implements Runnable {
             // The first order of buisiness every time around the game loop is
             // to check if we need to execute any calls to 'update()'
             loops = 0;
-            while (System.nanoTime() > nextGamePeriod && loops < this.maxFrameSkips) {
+            while (System.nanoTime() > nextGamePeriod && loops++ < this.maxFrameSkips) {
+                //if (loops>1) System.out.println("Skipped " + loops + " frames");
                 update();
                 nextGamePeriod += this.period;
-                loops++;
             }
 
             // Get the Graphics2D object we're going to draw onto
@@ -232,11 +231,10 @@ public class Game extends ScriptableObject implements Runnable {
             g.fillRect(0, 0, screen.getWidth(), screen.getHeight());
 
             // Render all Components. Taking the interpolation value into account
-            interpolation = (System.nanoTime() + this.period - nextGamePeriod) / this.period;
-            render(g, interpolation);
+            render(g, (System.nanoTime() + this.period - nextGamePeriod) / this.period);
 
             // DEBUG
-            /*
+            //*
             g.setColor(java.awt.Color.white);
             double duration =  (double)System.nanoTime() - (double)this.startTime;
             g.drawString("FPS: " + (int)((double)this.renderCount/duration * 1000000000), 2, 15);
@@ -245,14 +243,14 @@ public class Game extends ScriptableObject implements Runnable {
             g.drawString("Frames Rendered: " + this.renderCount, 2, 60);
             g.drawString("Updates Processed: " + this.updateCount, 2, 75);
             g.drawString("# of Components: " + this.componentsArray.size(), 2, 90);
-            */
-            
+            //*/
+
             // Now that all rendering is done for this frame, dispose our
             // reference and show what was drawn on the 'screen'.
             g.dispose();
             screen.strategy.show();
 
-            // Allow any other Threads awaiting execution to execute before continuing...
+            // Allow any starving Threads get some CPU time before continuing...
             Thread.yield();
         }
     }

@@ -43,13 +43,13 @@ public abstract class Sprite extends Component {
         if (needToRotate) {
             origTransform = g.getTransform();
             AffineTransform rotatedTransform = (AffineTransform)origTransform.clone();
-            rotatedTransform.rotate(Math.toRadians(rotation), currentFrameX + (__getWidth() / 2), currentFrameY + (__getHeight() / 2));
+            rotatedTransform.rotate(Math.toRadians(rotation), currentFrameX + (__getWidth() / 2d), currentFrameY + (__getHeight() / 2d));
             g.setTransform(rotatedTransform);
         }
 
         float opacity = (float)__getOpacity();
         AlphaComposite origComposite = null;
-        if (opacity < 1) {
+        if (opacity < 1.0f) {
             origComposite = (AlphaComposite)g.getComposite();
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
         }
@@ -65,7 +65,7 @@ public abstract class Sprite extends Component {
                 sy2,
                 null);
 
-        if (opacity < 1) {
+        if (opacity < 1.0f) {
             g.setComposite(origComposite);
         }
 
