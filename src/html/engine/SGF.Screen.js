@@ -1,14 +1,22 @@
+/** section: Core API
+ * SGF.Screen
+ *
+ * Contains information about the screen the game is being rendered to.
+ **/
+
 SGF.Screen = (function() {
     var REQUIRED_OVERFLOW = "hidden",
         scale = 1,
         lastColor = null;
     
     function bind(element) {
-        if (element.getStyle("overflow") != REQUIRED_OVERFLOW)
+        if (Element.getStyle(element, "overflow") != REQUIRED_OVERFLOW)
             element.style.overflow = REQUIRED_OVERFLOW;
 
         element.innerHTML = "";
-        element.makePositioned();
+        //element.style.margin = 0;
+        element.style.padding = 0;
+        Element.makePositioned(element);
 
         var oldScreen = SGF.Screen.element;
         if (oldScreen !== null && Object.isElement(oldScreen)) {
@@ -40,7 +48,7 @@ SGF.Screen = (function() {
     function useNativeCursor(cursor) {
         var val = null;
         if (Boolean(cursor) == false) {
-            val = "none";
+            cursor = "none";
         }
         if (Object.isString(cursor)) {
             cursor = cursor.toLowerCase();
@@ -57,7 +65,8 @@ SGF.Screen = (function() {
             } else if ("wait" == (cursor)) {
                 val = "wait";
             } else if ("none" ==(cursor)) {
-                val = "none";
+                val = "url("+SGF.engineRoot+"blank.cur), none";
+                SGF.log(val);
             }
         }
 
@@ -66,11 +75,11 @@ SGF.Screen = (function() {
     }
 
     function getPixelWidth() {
-        return SGF.Screen.element.measure("width");
+        return SGF.Screen.element.clientWidth;
     }
 
     function getPixelHeight() {
-        return SGF.Screen.element.measure("height");
+        return SGF.Screen.element.clientHeight;
     }
 
     function getGameWidth() {
@@ -82,31 +91,66 @@ SGF.Screen = (function() {
     }
 
     function remeasure() {
-        //console.log("remeasuring screen");
         SGF.Screen.width = getGameWidth();
         SGF.Screen.height = getGameHeight();
     }
 
     function resetColor() {
         if (SGF.Screen.color != lastColor) {
-            //console.log("Screen color changed!");
             SGF.Screen.element.style.backgroundColor = "#" + SGF.Screen.color;
             lastColor = SGF.Screen.color;
         }
     }
 
     return {
-        element:  null,
+        // SGF API parts
+        /**
+         * SGF.Screen.useNativeCursor(cursor) -> undefined
+         * - cursor (String | false)
+         *
+         * Changes the mouse icon to one of the specified `cursor` values.
+         * These values correspond to the system native cursors, and those
+         * icons will be used.
+         *
+         * The allowed `cursor` values are:
+         *
+         *   - `default`: The default system mouse pointer.
+         *
+         *   - `hand`: A hand that has an index finger pointing to the hot spot.
+         *
+         *   - `crosshair`: A crosshair symbol, or + sign. Could be useful as a gun shoot point.
+         *
+         *   - `move`: Makes arrows point in all directions. Maybe if something is draggable in your UI.
+         *
+         *   - `text`: Makes it look like an element can be typed inside of.
+         *
+         *   - `wait`: A busy icon. Useful for loading script files or other dependencies.
+         *
+         *   - `none` or `false`: Invisible mouse cursor. Note that all mouse movement and button click event will still be fired. This is very useful if your game doesn't use the mouse, or if your game uses a custom mouse cursor (possibly via a [[SGF.Sprite]]).
+         **/
+        useNativeCursor: useNativeCursor,
+        /**
+         * SGF.Screen.width -> Number
+         *
+         * The total width available to your game. Use this value for centering
+         * (or any kind of positioning) components.
+         **/
         width:    0,
+        /**
+         * SGF.Screen.height -> Number
+         *
+         * The total height available to your game. Use this value for centering
+         * (or any kind of positioning) components.
+         **/
         height:   0,
+
+        // HTML/DOM Specific
+        element:  null,
         bind:     bind,
         getScale: getScale,
         setScale: setScale,
         remeasure: remeasure,
-        resetColor: resetColor,
-        //getWidth: getGameWidth,
-        //getHeight: getGameHeight,
-        useNativeCursor: useNativeCursor
+        resetColor: resetColor
     }
 })();
 

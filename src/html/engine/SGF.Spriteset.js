@@ -80,6 +80,6 @@ SGF.Spriteset = Class.create({
         this.loadListeners.push(handler);
     },
     toElement: function() {
-        return this.image.clone(false);
+        return this.image.cloneNode(true);
     }
 });

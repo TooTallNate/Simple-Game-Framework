@@ -81,7 +81,7 @@ SGF.Component = Class.create({
      * should be rendered. This default implementation does nothing, since
      * a [[SGF.Component]] itself cannot be rendered/instantiated.
      **/
-    render: function(interpolation, renderCount) {
+    render: function(interpolation) {
         var scale = SGF.Screen.getScale();
 
         if (this.__opacity != this.opacity) {
@@ -90,14 +90,12 @@ SGF.Component = Class.create({
         }
 
         if (this.__rotation != this.rotation) {
-            this.element.transform({
-                rotation: this.rotation * (Math.PI/180) // Convert from Deg to Rad
-            });
+            this.element.setRotation(this.rotation * (Math.PI/180)); // Convert from Deg to Rad
             this.__rotation = this.rotation;
         }
 
         if (this.__zIndex != this.zIndex) {
-            this.element.style.zIndex = this.zIndex;
+            this.__fixZIndex();
             this.__zIndex = this.zIndex;
         }
 
@@ -139,18 +137,28 @@ SGF.Component = Class.create({
         this.__y = this.y;
     },
     /**
-     * SGF.Component#update() -> undefined
+     * SGF.Component#update(updateCount) -> undefined
+     * - updateCount (Number): The total number of times that [[SGF.Game#update]]
+     *                         has been called for this game. This value has nothing
+     *                         to do with the number of times this [[SGF.Component]]
+     *                         has been updated.
      *
      * Updates the state of the individual [[SGF.Component]]. This is called in
      * the game loop once this component has been added through [[SGF.Game#addComponent]].
      **/
-    update: function(updateCount) {
+    update: function() {
         if (this.dx !== 0) {
             this.x = this.x + this.dx;
         }
         if (this.dy !== 0) {
             this.y = this.y + this.dy;
         }
+    },
+    __fixZIndex: function() {
+        this.element.style.zIndex =
+            this.parent && this.parent.__computeChildZIndex ?
+                this.parent.__computeChildZIndex(this.zIndex) :
+                this.zIndex;
     }
 });
 

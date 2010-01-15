@@ -12,6 +12,7 @@
  * namespace.
  **/
 var SGF = (function() {
+    // Define private vars.
     var fileRegexp = /SimpleGameFramework\.js(\?.*)?$/,
         scriptNode = findScriptNode(),
         engineRoot = getEngineRoot(scriptNode),
@@ -36,10 +37,9 @@ var SGF = (function() {
     // Engine Initialization
 
     // The first matter of buisiness is to load all libraray files (Prototype,
-    // Scripty2, SoundManager, etc.) if they need to be.
-
+    // SoundManager, etc.) if they need to be.
     loadLibPrototype(function() {
-        loadLibScripty(function() {});
+        loadElementSetRotation();
     });
     // TODO: loadSoundManager();
 
@@ -99,8 +99,9 @@ var SGF = (function() {
      * once, and at the end.
      **/
     function engineScriptLoaded(loadEvent) {
-        //console.log(loadEvent.target.src + " finished loading!");
-        
+        //SGF.log(loadEvent.target.src + " finished loading!");
+
+        // We loop through, looking for a script that hasn't been loaded yet.
         var engineFinishedLoading = true;
         for (var script in engineScripts) {
             if (!engineScripts[script].loaded) {
@@ -109,6 +110,7 @@ var SGF = (function() {
             }
         }
 
+        // But if the loop finishes and the flag is still true, call 'engineLoaded'
         if (engineFinishedLoading) engineLoaded();
     }
 
@@ -156,16 +158,50 @@ var SGF = (function() {
      * core scripts.
      **/
     function libraryFileLoaded() {
-        if (typeof Prototype !== 'undefined' &&
-            typeof S2 !== 'undefined') {
+        if (typeof Prototype !== 'undefined') {
             // Horray! All library files are loaded!
             
             // Now load all core engine scripts
             for (var script in engineScripts) {
-                console.log("Loading engine script: " + script);
+                log("Loading engine script: " + script);
                 engineScripts[script] = loadEngineScript(script);
             }
         }
+    }
+
+    /*
+     * This loads Element#setRotation, which is a variation of Element#transform
+     * from Scripty2, but with the scale hard-coded at 1, and rotation being the
+     * only affected value.
+     **/
+    function loadElementSetRotation() {
+        var transform;
+
+        if(window.CSSMatrix) transform = function(element, transform){
+            element.style.transform = 'scale(1) rotate('+(transform||0)+'rad)';
+            return element;
+        };
+        else if(window.WebKitCSSMatrix) transform = function(element, transform){
+            element.style.webkitTransform = 'scale(1) rotate('+(transform||0)+'rad)';
+            return element;
+        };
+        else if(Prototype.Browser.Gecko) transform = function(element, transform){
+            element.style.MozTransform = 'scale(1) rotate('+(transform||0)+'rad)';
+            return element;
+        };
+        else if(Prototype.Browser.IE) transform = function(element, transform){
+            if(!element._oDims)
+                element._oDims = [element.offsetWidth, element.offsetHeight];
+            var c = Math.cos(transform||0) * 1, s = Math.sin(transform||0) * 1,
+                filter = "progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
+            element.style.filter = filter;
+            element.style.marginLeft = (element._oDims[0]-element.offsetWidth)/2+'px';
+            element.style.marginTop = (element._oDims[1]-element.offsetHeight)/2+'px';
+            return element;
+        };
+        else transform = function(element){ return element; }
+
+        Element.addMethods({ setRotation: transform });
     }
 
     /*
@@ -204,7 +240,6 @@ var SGF = (function() {
      * Checks for Scripty2, and calls "onComplete" if it is already loaded.
      * If not, then this loads it. The init parameter 's2' can
      * override where Scripty2 is loaded from.
-     **/
     function loadLibScripty(onComplete) {
         if (typeof S2 === 'undefined') {
             loadLib("s2" in params ? params.s2 : engineRoot + "lib/s2.js", onComplete);
@@ -213,6 +248,7 @@ var SGF = (function() {
             onComplete();
         }
     }
+    **/
 
     /*
      * Dynamically load a script element, calling an optional callback function
@@ -244,6 +280,28 @@ var SGF = (function() {
         return script;
     }
 
+    /**
+     * SGF.log(arg) -> undefined
+     * SGF.log(arg...) -> undefined
+     * - arg (Object): An arbitrary number of `Object`s to write to the debug
+     *                 console.
+     *
+     * A simple `log` statement for debugging. You can pass any number of
+     * objects to inspect to this function. The value output will be the result
+     * of Prototype's `Object.inspect()` on the object(s) being logged. Where
+     * exactly the output of this function goes is platform specific. In the
+     * HTML client, output goes to the `console` object via `console.log`. In
+     * the Java client, output is sent to `System.out.println`, etc.
+     **/
+    function log() {
+        if (window.console && window.console.log) {
+            for (var i=0; i<arguments.length; i++) {
+                window.console.log((new Date().getTime()) + ": " +
+                    (Object.inspect ? Object.inspect(arguments[i]) : String(arguments[i])));
+            }
+        }
+    }
+
     /*
      * SGF.observe(eventName, handler) -> undefined
      * - eventName (String): One of the valid event names to attach a handler to.
@@ -263,12 +321,14 @@ var SGF = (function() {
     
     
     return {
+        log:        log,
         params:     params,
         observe:    observe,
-        loadScript: loadScript
+        loadScript: loadScript,
+        engineRoot: engineRoot
     };
 })();
 
-SGF.observe("load", function() {
-    console.log("engine loaded");
-});
+//SGF.observe("load", function() {
+//    console.log("engine loaded");
+//});

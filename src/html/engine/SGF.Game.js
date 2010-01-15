@@ -13,15 +13,15 @@
 /**
  * SGF.Game#updateCount -> Number
  *
- * The total number of times that [[SGF.Game#update]] has been called for this
- * game.
+ * The total number of times that [[SGF.Game#update]] has been called throughout
+ * the lifetime of this game.
  **/
 
 /**
  * SGF.Game#renderCount -> Number
  *
- * The total number of times that [[SGF.Game#render]] has been called for this
- * game.
+ * The total number of times that [[SGF.Game#render]] has been called throughout
+ * the lifetime of this game.
  **/
 
 SGF.Game = Class.create({
@@ -32,10 +32,11 @@ SGF.Game = Class.create({
         this.root = rootUrl.endsWith('/') ? rootUrl : rootUrl + '/';
         
         // Override the default options with the user defined options
-        this.setOptions(options);
+        //this.setOptions(options);
+        Object.extend(this, Object.extend(Object.clone(SGF.Game.DEFAULTS), options || {}));
 
         // Set the initial game speed. This can be changed during gameplay.
-        this.setGameSpeed(this.options.gameSpeed);
+        this.setGameSpeed(this.gameSpeed);
 
         // Init some standard properties
         this.loaded = this.running = false;
@@ -50,7 +51,6 @@ SGF.Game = Class.create({
 
         // Keep a "private" reference to a binded 'step' function, for use in
         // the game loop (setTimeout looses the 'this' reference normally).
-        //this.__bindedStep = this.step.bind(this);
         var This = this;
         this.__bindedStep = function() {
             return This.step();
@@ -65,8 +65,7 @@ SGF.Game = Class.create({
      * - component (SGF.Component): The top-level component to add to the game
      *                              loop and begin rendering.
      *                              
-     * Adds a top-level component to the game. A top-level component is expected
-     * to both update() and render(). It will be placed onto the drawing screen,
+     * Adds a [[SGF.Component]] to the game. It will be rendered onto the screen,
      * and considered in the game loop. Returns the [[SGF.Game]] object (this),
      * for chaining.
      **/
@@ -74,6 +73,8 @@ SGF.Game = Class.create({
         if (!this.components.include(component)) {
             this.components.push(component);
             SGF.Screen.element.insert(component);
+            component.parent = this;
+            component.__fixZIndex();
         }
         return this;
     },
@@ -83,27 +84,28 @@ SGF.Game = Class.create({
      * - component (SGF.Component): The top-level component to remove from the
      *                              game loop and stop rendering.
      *                              
-     * Removes a SGF.Component that has been added to the game loop via
-     * [[SGF.Game#addComponent]].
+     * Removes a [[SGF.Component]] that has previously been added to the game
+     * loop via [[SGF.Game#addComponent]].
      **/
     removeComponent: function(component) {
         if (this.components.include(component)) {
             this.components = this.components.without(component);
             component.toElement().remove();
+            component.parent = null;
         }
         return this;
     },
 
     /**
-     * SGF.Game#loadScript(filePath, onLoad) -> SGF.Game
+     * SGF.Game#loadScript(filePath[, onLoad = Prototype.emptyFunction]) -> SGF.Game
      * - filePath (String): The relative path, including filename of the game
      *                      script file to load.
-     * - onLoad (Function): The Function to invoke when the script file
-     *                      has finished loading and executing.
+     * - onLoad (Function): Optional. The `Function` to invoke when the script
+     *                      file has finished loading and executing.
      *                      
-     * Loads a script file in the game's folder. The script is immediately
-     * executed once it has finished loading. Afterwards, the optional
-     * [[onLoad]] function is called.
+     * Loads a script file from the game's folder into the game environment. The
+     * script is immediately executed once it has finished loading. Afterwards,
+     * the optional `onLoad` function is called.
      **/
     loadScript: function(relativeUrl, onComplete) {
         SGF.loadScript(this.root + relativeUrl,
@@ -113,16 +115,28 @@ SGF.Game = Class.create({
 
     mainFileLoaded: function() {
         this.loaded = true;
-        if (this.options.autostart === true) {
+        if (this.autostart === true) {
             this.start();
         }
     },
 
+    /**
+     * SGF.Game#observe(eventName, handler) -> SGF.Game
+     * - eventName (String): The name of the game event to attach a handler to.
+     * - handler (Function): A reference to the `Function` that should be
+     *                       executed when `eventName` occurs.
+     *
+     * Attaches `handler` to one of the allowed `eventName`s. When `eventName`
+     * occurs in the execition environment, `handler` will be executed. Multiple
+     * handlers are allowed to be attached to a single event (via subsequent calls
+     * to `observe`) and they will  be executed in the order they were observed
+     * when the event occurs.
+     **/
     observe: function(eventName, handler) {
-        
+        return this;
     },
 
-    /*
+    /* HTML/DOM Client specific function
      * Returns the current timestamp in milliseconds.
      * Used continually by the game loop.
      **/
@@ -173,14 +187,14 @@ SGF.Game = Class.create({
      * playing sounds and music speed do not get affected by changing this value.
      **/
     setGameSpeed: function(updatesPerSecond) {
-        this.options.gameSpeed = updatesPerSecond;
+        this.gameSpeed = updatesPerSecond;
 
         // 'period' is the attempted time between each update() call (in ms).
-        this.period = 1000 / this.options.gameSpeed;
+        this.period = 1000 / updatesPerSecond;
     },
 
     start: function() {
-        console.log("Starting " + this.root);
+        SGF.log("Starting " + this.root);
 
         if (!SGF.Input.grabbed) SGF.Input.grab();
         
@@ -221,7 +235,7 @@ SGF.Game = Class.create({
         // could happen 0 times if the hardware is calling step() more times
         // than the requested 'gameSpeed'. This will result in higher FPS than UPS
         var loops = 0;
-        while (this.now() > this.nextGamePeriod && loops < this.options.maxFrameSkips) {
+        while (this.now() > this.nextGamePeriod && loops < this.maxFrameSkips) {
             this.update();
             this.nextGamePeriod += this.period;
             loops++;
@@ -265,27 +279,34 @@ SGF.Game = Class.create({
      * this method, however.
      **/
     update: function() {
+        // Update the SGF.Screen properties
+        SGF.Screen.remeasure();
+
         for (var i=0; i<this.components.length; i++) {
             this.components[i].update(this.updateCount);
-        }
-        if (this.updateCount % this.options.gameSpeed == 0) {
-            SGF.Screen.remeasure();
         }
 
         this.updateCount++;
         this.upsCount++;
+    },
+
+    /* HTML/DOM Client specific function
+     * Computes the z-index of a component added through addComponent.
+     **/
+    __computeChildZIndex: function(zIndex) {
+        return parseInt(zIndex) * 1000;
     }
 
-}, S2.UI.Mixin.Configurable);
+});
 
 
 // PUBLIC STATIC
 Object.extend(SGF.Game, {
-    /*
+    /* HTML/DOM Client specific object
      * The default options to use when no user provided one is given.
      * This is used by S2.UI.Mixin.Configurable#setOptions(options).
      **/
-    DEFAULT_OPTIONS: {
+    DEFAULTS: {
         autostart: true,    // Start the game immediately after 'main.js' loads.
         gameSpeed: 30,      // The target UPS to achieve. Value is in milliseconds.
         maxFrameSkips: 5    // The maximum allowed number of updates to call in between render calls if hardware requires
@@ -299,7 +320,7 @@ Object.extend(SGF.Game, {
      **/
     current: null,
 
-    /*
+    /* HTML/DOM Client specific function
      * Loads an entirely new game based on its root URL (the URL to the
      * folder where "main.js" resides), and sets the new instance to
      * SGF.Game.current

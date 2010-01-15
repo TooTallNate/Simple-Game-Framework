@@ -61,12 +61,14 @@ SGF.Container = Class.create(SGF.Component, {
      *                              container.
      *
      * Adds an [[SGF.Component]] into the container. `component`'s attributes
-     * will be rendered relative to the attributes of this `SGF.Container`.
+     * will be rendered in relation to the attributes of this `SGF.Container`.
      **/
     addComponent: function(component) {
         if (!this.components.include(component)) {
             this.components.push(component);
             this.element.insert(component);
+            component.parent = this;
+            component.__fixZIndex();
         }
         return this;
     },
@@ -75,8 +77,18 @@ SGF.Container = Class.create(SGF.Component, {
         if (this.components.include(component)) {
             this.components = this.components.without(component);
             component.toElement().remove();
+            component.parent = null;
         }
         return this;
+    },
+    __computeChildZIndex: function(zIndex) {
+        return parseInt(this.element.style.zIndex) + parseInt(zIndex);
+    },
+    __fixZIndex: function($super) {
+        $super();
+        for (var i=0; i < this.components.length; i++) {
+            this.components[i].__fixZIndex();
+        }
     }
 });
 
