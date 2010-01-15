@@ -20,7 +20,7 @@ SGF.Component = Class.create({
      * SGF.Component#getElement() -> Element
      * Internal method. Game developers need not be aware.
      **/
-    getElement: Function.ABSTRACT,
+    getElement: function() { throw "SGF.Component can't be instatiated directly, please use a subclass."; },
     toElement: function() {
         return this.element;
     },
