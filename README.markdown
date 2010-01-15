@@ -32,6 +32,16 @@ Game Engine Clients
    engine. However, I (TooTallNate) have never programmed in C++, let alone
    developed games, so I probably won't be touching this one.
 
+ * `HTML/Canvas2D`: Using a lot of the same code as the `HTML/DOM` client, and
+   rewriting the rendering code, we could create a client the renders to a
+   `<canvas>` element using the 2D context. This would probably be slower than
+   the `HTML/DOM` version, but I might make it at some point for demonstration
+   purposes.
+
+ * `HTML/WebGL`: For probably the best speed in the web browser, we could create
+   a client that renders the game using the draft WebGL. I've never touched
+   OpenGL, but might look into this one once WebGL is more standard.
+
  * `Flash`: A Flash engine could be written that (theoretically) uses
    ExternalInterface to communicate your game code with the Flash based
    rendering engine. This is only an idea though, and the lag between
