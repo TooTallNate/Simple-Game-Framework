@@ -8,13 +8,13 @@
 BB = {};
 // A refererence to our game. Just for shorter code.
 BB.game = SGF.Game.current;
+// Set the engine to call 'update()' 50 times per second.
+BB.game.setGameSpeed(50);
 
-// The resolution of the game.
-BB.GAME_WIDTH = 320;
-BB.GAME_HEIGHT = 240;
-
-// Hide the native cursor.
-SGF.Screen.useNativeCursor(false);
+// The resolution of the game. We keep it hard coded just for simplicity,
+// a "good" game might be dynamic based on a variable screen size.
+BB.GAME_WIDTH = 400;
+BB.GAME_HEIGHT = 300;
 
 // Create a background
 BB.bg = new SGF.Rectangle({
@@ -25,31 +25,56 @@ BB.bg = new SGF.Rectangle({
 });
 BB.game.addComponent(BB.bg);
 
+// Set the area outside our hard coded screen to solid black
+SGF.Screen.color = "000000";
+
 // First load some dependencies.
-BB.game.loadScript("Paddle.js", function() {
-    BB.game.loadScript("Ball.js", function() {
-        
-        BB.newBall = function() {
-            // The ball. A new one is created each life.
-            BB.ball = new BB.Ball({
-                paddle : BB.paddle,
-                color  : "f47111"
-            });
-            // Add it onto the screen and into the game loop.
-            BB.game.addComponent(BB.ball);
-        };
+BB.game.loadScript("Brick.js", function() {
+    BB.game.loadScript("Paddle.js", function() {
+        BB.game.loadScript("Ball.js", function() {
+
+            BB.ballsUsed = 0;
+
+            BB.newBall = function() {
+                // The ball. A new one is created each life.
+                BB.ball = new BB.Ball();
+                // Add it onto the screen and into the game loop.
+                BB.game.addComponent(BB.ball);
+                // Increment the number of lives used.
+                BB.ballsUsed++;
+            };
+
+            BB.gameOver = function() {
+                BB.ball.gameOver();
+                BB.paddle.gameOver();
+                BB.goOverlay = new SGF.Rectangle({
+                    width:   BB.GAME_WIDTH,
+                    height:  BB.GAME_HEIGHT,
+                    color:   "000000", // Black
+                    zIndex:  10,       // Appear above everything else
+                    opacity: 0.5       // 50% Transparent
+                });
+                BB.game.addComponent(BB.goOverlay);
+            }
 
 
-        // Paddle instance. There is only one for the duration of the game.
-        BB.paddle = new BB.Paddle();
-        this.addComponent(BB.paddle);
+            // Paddle instance. There is only one for the duration of the game.
+            BB.paddle = new BB.Paddle();
+            this.addComponent(BB.paddle);
 
-        // Start the game with a new ball.
-        BB.newBall();
+            // Start the game with a new ball.
+            BB.newBall();
 
-        // Track mouse button presses to launch the ball.
-        SGF.Input.observe("mousedown", function() {
-            BB.ball.launch();
+
+            BB.initBricks([  [0,0,1,1,1,1,0,0],
+                             [0,1,0,1,1,0,1,0],
+                             [0,1,0,1,1,0,1,0],
+                             [0,0,1,1,1,1,0,0],
+                             [0,1,0,0,0,0,1,0],
+                             [0,0,1,1,1,1,0,0],
+                             [0,0,0,1,1,0,0,0]  ]);
+
+            BB.startTime = new Date();
         });
     });
 });
