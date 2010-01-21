@@ -7,6 +7,13 @@
  */
 
 
+// Set the background color.
+SGF.Screen.color = "123456";
+
+// Hide the native mouse cursor. This is for custom game mouse cursors
+// or games that don't use the mouse at all, and want it hidden.
+// Note that all mouse movement and button events are still fired.
+SGF.Screen.useNativeCursor(false);
 
 // Firstly, it's always a good idea to namespace you games. This is because
 // we don't like polluting the global namespace, since you could potentially
@@ -22,26 +29,27 @@ SpriteFollow.CursorClass = Class.create(SGF.Sprite, {
         $super(spriteset, {
             width: spriteset.spriteWidth,
             height: spriteset.spriteHeight,
+
+            // Appear above the Rect's
             zIndex: 2
         });
         
-        // Attach two different mouse events to this "cursor"
+        // Attach various input events to this "cursor" instance
         this.bindedCreateRect = this.createRect.bind(this);
-        SGF.Input
-            .observe("mousedown", this.bindedCreateRect)
-            .observe("mousemove", this.bindedCreateRect);
+        SGF.Input.observe("mousedown", this.bindedCreateRect)
+                 .observe("mousemove", this.bindedCreateRect);
     },
     update: function() {
+        // Update the Sprite's location to the location of the native cursor
         this.x = SGF.Input.pointerX;
         this.y = SGF.Input.pointerY;
     },
     createRect: function() {
-        //if (SpriteFollow.Rect.instances.size() < 50) {
-            new SpriteFollow.Rect({
-                x: this.x,
-                y: this.y
-            });
-        //}
+        // Every time 'mousedown', or 'mousemove' is fired, create a new Rect
+        new SpriteFollow.Rect({
+            x: this.x,
+            y: this.y
+        });
     }
 });
 
@@ -50,11 +58,14 @@ SpriteFollow.CursorClass = Class.create(SGF.Sprite, {
 // the game loop when it becomes completely invisible.
 SpriteFollow.Rect = Class.create(SGF.Rectangle, {
     initialize: function($super, options) {
+        
+        // We'll make it be a square, with a random w/h between 2 and 20.
         var size = ((Math.random()*18)+2);
+
         $super(Object.extend({
             // Make it move across the screen at a random speed (between -10 and 10)
-            dy: ((Math.random()*19)+1) - 10,
-            dx: ((Math.random()*19)+1) - 10,
+            dy: (Math.random()*20) - 10,
+            dx: (Math.random()*20) - 10,
 
             width: size,
             height: size,
@@ -67,8 +78,8 @@ SpriteFollow.Rect = Class.create(SGF.Rectangle, {
                    (Math.random()*255).round().toColorPart() +
                    (Math.random()*255).round().toColorPart()
         }, options));
-        this.startY = this.bottom();
-        this.constructor.instances.push(this);
+
+        // Add this new instance to the game loop.
         SGF.Game.current.addComponent(this);
     },
     update: function($super) {
@@ -81,21 +92,11 @@ SpriteFollow.Rect = Class.create(SGF.Rectangle, {
     },
     remove: function() {
         SGF.Game.current.removeComponent(this);
-        this.constructor.instances = this.constructor.instances.without(this);
     }
 });
-SpriteFollow.Rect.instances = [];
 
 // Make a new instance of our CursorClass class, for use in our game.
 SpriteFollow.cursor = new SpriteFollow.CursorClass();
 
 // Add the 'cursor' as a top-level component to the game.
 SGF.Game.current.addComponent(SpriteFollow.cursor);
-
-// Set the background color.
-SGF.Screen.color = "123456";
-
-// Hide the native mouse cursor. This is for custom game mouse cursors
-// or games that don't use the mouse at all, and want it hidden.
-// Note that all mouse movement and button events are still fired.
-SGF.Screen.useNativeCursor(false);
