@@ -16,6 +16,43 @@ SGF.Input = (function() {
     downKeys = {},
     downMouseButtons = {};
 
+    /**
+     * SGF.Input.observe(eventName, handler) -> SGF.Input
+     * - eventName (String): The name of the input event to observe. See below.
+     * - handler (Function): The function to execute when `eventName` occurs.
+     *
+     * Sets the engine to call Function `handler` when input event `eventName`
+     * occurs from the user. Allowed `eventName` values are:
+     *
+     *  - `keydown`: Called when a key is pressed down. The term "key" is meant
+     *               to be used loosley, as in, a game client that contains a
+     *               keyboard should call this for each key pressed. If the client
+     *               contains is a portable gaming device, this should be called
+     *               for each button pressed on the controller. The `SGF.Input.KEY_*`
+     *               values should be used as the "basic" keyCode values.
+     *               Optionally, the `keyCode` property in the argument object
+     *               can be used to determine more precisely which key was pressed.
+     *
+     *  - `keyup`: Called when a key is released. See `keydown` above for more
+     *             details.
+     *
+     *  - `mousemove`: Called continually as the mouse moves across the game screen.
+     *                 The `x` and `y` properties in the argument object can be
+     *                 used to determine the mouse position.
+     *
+     *  - `mousedown`: Called when any of the mouse keys are pressed down. The
+     *                 `button` value in the argument object can be used to
+     *                 determine which mouse button was pressed, along with `x`
+     *                 and `y` to determine where on the screen the button was
+     *                 pressed down.
+     *
+     *  - `mouseup`: Called when any of the mouse keys are released. The
+     *               `button` value in the argument object can be used to
+     *               determine which mouse button was pressed, along with `x`
+     *               and `y` to determine where on the screen the button was
+     *               pressed released.
+     *                 
+     **/
     function observe(eventName, handler) {
         if (!eventName in listeners)
             throw "SGF.Input.observe: '" + eventName + "' is not a recognized event name."
@@ -24,11 +61,34 @@ SGF.Input = (function() {
         return this;
     }
 
+    /**
+     * SGF.Input.stopObserving(eventName, handler) -> SGF.Input
+     * - eventName (String): The name of the input event to stop observing.
+     * - handler (Function): The function to remove from execution.
+     *
+     * Detaches Function `handler` from event `eventName`. See the description
+     * and list of events in [[SGF.Input.observe]] for more information on the
+     * allowed `eventName` values.
+     **/
     function stopObserving(eventName, handler) {
         if (!eventName in listeners)
             throw "SGF.Input.stopObserving: '" + eventName + "' is not a recognized event name."
 
         listeners[eventName] = listeners[eventName].without(handler);
+        return this;
+    }
+
+    /**
+     * SGF.Input.isKeyDown(keyCode) -> Boolean
+     * - keyCode (Number): The keyCode the check if it is being pressed.
+     *
+     * Returns `true` if the key `keyCode` is currently being pressed down, or
+     * `false` otherwise. `keyCode` can be and of the `SGF.Input.KEY_*` values,
+     * or any other key code value for a input device with more keys (like a
+     * full keyboard).
+     **/
+    function isKeyDown(keyCode) {
+        return downKeys[keyCode] === true;
     }
 
     function grab() {
@@ -166,10 +226,6 @@ SGF.Input = (function() {
         };
     }
 
-    function isKeyDown(keyCode) {
-        return downKeys[keyCode] === true;
-    }
-
     return {
         // Constants
         /**
@@ -229,6 +285,24 @@ SGF.Input = (function() {
          * a controller is being used, this should also be the value returned.
          **/
         KEY_1:           32,
+        /**
+         * SGF.Input.KEY_2 -> ?
+         *
+         * Indicates that second button on the keypad is being pressed.
+         **/
+        KEY_2:           33,
+        /**
+         * SGF.Input.KEY_3 -> ?
+         *
+         * Indicates that third button on the keypad is being pressed.
+         **/
+        KEY_3:           34,
+        /**
+         * SGF.Input.KEY_4 -> ?
+         *
+         * Indicates that fourth button on the keypad is being pressed.
+         **/
+        KEY_4:           35,
         
         // Public "Game" Methods
         observe: observe,

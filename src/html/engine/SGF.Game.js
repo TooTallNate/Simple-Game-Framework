@@ -50,10 +50,10 @@ SGF.Game = Class.create({
         }
 
         // Keep a "private" reference to a binded 'step' function, for use in
-        // the game loop (setTimeout looses the 'this' reference normally).
+        // the game loop (setTimeout sets 'this' to the 'window' normally).
         var This = this;
         this.__bindedStep = function() {
-            return This.step();
+            This.step();
         }
 
         // Last step of initialization is to load the Game's 'main.js' file
@@ -244,13 +244,9 @@ SGF.Game = Class.create({
         // Sets the background color, only if it has changed in game code.
         SGF.Screen.resetColor();
 
-        // The interpolation value describes where in between update() calls
-        // this render() call is taking place.
-        var interpolation = (this.now() + this.period - this.nextGamePeriod)
-                                                / this.period;
         // Renders all game components, taking the interpolation value
         // to predict where the game objects will be placed.
-        this.render(interpolation);
+        this.render((this.now() + this.period - this.nextGamePeriod) / this.period);
 
         // Continue the game loop, as soon as the browser has time for it,
         // allowing for other JS on the stack to be executed (events, etc.)
@@ -304,7 +300,6 @@ SGF.Game = Class.create({
 Object.extend(SGF.Game, {
     /* HTML/DOM Client specific object
      * The default options to use when no user provided one is given.
-     * This is used by S2.UI.Mixin.Configurable#setOptions(options).
      **/
     DEFAULTS: {
         autostart: true,    // Start the game immediately after 'main.js' loads.
@@ -315,7 +310,7 @@ Object.extend(SGF.Game, {
     /**
      * SGF.Game.current -> SGF.Game
      * 
-     * The currently running game, or [[null]] if there is none running. This global
+     * The currently running game, or `null` if there is none running. This global
      * reference is how to access your [[SGF.Game]] object inside your game code.
      **/
     current: null,
@@ -330,8 +325,7 @@ Object.extend(SGF.Game, {
         if (SGF.Game.current != null)
             SGF.Game.current.stop();
 
-        // Create and set the new SGG.Game instance
-        new SGF.Game(rootUrl, options);
-        return SGF.Game.current;
+        // Create and set the new SGF.Game instance
+        return new SGF.Game(rootUrl, options);
     }
 });
