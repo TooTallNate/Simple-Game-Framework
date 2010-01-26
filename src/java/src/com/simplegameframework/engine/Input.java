@@ -53,7 +53,7 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
     public int jsGet_pointerY() { return this.pointerY; }
 
     public boolean jsFunction_isKeyDown(int keyCode) {
-        return this.keysDown.get(keyCode) == Boolean.TRUE;
+        return Boolean.TRUE.equals(this.keysDown.get(keyCode));
     }
 
     /**
@@ -64,10 +64,24 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
      */
     public Input jsFunction_observe(String eventName, Function handler) {
         if (!this.observers.containsKey(eventName))
-            return null;
+            return this;
 
         Vector<Function> handlers = this.observers.get(eventName);
         handlers.add(handler);
+        return this;
+    }
+
+    /**
+     * Removes the Function from the <var>eventName</var> as a handler.
+     * @param eventName
+     * @param handler
+     */
+    public Input jsFunction_stopObserving(String eventName, Function handler) {
+        if (!this.observers.containsKey(eventName))
+            return this;
+
+        Vector<Function> handlers = this.observers.get(eventName);
+        handlers.remove(handler);
         return this;
     }
 

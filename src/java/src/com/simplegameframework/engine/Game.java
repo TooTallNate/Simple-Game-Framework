@@ -220,10 +220,10 @@ public class Game extends ScriptableObject implements Runnable {
             // to check if we need to execute any calls to 'update()'
             loops = 0;
             while (System.nanoTime() > nextGamePeriod && loops++ < this.maxFrameSkips) {
-                //if (loops>1) System.out.println("Skipped " + loops + " frames");
                 update();
                 nextGamePeriod += this.period;
             }
+            //if (loops>1) System.out.println("Skipped " + loops + " frames");
 
             // Get the Graphics2D object we're going to draw onto
             Graphics2D g = (Graphics2D) screen.strategy.getDrawGraphics();

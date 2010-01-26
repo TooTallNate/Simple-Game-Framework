@@ -1,5 +1,6 @@
 package com.simplegameframework.engine;
 
+import com.simplegameframework.networking.*;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -17,6 +18,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.FunctionObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -91,6 +93,13 @@ public class Main extends JFrame implements ActionListener, WindowListener {
             this.sgfObj = cx.newObject(this.globalScope);
             this.globalScope.put("SGF", this.globalScope, this.sgfObj);
 
+            try {
+                FunctionObject log = new FunctionObject("log", Log.class.getMethod("logFunction", new Class[]{Object.class}), this.sgfObj);
+                this.sgfObj.put("log", this.sgfObj, log);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
 
             // Add SGF.Input
             String inputStr = "Input";
@@ -113,6 +122,8 @@ public class Main extends JFrame implements ActionListener, WindowListener {
             this.scriptableScreen.setScreen(this.screen);
             this.globalScope.delete(inputStr);
 
+
+
             // Add SGF.Component
             resource = this.getClass().getResource("js/SGF.Component.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
@@ -131,6 +142,14 @@ public class Main extends JFrame implements ActionListener, WindowListener {
 
             // Add SGF.Sprite
             resource = this.getClass().getResource("js/SGF.Sprite.js");
+            cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
+
+            // Add SGF.Server
+            resource = this.getClass().getResource("js/SGF.Server.js");
+            cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
+
+            // Add SGF.Client
+            resource = this.getClass().getResource("js/SGF.Client.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
 
             // Add SGF.Spriteset
