@@ -21,6 +21,8 @@ var SGF = (function() {
             "Game":     null,
             "Screen":   null,
             "Input":    null,
+            "Server":   null,
+            "Client":   null,
             "Component":null,
             "Container":null,
             "Spriteset":null,
@@ -41,6 +43,16 @@ var SGF = (function() {
     loadLibPrototype(function() {
         loadElementSetRotation();
     });
+    if (!window.WebSocket) {
+        log("Native WebSocket implementation not detected, will load Flash fallback...");
+        loadSwfobject(function() {
+            loadFABridge(function() {
+                loadWebSockets();
+            });
+        });
+    } else {
+        log("Native WebSocket implementation detected, will use...");
+    }
     // TODO: loadSoundManager();
 
 
@@ -99,7 +111,7 @@ var SGF = (function() {
      * once, and at the end.
      **/
     function engineScriptLoaded(loadEvent) {
-        //SGF.log(loadEvent.target.src + " finished loading!");
+        SGF.log(loadEvent.target.src + " finished loading!");
 
         // We loop through, looking for a script that hasn't been loaded yet.
         var engineFinishedLoading = true;
@@ -158,7 +170,9 @@ var SGF = (function() {
      * core scripts.
      **/
     function libraryFileLoaded() {
-        if (typeof Prototype !== 'undefined') {
+        if (typeof Prototype !== 'undefined' && // Check for Prototype
+            "WebSocket" in window) { // Check for WebSockets (native or Flash)
+            
             // Horray! All library files are loaded!
             
             // Now load all core engine scripts
@@ -229,26 +243,53 @@ var SGF = (function() {
      **/
     function loadLibPrototype(onComplete) {
         if (typeof Prototype === 'undefined') {
+            log("Loading Prototype");
             loadLib("Prototype" in params ? params.Prototype : engineRoot + "lib/prototype.js", onComplete);
         } else {
+            SGF.log("Prototype is already loaded, skipping...");
+            libraryFileLoaded();
+            onComplete();
+        }
+    }
+    
+    function loadSwfobject(onComplete) {
+        if (!(window.swfobject && Object.isFunction(swfobject.embedSWF))) {
+            log("Loading SWFObject 2.0");
+            loadLib(engineRoot + "lib/swfobject.js", onComplete);
+        } else {
+            SGF.log("SWFObject 2.0 is already loaded, skipping...");
             libraryFileLoaded();
             onComplete();
         }
     }
 
-    /*
-     * Checks for Scripty2, and calls "onComplete" if it is already loaded.
-     * If not, then this loads it. The init parameter 's2' can
-     * override where Scripty2 is loaded from.
-    function loadLibScripty(onComplete) {
-        if (typeof S2 === 'undefined') {
-            loadLib("s2" in params ? params.s2 : engineRoot + "lib/s2.js", onComplete);
+    function loadFABridge(onComplete) {
+        if (!window.FABridge) {
+            log("Loading FABridge");
+            loadLib(engineRoot + "lib/FABridge.js", onComplete);
         } else {
+            SGF.log("FABridge is already loaded, skipping...");
             libraryFileLoaded();
             onComplete();
         }
     }
-    **/
+
+    function loadWebSockets() {
+        log("Loading Flash WebSocket");
+        loadScript(engineRoot + "lib/web_socket.js", function() {
+            (function() {
+                var body = document.getElementsByTagName("body");
+                if (body.length >= 1) {
+                    WebSocket.__swfLocation = engineRoot + "lib/WebSocketMain.swf";
+                    WebSocket.__initialize();
+                    libraryFileLoaded();
+
+                } else {
+                    setTimeout(arguments.callee, 10);
+                }
+            })();
+        });
+    }
 
     /*
      * Dynamically load a script element, calling an optional callback function
@@ -328,7 +369,3 @@ var SGF = (function() {
         engineRoot: engineRoot
     };
 })();
-
-//SGF.observe("load", function() {
-//    console.log("engine loaded");
-//});

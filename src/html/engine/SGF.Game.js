@@ -32,7 +32,6 @@ SGF.Game = Class.create({
         this.root = rootUrl.endsWith('/') ? rootUrl : rootUrl + '/';
         
         // Override the default options with the user defined options
-        //this.setOptions(options);
         Object.extend(this, Object.extend(Object.clone(SGF.Game.DEFAULTS), options || {}));
 
         // Set the initial game speed. This can be changed during gameplay.
@@ -43,11 +42,14 @@ SGF.Game = Class.create({
         this.startTime = -1;
         this.components = [];
         this.listeners = {
-            "load": [],
-            "start": [],
+            "load":     [],
+            "start":    [],
             "stopping": [],
-            "stopped": []
+            "stopped":  []
         }
+
+        // Reset the background color to black at the creation of every game
+        SGF.Screen.color = "000000";
 
         // Keep a "private" reference to a binded 'step' function, for use in
         // the game loop (setTimeout sets 'this' to the 'window' normally).
@@ -207,7 +209,7 @@ SGF.Game = Class.create({
         // call to update() should take place.
         this.startTime = this.nextGamePeriod = this.now();
         this.updateCount = this.renderCount = 0;
-        
+
         // Start the game loop itself!
         setTimeout(this.__bindedStep, 0);
 
@@ -246,7 +248,8 @@ SGF.Game = Class.create({
 
         // Renders all game components, taking the interpolation value
         // to predict where the game objects will be placed.
-        this.render((this.now() + this.period - this.nextGamePeriod) / this.period);
+        //this.render((this.now() + this.period - this.nextGamePeriod) / this.period);
+        this.render(0);
 
         // Continue the game loop, as soon as the browser has time for it,
         // allowing for other JS on the stack to be executed (events, etc.)
