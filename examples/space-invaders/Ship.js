@@ -10,6 +10,7 @@ SI.Ship = Class.create(SGF.Sprite, {
         SGF.Input.observe("keydown", this.keyDown.bind(this));
     },
     update: function($super) {
+        $super();
         if (this.left() < 0) {
             this.dx = this.x = 0;
         } else if (this.right() > 320) {
@@ -24,8 +25,7 @@ SI.Ship = Class.create(SGF.Sprite, {
                 this.dx = this.dx * 0.9;
             }
         }
-        $super();
-        this.x = this.x.constrain(0,320-this.width);
+        //this.x = this.x.constrain(0,320-this.width);
     },
     render: function($super, interpolation) {
         $super(interpolation);
