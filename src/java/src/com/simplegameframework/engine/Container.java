@@ -4,7 +4,7 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.geom.AffineTransform;
+import java.awt.image.VolatileImage;
 import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.mozilla.javascript.Context;
@@ -17,6 +17,27 @@ public abstract class Container extends Component {
      * this Container.
      */
     private final CopyOnWriteArrayList<Component> components;
+
+    private double currentRotationRad;
+    private double currentCenterX;
+    private double currentCenterY;
+
+    /**
+     * The Image to draw this Container onto, as an intermediary buffer. The
+     * buffer is reused each render, and only recreated when the size of the
+     * Container is changed.
+     */
+    private VolatileImage buffer;
+    /**
+     * The width of the buffer, as to avoid calling buffer.getWidth(null), for
+     * speed.
+     */
+    private int bufferWidth;
+    /**
+     * The width of the buffer, as to avoid calling buffer.getWidth(null), for
+     * speed.
+     */
+    private int bufferHeight;
 
     /**
      * Called when the Container is instantiated (through JS code).
@@ -75,9 +96,25 @@ public abstract class Container extends Component {
 
         double width = __getWidth();
         double height = __getHeight();
+        int iWidth = (int)width;
+        int iHeight = (int)height;
 
-        Image containerImage = g.getDeviceConfiguration().createCompatibleImage((int) width, (int) height, Color.TRANSLUCENT);
-        Graphics2D containerGraphics = (Graphics2D)containerImage.getGraphics();//.createGraphics();
+        if (this.buffer == null ||
+                this.bufferWidth != iWidth ||
+                this.bufferHeight != iHeight ||
+                this.buffer.contentsLost()) {
+
+            //System.out.println("Recreating Container Buffer");
+
+            if (this.buffer != null)
+                this.buffer.flush();
+            
+            this.bufferHeight = iHeight;
+            this.bufferWidth = iWidth;
+            this.buffer = g.getDeviceConfiguration().createCompatibleVolatileImage(iWidth, iHeight, Color.TRANSLUCENT);
+        }
+        Graphics2D containerGraphics = (Graphics2D)this.buffer.getGraphics();//.createGraphics();
+        containerGraphics.clearRect(0, 0, iWidth, iHeight);
 
         // Render each individual component onto the intermediary Graphics object
         for (Component c : sortedComponents) {
@@ -92,13 +129,12 @@ public abstract class Container extends Component {
 
         double rotation = __getRotation();
         boolean needToRotate = rotation % 360 != 0;
-        AffineTransform origTransform = null;
 
         if (needToRotate) {
-            origTransform = g.getTransform();
-            AffineTransform rotatedTransform = (AffineTransform)origTransform.clone();
-            rotatedTransform.rotate(Math.toRadians(rotation), currentFrameX + (__getWidth() / 2d), currentFrameY + (__getHeight() / 2d));
-            g.setTransform(rotatedTransform);
+            this.currentRotationRad = Math.toRadians(rotation);
+            this.currentCenterX = currentFrameX + (width / 2d);
+            this.currentCenterY = currentFrameY + (height / 2d);
+            g.rotate(this.currentRotationRad, this.currentCenterX, this.currentCenterY);
         }
 
         float opacity = (float)__getOpacity();
@@ -109,9 +145,7 @@ public abstract class Container extends Component {
         }
 
         containerGraphics.dispose();
-        g.drawImage(containerImage, (int)currentFrameX, (int)currentFrameY, (int)width, (int)height, null);
-        containerImage.flush();
-        containerImage = null;
+        g.drawImage(this.buffer, (int)currentFrameX, (int)currentFrameY, iWidth, iHeight, null);
 
 
         if (opacity < 1.0f) {
@@ -119,7 +153,7 @@ public abstract class Container extends Component {
         }
 
         if (needToRotate) {
-            g.setTransform(origTransform);
+            g.rotate(-this.currentRotationRad, this.currentCenterX, this.currentCenterY);
         }
     }
 

@@ -10,19 +10,24 @@
  */
 (function() {
     var timers = [];
+    var num = -1;
 
     setInterval = function(fn, time) {
-        var num = timers.length;
+        num = timers.length;
         // Default to 1 second if no time supplied
         time = time || 1000;
         timers[num] = new java.lang.Thread(new java.lang.Runnable({
             run: function() {
+                Packages.org.mozilla.javascript.Context.enter();
                 while (true) {
                     java.lang.Thread.currentThread().sleep(time);
                     typeof fn == "function" ? fn() : eval(fn);
                 }
+                Packages.org.mozilla.javascript.Context.exit();
             }
         }));
+
+        timers[num].setDaemon(true);
 
         timers[num].start();
 

@@ -1,6 +1,6 @@
 SGF.Client = Class.create({
     initialize: function(wsUri, options) {
-        Object.extend(this, Object.extend(Object.clone(SGF.Server.DEFAULTS), options || {}));
+        Object.extend(this, Object.extend(Object.clone(SGF.Client.DEFAULTS), options || {}));
         this.URL = wsUri;
         this.__this = this;
         this.__client = new Packages.com.simplegameframework.networking.Client(this);

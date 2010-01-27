@@ -223,6 +223,11 @@ public class Main extends JFrame implements ActionListener, WindowListener {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 Main m = new Main(args);
+                if (args.length >= 1) {
+                    File loadGame = new File(args[0]);
+                    if (loadGame.exists())
+                        m.loadGame(loadGame);
+                }
             }
         });
     }
