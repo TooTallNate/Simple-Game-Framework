@@ -3,7 +3,7 @@ Simple Game Framework
 
 #### An object-oriented JavaScript framework to develop simple, shape and sprite based games ####
 
-`Simple Game Framework`, or SGF for short, aims to be an abstract JavaScript
+`Simple Game Framework`, or `SGF` for short, aims to be an abstract JavaScript
 based API to develop 2D shape and/or sprite based games. The idea is that
 the game developer writes games using one code base, written in JavaScript,
 and incorporating the SGF API. That code base can then be deployed to any
@@ -64,7 +64,7 @@ API itself. The example games can be found in the `examples/` folder.
 
 An SGF game starts with a folder with a `main.js` file inside. `main.js` is
 the first file loaded when your game starts. That is the only requirement to
-load an SGF game.
+create an SGF game.
 
 Additional game resources like more `*.js` files, image and sound files can
 be placed inside that same folder, or any number of folders inside your root
