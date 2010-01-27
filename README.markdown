@@ -70,6 +70,10 @@ Additional game resources like more `*.js` files, image and sound files can
 be placed inside that same folder, or any number of folders inside your root
 game folder (the folder where `main.js` is located).
 
+You can view the full [Simple Game Framework API Docs](http://tootallnate.github.com/Simple-Game-Framework/doc/)
+to learn it all!
+
+
 License
 -------
 
