@@ -9,6 +9,7 @@ import java.awt.Graphics2D;
  * @author Nathan Rajlich
  */
 public abstract class Shape extends Component {
+    protected boolean fill;
     protected Color color = Color.BLACK;
     protected String colorStr = null;
 
@@ -16,9 +17,12 @@ public abstract class Shape extends Component {
     public void doRender(Graphics2D g, double interpolation, long renderCount) {
         super.doRender(g, interpolation, renderCount);
 
+        // Set the boolean if we should fill the shape or just render the outline.
+        this.fill = __getFill();
+
         // Check if the color has changed, and create a native java.awt.Color if it has
         String colorString = __getColor();
-        if (!colorString.equals(this.colorStr) && !colorString.equals("undefined") || ((int)(__getOpacity()*255)) != color.getAlpha())
+        if (!colorString.equals(this.colorStr) && !colorString.equals("undefined"))
             setColor(colorString);
         
     }
@@ -31,9 +35,10 @@ public abstract class Shape extends Component {
         String r = cssColor.substring(0,2);
         String g = cssColor.substring(2,4);
         String b = cssColor.substring(4,6);
-        this.color = new Color(Integer.parseInt(r, 16), Integer.parseInt(g, 16), Integer.parseInt(b, 16), ((int)(__getOpacity()*255)));
+        this.color = new Color(Integer.parseInt(r, 16), Integer.parseInt(g, 16), Integer.parseInt(b, 16));
         this.colorStr = cssColor;
     }
 
     public abstract String __getColor();
+    public abstract boolean __getFill();
 }

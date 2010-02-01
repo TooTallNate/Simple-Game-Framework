@@ -1,7 +1,7 @@
 /** section: Components API
  * class SGF.Rectangle < SGF.Shape
  *
- * A [[SGF.Component]] that renders a rectangle onto the screen.
+ * A [[SGF.Component]] that renders a single rectangle onto the screen.
  **/
 SGF.Rectangle = Class.create(SGF.Shape, {
     initialize: function($super, options) {

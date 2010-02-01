@@ -83,6 +83,7 @@ public class Main extends JFrame implements ActionListener, WindowListener {
     private void initJavaScriptEngine() {
         Context cx = Context.enter();
         try {
+            cx.setOptimizationLevel(9);
             this.globalScope = cx.initStandardObjects();
 
             // Load the Prototype lang extensions

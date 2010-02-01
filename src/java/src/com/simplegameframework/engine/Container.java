@@ -1,9 +1,7 @@
 package com.simplegameframework.engine;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.VolatileImage;
 import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,10 +15,6 @@ public abstract class Container extends Component {
      * this Container.
      */
     private final CopyOnWriteArrayList<Component> components;
-
-    private double currentRotationRad;
-    private double currentCenterX;
-    private double currentCenterY;
 
     /**
      * The Image to draw this Container onto, as an intermediary buffer. The
@@ -90,6 +84,13 @@ public abstract class Container extends Component {
         // Call the superclass' doRender, including the user defined render() function
         super.doRender(g, interpolation, renderCount);
 
+        float opacity = (float)__getOpacity();
+        if (opacity <= 0) {
+            return; // If the Component is invisible, then return without rendering anything!
+        } else {
+            g.setComposite(getAlphaComposite());
+        }
+
         // We need to ensure that Components are rendered according to their zIndex
         Component[] sortedComponents = components.toArray(new Component[0]);
         Arrays.sort(sortedComponents, Game.Z_INDEX_COMPARATOR);
@@ -113,7 +114,8 @@ public abstract class Container extends Component {
             this.bufferWidth = iWidth;
             this.buffer = g.getDeviceConfiguration().createCompatibleVolatileImage(iWidth, iHeight, Color.TRANSLUCENT);
         }
-        Graphics2D containerGraphics = (Graphics2D)this.buffer.getGraphics();//.createGraphics();
+        Graphics2D containerGraphics = this.buffer.createGraphics();
+        //containerGraphics.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
         containerGraphics.clearRect(0, 0, iWidth, iHeight);
 
         // Render each individual component onto the intermediary Graphics object
@@ -126,31 +128,19 @@ public abstract class Container extends Component {
 
 
 
-
-        double rotation = __getRotation();
-        boolean needToRotate = rotation % 360 != 0;
-
+        this.currentRotationRad = __getRotation();
+        boolean needToRotate = this.currentRotationRad % (Math.PI*2) != 0.0;
         if (needToRotate) {
-            this.currentRotationRad = Math.toRadians(rotation);
             this.currentCenterX = currentFrameX + (width / 2d);
             this.currentCenterY = currentFrameY + (height / 2d);
             g.rotate(this.currentRotationRad, this.currentCenterX, this.currentCenterY);
         }
 
-        float opacity = (float)__getOpacity();
-        AlphaComposite origComposite = null;
-        if (opacity < 1.0f) {
-            origComposite = (AlphaComposite)g.getComposite();
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-        }
+
 
         containerGraphics.dispose();
         g.drawImage(this.buffer, (int)currentFrameX, (int)currentFrameY, iWidth, iHeight, null);
 
-
-        if (opacity < 1.0f) {
-            g.setComposite(origComposite);
-        }
 
         if (needToRotate) {
             g.rotate(-this.currentRotationRad, this.currentCenterX, this.currentCenterY);

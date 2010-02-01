@@ -21,10 +21,42 @@ SGF.Shape = Class.create(SGF.Component, {
         $super(Object.extend(Object.clone(SGF.Shape.DEFAULTS), options || {}));
     },
     render: function($super, interpolation) {
+        //var scale = SGF.Screen.getScale();
+
+        if (this.__fill != this.fill) {
+            if (!this.fill) {
+                this.element.style.backgroundColor = "transparent";
+                this.element.style.border = "Solid 1px #" + this.color;
+                //this.element.style.width = ((this.width * scale)-5) + "px";
+                //this.element.style.height = ((this.height * scale)-5) + "px";
+            } else {
+                this.element.style.border = null;
+                this.element.style.backgroundColor = "#" + this.color;
+            }
+            this.__fill = this.fill;
+        }
+
         if (this.__color != this.color) {
-            this.element.style.backgroundColor = "#" + this.color;
+            if (this.fill)
+                this.element.style.backgroundColor = "#" + this.color;
+            else
+                this.element.style.borderColor = "#" + this.color;
             this.__color = this.color;
         }
+
+        /*
+        if (this.__width != this.width) {
+            var w = (this.width * scale);
+            this.element.style.width = (this.fill ? w : w-5) + "px";
+            this.__width = this.width;
+        }
+        if (this.__height != this.height) {
+            var h = (this.height * scale);
+            this.element.style.height = (this.fill ? h : h-5) + "px";
+            this.__height = this.height;
+        }
+        */
+
         $super(interpolation);
     }
 });
@@ -39,6 +71,7 @@ SGF.Shape = Class.create(SGF.Component, {
  * The [[SGF.Shape.DEFAULTS]] object contains the default values:
  *
  *     - color: "000000"
+ *     - fill: true
  **/
 SGF.Shape.DEFAULTS = {
     /**
@@ -49,5 +82,12 @@ SGF.Shape.DEFAULTS = {
      * String formatted in `RRGGBB` form. Each color is a 2-digit hex number
      * between 0 and 255.
      **/
-    color: "000000"
+    color: "000000",
+    /**
+     * SGF.Shape#fill -> Boolean
+     *
+     * Boolean determining if the [[SGF.Shape]] should be filled (`true`), or
+     * if just the outline should be rendered (`false`).
+     **/
+    fill: true
 };

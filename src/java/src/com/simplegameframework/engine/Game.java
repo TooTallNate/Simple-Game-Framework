@@ -227,6 +227,8 @@ public class Game extends ScriptableObject implements Runnable {
 
             // Get the Graphics2D object we're going to draw onto
             Graphics2D g = (Graphics2D) screen.strategy.getDrawGraphics();
+            g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+
             g.setColor(screen.getBackgroundColor());
             g.fillRect(0, 0, screen.getWidth(), screen.getHeight());
 
@@ -236,6 +238,7 @@ public class Game extends ScriptableObject implements Runnable {
             // DEBUG
             //*
             g.setColor(java.awt.Color.white);
+            g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
             double duration =  (double)System.nanoTime() - (double)this.startTime;
             g.drawString("FPS: " + (int)((double)this.renderCount/duration * 1000000000), 2, 15);
             g.drawString("UPS: " + (int)((double)this.updateCount/duration * 1000000000), 2, 30);

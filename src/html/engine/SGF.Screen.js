@@ -12,16 +12,16 @@ SGF.Screen = (function() {
     function bind(element) {
         // First, we need to "normalize" the Screen element by first removing all
         // previous elements, and then setting some standard styles
-        element.immediateDescendants().without($("webSocketContainer")).invoke("remove");
         element.style.padding = 0;
         element.style.overflow = REQUIRED_OVERFLOW;
         Element.makePositioned(element);
+        Element.immediateDescendants(element).without($("webSocketContainer")).invoke("remove");
 
         // If SGF.Screen.bind has been called prevously, then this call will
         // essentially move all game elements to the new Screen element
         var oldScreen = SGF.Screen.element;
         if (oldScreen !== null && Object.isElement(oldScreen)) {
-            oldScreen.immediateDescendants().invoke("remove").each(element.insert, element);
+            Element.immediateDescendants(oldScreen).invoke("remove").each(element.insert, element);
         }
         SGF.Screen.element = element;
 
@@ -38,7 +38,7 @@ SGF.Screen = (function() {
     function setScale(newScale) {
         scale = newScale;
 
-        if (SGF.Game.current instanceof SGF.Game) {
+        if (SGF.Game.current != null) {
             var c = SGF.Game.current.components, i=0;
             for (; i < c.length; i++) {
                 c[i].scale(scale);
@@ -67,12 +67,10 @@ SGF.Screen = (function() {
                 val = "wait";
             } else if ("none" ==(cursor)) {
                 val = "url("+SGF.engineRoot+"blank.cur), none";
-                SGF.log(val);
             }
         }
 
-        if (SGF.Screen.element.getStyle("cursor") != val)
-            SGF.Screen.element.style.cursor = val;
+        SGF.Screen.element.style.cursor = val;
     }
 
     function getPixelWidth() {

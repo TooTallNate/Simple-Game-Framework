@@ -1,13 +1,11 @@
 package com.simplegameframework.engine;
 
-import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 
 /**
  * Represents an individual sprite that gets drawn onto the screen, and updated
  * in the game loop. Sprites contain a reference to a Spriteset, and a current
- * x and y sprite coordinate that corresponds to which sprite to use on the
+ * x and y sprite coordinate that corresponds to which sprite to use from the
  * Spriteset.
  * @author Nathan Rajlich
  */
@@ -27,7 +25,17 @@ public abstract class Sprite extends Component {
     @Override
     public void doRender(Graphics2D g, double interpolation, long renderCount) {
         super.doRender(g, interpolation, renderCount);
-        
+
+        float opacity = (float)__getOpacity();
+        if (opacity <= 0) {
+            return; // If the Component is invisible, then return without rendering anything!
+        } else {
+            g.setComposite(getAlphaComposite());
+        }
+
+        double width = __getWidth();
+        double height = __getHeight();
+
         Spriteset s = __getSpriteset();
         int spriteWidth = s.jsGet_spriteWidth();
         int spriteHeight = s.jsGet_spriteHeight();
@@ -36,41 +44,27 @@ public abstract class Sprite extends Component {
         int sx2 = sx1 + spriteWidth;
         int sy2 = sy1 + spriteHeight;
 
-        double rotation = __getRotation();
-        boolean needToRotate = rotation % 360 != 0;
-        AffineTransform origTransform = null;
-        
+        this.currentRotationRad = __getRotation();
+        boolean needToRotate = this.currentRotationRad % (Math.PI*2) != 0.0;
         if (needToRotate) {
-            origTransform = g.getTransform();
-            AffineTransform rotatedTransform = (AffineTransform)origTransform.clone();
-            rotatedTransform.rotate(Math.toRadians(rotation), currentFrameX + (__getWidth() / 2d), currentFrameY + (__getHeight() / 2d));
-            g.setTransform(rotatedTransform);
-        }
-
-        float opacity = (float)__getOpacity();
-        AlphaComposite origComposite = null;
-        if (opacity < 1.0f) {
-            origComposite = (AlphaComposite)g.getComposite();
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+            this.currentCenterX = currentFrameX + (width / 2d);
+            this.currentCenterY = currentFrameY + (height / 2d);
+            g.rotate(this.currentRotationRad, this.currentCenterX, this.currentCenterY);
         }
 
         g.drawImage(s.getImage(),
                 (int)currentFrameX,
                 (int)currentFrameY,
-                (int)(currentFrameX + __getWidth()),
-                (int)(currentFrameY + __getHeight()),
+                (int)(currentFrameX + width),
+                (int)(currentFrameY + height),
                 sx1,
                 sy1,
                 sx2,
                 sy2,
                 null);
 
-        if (opacity < 1.0f) {
-            g.setComposite(origComposite);
-        }
-
         if (needToRotate) {
-            g.setTransform(origTransform);
+            g.rotate(-this.currentRotationRad, this.currentCenterX, this.currentCenterY);
         }
     }
 

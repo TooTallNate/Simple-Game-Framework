@@ -44,14 +44,16 @@ SGF.Container = Class.create(SGF.Component, {
         $super(updateCount);
         if (this.updateChildren) {
             for (var i=0; i<this.components.length; i++) {
-                this.components[i].update(updateCount);
+                if (this.components[i].update)
+                    this.components[i].update(updateCount);
             }
         }
     },
     render: function($super, interpolation, renderCount) {
         $super(interpolation, renderCount);
         for (var i=0; i < this.components.length; i++) {
-            this.components[i].render(interpolation, renderCount);
+            if (this.components[i].render)
+                this.components[i].render(interpolation, renderCount);
         }
     },
 

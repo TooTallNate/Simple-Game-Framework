@@ -173,7 +173,8 @@ SGF.Game = Class.create({
      **/
     render: function(interpolation) {
         for (var i=0; i < this.components.length; i++) {
-            this.components[i].render(interpolation, this.renderCount);
+            if (this.components[i].render)
+                this.components[i].render(interpolation, this.renderCount);
         }
         this.renderCount++;
         this.fpsCount++;
@@ -282,7 +283,8 @@ SGF.Game = Class.create({
         SGF.Screen.remeasure();
 
         for (var i=0; i<this.components.length; i++) {
-            this.components[i].update(this.updateCount);
+            if (this.components[i].update)
+                this.components[i].update(this.updateCount);
         }
 
         this.updateCount++;

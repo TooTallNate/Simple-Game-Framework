@@ -83,7 +83,7 @@ SGF.Input = (function() {
      * - keyCode (Number): The keyCode the check if it is being pressed.
      *
      * Returns `true` if the key `keyCode` is currently being pressed down, or
-     * `false` otherwise. `keyCode` can be and of the `SGF.Input.KEY_*` values,
+     * `false` otherwise. `keyCode` can be any of the `SGF.Input.KEY_*` values,
      * or any other key code value for a input device with more keys (like a
      * full keyboard).
      **/
@@ -129,7 +129,7 @@ SGF.Input = (function() {
     }
 
     function keydownHandler(event) {
-        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.ctrlKey || event.metaKey || event.altKey || downKeys[event.keyCode] === true) return;
 
         event.stop();
         var l = listeners.keydown,
@@ -147,7 +147,7 @@ SGF.Input = (function() {
     }
 
     function keyupHandler(event) {
-        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.ctrlKey || event.metaKey || event.altKey || downKeys[event.keyCode] === false) return;
 
         event.stop();
         var l = listeners.keyup,

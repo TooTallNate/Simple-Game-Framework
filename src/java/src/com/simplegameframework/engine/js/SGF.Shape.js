@@ -7,9 +7,13 @@ SGF.Shape = Class.create(SGF.Component, {
     },
     __getColor: function() {
         return this.color;
+    },
+    __getFill: function() {
+        return this.fill;
     }
 });
 
 SGF.Shape.DEFAULTS = {
-    color: "000000"
+    color: "000000",
+    fill: true
 };

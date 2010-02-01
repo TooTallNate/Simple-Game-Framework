@@ -84,14 +84,14 @@ SGF.Component = Class.create({
     render: function(interpolation) {
         var scale = SGF.Screen.getScale();
 
+        if (this.__rotation != this.rotation) {
+            this.element.setRotation(this.rotation); // Radians
+            this.__rotation = this.rotation;
+        }
+
         if (this.__opacity != this.opacity) {
             this.element.setOpacity(this.opacity);
             this.__opacity = this.opacity;
-        }
-
-        if (this.__rotation != this.rotation) {
-            this.element.setRotation(this.rotation * (Math.PI/180)); // Convert from Deg to Rad
-            this.__rotation = this.rotation;
         }
 
         if (this.__zIndex != this.zIndex) {

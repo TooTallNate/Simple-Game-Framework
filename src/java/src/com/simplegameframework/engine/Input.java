@@ -61,6 +61,7 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
      * The same handler can be added multiple times to an event.
      * @param eventName
      * @param handler
+     * @return
      */
     public Input jsFunction_observe(String eventName, Function handler) {
         if (!this.observers.containsKey(eventName))
@@ -75,6 +76,7 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
      * Removes the Function from the <var>eventName</var> as a handler.
      * @param eventName
      * @param handler
+     * @return
      */
     public Input jsFunction_stopObserving(String eventName, Function handler) {
         if (!this.observers.containsKey(eventName))
@@ -146,13 +148,6 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
 
     // MouseMotionListener /////////////////////////////////////////////////////
     public void mouseMoved(MouseEvent e) {
-        mouseMove(e);
-    }
-    public void mouseDragged(MouseEvent e) {
-        mouseMove(e);
-    }
-
-    private void mouseMove(MouseEvent e) {
         this.pointerX = e.getX();
         this.pointerY = e.getY();
         Context cx = Context.enter();
@@ -168,7 +163,9 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
         } finally {
             Context.exit();
         }
-
+    }
+    public void mouseDragged(MouseEvent e) {
+        mouseMoved(e);
     }
 
     // Unused //////////////////////////////////////////////////////////////////

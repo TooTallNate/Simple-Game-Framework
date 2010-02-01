@@ -1,5 +1,6 @@
 package com.simplegameframework.engine;
 
+import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 
 /**
@@ -24,6 +25,11 @@ public abstract class Component {
     public abstract int __getZIndex();
 
     protected double currentFrameX, currentFrameY;
+    protected double currentRotationRad, currentCenterX, currentCenterY;
+    
+    private AlphaComposite alpha;
+    private float alphaVal;
+
 
 
 
@@ -61,5 +67,14 @@ public abstract class Component {
     public void doUpdate(long updateCount) {
         // Call the JS object's "update" function.
         __update(updateCount);
+    }
+
+    protected AlphaComposite getAlphaComposite() {
+        float currentAlpha = (float)__getOpacity();
+        if (this.alphaVal != currentAlpha) {
+            this.alpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.min(1, currentAlpha));
+            this.alphaVal = currentAlpha;
+        }
+        return this.alpha;
     }
 }
