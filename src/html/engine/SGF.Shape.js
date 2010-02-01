@@ -30,7 +30,7 @@ SGF.Shape = Class.create(SGF.Component, {
                 //this.element.style.width = ((this.width * scale)-5) + "px";
                 //this.element.style.height = ((this.height * scale)-5) + "px";
             } else {
-                this.element.style.border = null;
+                this.element.style.borderColor = "transparent";
                 this.element.style.backgroundColor = "#" + this.color;
             }
             this.__fill = this.fill;

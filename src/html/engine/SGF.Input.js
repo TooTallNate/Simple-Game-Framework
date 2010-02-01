@@ -96,8 +96,8 @@ SGF.Input = (function() {
                 .observe("keypress", keypressHandler)
                 .observe("keyup", keyupHandler);
 
-        SGF.Screen.element
-            .observe("mousemove", mousemoveHandler)
+        //SGF.Screen.element
+        document.observe("mousemove", mousemoveHandler)
             .observe("mousedown", mousedownHandler)
             .observe("mouseup", mouseupHandler)
             .observe("contextmenu", contextmenuHandler);
@@ -110,8 +110,8 @@ SGF.Input = (function() {
                 .stopObserving("keypress", keypressHandler)
                 .stopObserving("keyup", keyupHandler);
 
-        SGF.Screen.element
-            .stopObserving("mousemove", mousemoveHandler)
+        //SGF.Screen.element
+        document.stopObserving("mousemove", mousemoveHandler)
             .stopObserving("mousedown", mousedownHandler)
             .stopObserving("mouseup", mouseupHandler)
             .stopObserving("contextmenu", contextmenuHandler);
@@ -172,6 +172,7 @@ SGF.Input = (function() {
             i = 0,
             eventObj = getPointerCoords(event);
         eventObj.button = event.button;
+        if (eventObj.x < 0 || eventObj.y < 0 || eventObj.x > SGF.Screen.getGameWidth() || eventObj.y > SGF.Screen.getGameHeight()) return;
         
         downMouseButtons[event.button] = true;
 
@@ -190,6 +191,7 @@ SGF.Input = (function() {
         var l = listeners.mouseup,
             i = 0,
             eventObj = getPointerCoords(event);
+        if (eventObj.x < 0 || eventObj.y < 0 || eventObj.x > SGF.Screen.getGameWidth() || eventObj.y > SGF.Screen.getGameHeight()) return;
         eventObj.button = event.button;
         
         downMouseButtons[event.button] = false;
@@ -208,6 +210,7 @@ SGF.Input = (function() {
         var l = listeners.mousemove,
             i = 0,
             eventObj = getPointerCoords(event);
+        if (eventObj.x < 0 || eventObj.y < 0 || eventObj.x > SGF.Screen.getGameWidth() || eventObj.y > SGF.Screen.getGameHeight()) return;
             
         SGF.Input.pointerX = eventObj.x;
         SGF.Input.pointerY = eventObj.y;

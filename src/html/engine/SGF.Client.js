@@ -96,7 +96,7 @@ SGF.Client = Class.create({
      **/
     onMessage: Prototype.emptyFunction,
     /**
-     * SGF.Cient#connect() -> undefined
+     * SGF.Client#connect() -> undefined
      *
      * Makes this [[SGF.Client]] instance attempt to connect to the currently
      * set WebSocket server. This function will connect the underlying socket

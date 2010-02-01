@@ -145,7 +145,9 @@ SGF.Screen = (function() {
 
         // HTML/DOM Specific
         element:  null,
-        bind:     bind,
+        bind: bind,
+        getGameWidth: getGameWidth,
+        getGameHeight: getGameHeight,
         getScale: getScale,
         setScale: setScale,
         remeasure: remeasure,

@@ -143,7 +143,7 @@ SGF.Game = Class.create({
      * Used continually by the game loop.
      **/
     now: function() {
-        return new Date().getTime();
+        return (new Date).getTime();
     },
 
     recordStats: function() {
@@ -217,7 +217,7 @@ SGF.Game = Class.create({
 
 
         // DEBUG!! Display stats every second
-        //setInterval(this.recordStats.bind(this), 1000);
+        setInterval(this.recordStats.bind(this), 1000);
         // For FPS/UPS, probably temoprary
         this.fpsCount = this.upsCount = 0;
         this.statsTime = this.now();

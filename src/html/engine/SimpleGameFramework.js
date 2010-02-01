@@ -111,7 +111,7 @@ var SGF = (function() {
      * once, and at the end.
      **/
     function engineScriptLoaded(loadEvent) {
-        SGF.log(loadEvent.target.src + " finished loading!");
+        //SGF.log(loadEvent.target.src + " finished loading!");
 
         // We loop through, looking for a script that hasn't been loaded yet.
         var engineFinishedLoading = true;
@@ -369,3 +369,4 @@ var SGF = (function() {
         engineRoot: engineRoot
     };
 })();
+
