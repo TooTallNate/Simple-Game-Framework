@@ -4,6 +4,10 @@
  * This simple script makes a "game" that displays a custom mouse cursor,
  * instead of the OS native cursor. The "cursor" is a regular SGF.Sprite
  * subclass, for simplicity.
+ *
+ * As you move or click the mouse (an example of firing Input events), a
+ * random sized, fading away, rotating square, is created. This creates a cool
+ * "particle" effect to show off the engine a little bit.
  */
 
 
@@ -83,12 +87,12 @@ SpriteFollow.Rect = Class.create(SGF.Rectangle, {
         SGF.Game.current.addComponent(this);
     },
     update: function($super) {
+        $super();
         this.opacity -= .01;
-        this.rotation += 10;
+        this.rotation += .1;
         if (this.opacity <= 0) {
             this.remove();
         }
-        $super();
     },
     remove: function() {
         SGF.Game.current.removeComponent(this);
