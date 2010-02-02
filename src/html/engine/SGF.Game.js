@@ -117,6 +117,8 @@ SGF.Game = Class.create({
 
     mainFileLoaded: function() {
         this.loaded = true;
+        // Notify all the game's 'load' listeners
+        this.listeners.load.invoke("call", this);
         if (this.autostart === true) {
             this.start();
         }
@@ -135,6 +137,9 @@ SGF.Game = Class.create({
      * when the event occurs.
      **/
     observe: function(eventName, handler) {
+        if (!(eventName in this.listeners)) throw "'" + eventName + "' is an invalid eventName";
+        if (typeof(handler) !== 'function') throw "func must be a Function."
+        this.listeners[eventName].push(handler);
         return this;
     },
 
@@ -214,10 +219,12 @@ SGF.Game = Class.create({
         // Start the game loop itself!
         setTimeout(this.__bindedStep, 0);
 
+        // Notify game's 'start' listeners
+        this.listeners.start.invoke("call", this);
 
 
         // DEBUG!! Display stats every second
-        setInterval(this.recordStats.bind(this), 1000);
+        //setInterval(this.recordStats.bind(this), 1000);
         // For FPS/UPS, probably temoprary
         this.fpsCount = this.upsCount = 0;
         this.statsTime = this.now();
@@ -231,7 +238,7 @@ SGF.Game = Class.create({
      **/
     step: function() {
         // Stop the loop if the 'running' flag is changed.
-        if (!this.running) return;
+        if (!this.running) return this.stopped();
 
         // This while loop calls update() as many times as required depending
         // on the current time and the last time update() was called. This
@@ -261,14 +268,19 @@ SGF.Game = Class.create({
      * Stops the game loop if the game is running.
      **/
     stop: function() {
+        this.listeners.stopping.invoke("call", this);
+        this.running = false;
+        return this;
+    },
+
+    stopped: function() {
         if (SGF.Input.grabbed) SGF.Input.release();
         SGF.Screen.showNativeCursor(true);
 
-        this.running = false;
 
         SGF.Game.current = null;
-        
-        return this;
+
+        this.listeners.stopped.invoke("call", this);
     },
 
     /**
