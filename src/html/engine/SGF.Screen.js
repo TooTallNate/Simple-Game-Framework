@@ -66,7 +66,7 @@ SGF.Screen = (function() {
             } else if ("wait" == (cursor)) {
                 val = "wait";
             } else if ("none" ==(cursor)) {
-                val = "url("+SGF.engineRoot+"blank.cur), none";
+                val = "url(" + SGF.engineRoot + "blank." + (Prototype.Browser.IE ? "cur" : "gif") + "), none";
             }
         }
 
