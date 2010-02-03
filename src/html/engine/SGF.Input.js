@@ -9,12 +9,12 @@ SGF.Input = (function() {
         "mousemove": [],
         "mousedown": [],
         "mouseup"  : [],
-
         "keydown"  : [],
         "keyup"    : []
     },
     downKeys = {},
-    downMouseButtons = {};
+    downMouseButtons = {},
+    screenFocused = false;
 
     /**
      * SGF.Input.observe(eventName, handler) -> SGF.Input
@@ -54,9 +54,9 @@ SGF.Input = (function() {
      *                 
      **/
     function observe(eventName, handler) {
-        if (!eventName in listeners)
+        if (!(eventName in listeners))
             throw "SGF.Input.observe: '" + eventName + "' is not a recognized event name."
-
+        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
         listeners[eventName].push(handler);
         return this;
     }
@@ -71,9 +71,9 @@ SGF.Input = (function() {
      * allowed `eventName` values.
      **/
     function stopObserving(eventName, handler) {
-        if (!eventName in listeners)
+        if (!(eventName in listeners))
             throw "SGF.Input.stopObserving: '" + eventName + "' is not a recognized event name."
-
+        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
         listeners[eventName] = listeners[eventName].without(handler);
         return this;
     }
@@ -94,13 +94,11 @@ SGF.Input = (function() {
     function grab() {
         document.observe("keydown", keydownHandler)
                 .observe("keypress", keypressHandler)
-                .observe("keyup", keyupHandler);
-
-        //SGF.Screen.element
-        document.observe("mousemove", mousemoveHandler)
-            .observe("mousedown", mousedownHandler)
-            .observe("mouseup", mouseupHandler)
-            .observe("contextmenu", contextmenuHandler);
+                .observe("keyup", keyupHandler)
+                .observe("mousemove", mousemoveHandler)
+                .observe("mousedown", mousedownHandler)
+                .observe("mouseup", mouseupHandler)
+                .observe("contextmenu", contextmenuHandler);
 
         SGF.Input.grabbed = true;
     }
@@ -108,115 +106,125 @@ SGF.Input = (function() {
     function release() {
         document.stopObserving("keydown", keydownHandler)
                 .stopObserving("keypress", keypressHandler)
-                .stopObserving("keyup", keyupHandler);
-
-        //SGF.Screen.element
-        document.stopObserving("mousemove", mousemoveHandler)
-            .stopObserving("mousedown", mousedownHandler)
-            .stopObserving("mouseup", mouseupHandler)
-            .stopObserving("contextmenu", contextmenuHandler);
+                .stopObserving("keyup", keyupHandler)
+                .stopObserving("mousemove", mousemoveHandler)
+                .stopObserving("mousedown", mousedownHandler)
+                .stopObserving("mouseup", mouseupHandler)
+                .stopObserving("contextmenu", contextmenuHandler);
         
         SGF.Input.grabbed = false;
     }
 
     function contextmenuHandler(event) {
-        event.stop();
+        var eventObj = getPointerCoords(event);
+        if (screenFocused && eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+            event.stop();
+        }
     }
 
     function keypressHandler(event) {
         if (event.ctrlKey || event.metaKey || event.altKey) return;
-        event.stop();
+        if (screenFocused) {
+            event.stop();
+        }
     }
 
     function keydownHandler(event) {
-        if (event.ctrlKey || event.metaKey || event.altKey || downKeys[event.keyCode] === true) return;
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (screenFocused) {
+            event.stop();
+            if (downKeys[event.keyCode] === true) return;
+            var l = listeners.keydown,
+                i = 0,
+                eventObj = {
+                    keyCode: event.keyCode,
+                    shiftKey: event.shiftKey
+                };
 
-        event.stop();
-        var l = listeners.keydown,
-            i = 0,
-            eventObj = {
-                keyCode: event.keyCode,
-                shiftKey: event.shiftKey
-            };
-        
-        downKeys[event.keyCode] = true;
+            downKeys[event.keyCode] = true;
 
-        for (; i < l.length; i++) {
-            l[i](Object.clone(eventObj));
+            for (; i < l.length; i++) {
+                l[i](Object.clone(eventObj));
+            }
         }
     }
 
     function keyupHandler(event) {
-        if (event.ctrlKey || event.metaKey || event.altKey || downKeys[event.keyCode] === false) return;
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (screenFocused) {
+            event.stop();
+            if (downKeys[event.keyCode] === false) return;
+            var l = listeners.keyup,
+                i = 0,
+                eventObj = {
+                    keyCode: event.keyCode,
+                    shiftKey: event.shiftKey
+                };
 
-        event.stop();
-        var l = listeners.keyup,
-            i = 0,
-            eventObj = {
-                keyCode: event.keyCode,
-                shiftKey: event.shiftKey
-            };
+            downKeys[event.keyCode] = false;
 
-        downKeys[event.keyCode] = false;
-
-        for (; i < l.length; i++) {
-            l[i](Object.clone(eventObj));
+            for (; i < l.length; i++) {
+                l[i](Object.clone(eventObj));
+            }
         }
     }
 
     function mousedownHandler(event) {
-        event.stop();
-        window.focus();
-
         var l = listeners.mousedown,
             i = 0,
             eventObj = getPointerCoords(event);
         eventObj.button = event.button;
-        if (eventObj.x < 0 || eventObj.y < 0 || eventObj.x > SGF.Screen.getGameWidth() || eventObj.y > SGF.Screen.getGameHeight()) return;
-        
-        downMouseButtons[event.button] = true;
+        if (eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+            focus();
+            event.stop();
+            window.focus();
 
-        SGF.Input.pointerX = eventObj.x;
-        SGF.Input.pointerY = eventObj.y;
+            downMouseButtons[event.button] = true;
 
-        for (; i < l.length; i++) {
-            l[i](Object.clone(eventObj));
+            SGF.Input.pointerX = eventObj.x;
+            SGF.Input.pointerY = eventObj.y;
+
+            for (; i < l.length; i++) {
+                l[i](Object.clone(eventObj));
+            }
+        } else {
+            blur();
         }
     }
 
     function mouseupHandler(event) {
-        event.stop();
-        window.focus();
-
         var l = listeners.mouseup,
             i = 0,
             eventObj = getPointerCoords(event);
-        if (eventObj.x < 0 || eventObj.y < 0 || eventObj.x > SGF.Screen.getGameWidth() || eventObj.y > SGF.Screen.getGameHeight()) return;
         eventObj.button = event.button;
-        
-        downMouseButtons[event.button] = false;
+        if (screenFocused && eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+            event.stop();
+            window.focus();
 
-        SGF.Input.pointerX = eventObj.x;
-        SGF.Input.pointerY = eventObj.y;
+            downMouseButtons[event.button] = false;
 
-        for (; i < l.length; i++) {
-            l[i](Object.clone(eventObj));
+            SGF.Input.pointerX = eventObj.x;
+            SGF.Input.pointerY = eventObj.y;
+
+            for (; i < l.length; i++) {
+                l[i](Object.clone(eventObj));
+            }
         }
     }
 
     function mousemoveHandler(event) {
-        event.stop();
-        
         var l = listeners.mousemove,
             i = 0,
             eventObj = getPointerCoords(event);
-        if (eventObj.x < 0 || eventObj.y < 0 || eventObj.x > SGF.Screen.getGameWidth() || eventObj.y > SGF.Screen.getGameHeight()) return;
-            
-        SGF.Input.pointerX = eventObj.x;
-        SGF.Input.pointerY = eventObj.y;
-        
-        for (; i < l.length; i++) {
-            l[i](Object.clone(eventObj));
+        if (screenFocused && eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+            event.stop();
+
+            SGF.Input.pointerX = eventObj.x;
+            SGF.Input.pointerY = eventObj.y;
+
+            for (; i < l.length; i++) {
+                l[i](Object.clone(eventObj));
+            }
         }
     }
 
@@ -227,6 +235,14 @@ SGF.Input = (function() {
             x: (event.pointerX() - offset.left) / currentScale,
             y: (event.pointerY() - offset.top) / currentScale
         };
+    }
+
+    function blur() {
+        screenFocused = false;
+    }
+
+    function focus() {
+        screenFocused = true;
     }
 
     return {
@@ -329,6 +345,8 @@ SGF.Input = (function() {
         // Web/Internal Methods
         grabbed: false,
         grab: grab,
-        release: release
+        release: release,
+        focus: focus,
+        blur: blur
     };
 })();

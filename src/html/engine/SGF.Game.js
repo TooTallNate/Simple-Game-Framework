@@ -29,6 +29,7 @@ SGF.Game = Class.create({
         SGF.Game.current = this;
 
         // 'root' is the path to the folder containing the Game's 'main.js' file.
+        if (rootUrl.endsWith("main.js")) rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("main.js"));
         this.root = rootUrl.endsWith('/') ? rootUrl : rootUrl + '/';
         
         // Override the default options with the user defined options
@@ -137,8 +138,9 @@ SGF.Game = Class.create({
      * when the event occurs.
      **/
     observe: function(eventName, handler) {
-        if (!(eventName in this.listeners)) throw "'" + eventName + "' is an invalid eventName";
-        if (typeof(handler) !== 'function') throw "func must be a Function."
+        if (!(eventName in this.listeners))
+            throw "SGF.Game#observe: '" + eventName + "' is not a recognized event name.";
+        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
         this.listeners[eventName].push(handler);
         return this;
     },
@@ -151,6 +153,7 @@ SGF.Game = Class.create({
         return (new Date).getTime();
     },
 
+    /*
     recordStats: function() {
         var now = this.now(), totalDuration = now-this.statsTime;
 
@@ -161,6 +164,7 @@ SGF.Game = Class.create({
         this.fpsCount = this.upsCount = 0;
         this.statsTime = this.now();
     },
+    */
 
     /**
      * SGF.Game#render(interpolation) -> undefined
@@ -205,7 +209,7 @@ SGF.Game = Class.create({
         SGF.log("Starting " + this.root);
 
         if (!SGF.Input.grabbed) SGF.Input.grab();
-        
+        SGF.Input.focus();
 
         // The 'running' flag is used by step() to determine if the loop should
         // continue or end. No not set directly, use stop() to kill game loop.
@@ -251,8 +255,8 @@ SGF.Game = Class.create({
             loops++;
         }
 
-        // Sets the background color, only if it has changed in game code.
-        SGF.Screen.resetColor();
+        // Sets the screen background color, screen width and height
+        SGF.Screen.reset();
 
         // Renders all game components, taking the interpolation value
         // to predict where the game objects will be placed.
@@ -275,11 +279,8 @@ SGF.Game = Class.create({
 
     stopped: function() {
         if (SGF.Input.grabbed) SGF.Input.release();
-        SGF.Screen.showNativeCursor(true);
-
-
+        SGF.Screen.useNativeCursor(true);
         SGF.Game.current = null;
-
         this.listeners.stopped.invoke("call", this);
     },
 
@@ -291,14 +292,10 @@ SGF.Game = Class.create({
      * this method, however.
      **/
     update: function() {
-        // Update the SGF.Screen properties
-        SGF.Screen.remeasure();
-
         for (var i=0; i<this.components.length; i++) {
             if (this.components[i].update)
                 this.components[i].update(this.updateCount);
         }
-
         this.updateCount++;
         this.upsCount++;
     },
@@ -309,7 +306,6 @@ SGF.Game = Class.create({
     __computeChildZIndex: function(zIndex) {
         return parseInt(zIndex) * 1000;
     }
-
 });
 
 

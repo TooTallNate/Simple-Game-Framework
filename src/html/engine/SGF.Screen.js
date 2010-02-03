@@ -3,15 +3,14 @@
  *
  * Contains information about the screen the game is being rendered to.
  **/
-
 SGF.Screen = (function() {
     var REQUIRED_OVERFLOW = "hidden",
         scale = 1,
         lastColor = null;
     
     function bind(element) {
-        // First, we need to "normalize" the Screen element by first removing all
-        // previous elements, and then setting some standard styles
+        // First, we need to "normalize" the Screen element by first removing
+        // all previous elements, and then setting some standard styles
         element.style.padding = 0;
         element.style.overflow = REQUIRED_OVERFLOW;
         Element.makePositioned(element);
@@ -53,19 +52,19 @@ SGF.Screen = (function() {
         }
         if (Object.isString(cursor)) {
             cursor = cursor.toLowerCase();
-            if ("default" == (cursor)) {
+            if ("default" == cursor) {
                 val = "default";
-            } else if ("crosshair" == (cursor)) {
+            } else if ("crosshair" == cursor) {
                 val = "crosshair";
-            } else if ("hand" == (cursor)) {
+            } else if ("hand" == cursor) {
                 val = "pointer";
-            } else if ("move" == (cursor)) {
+            } else if ("move" == cursor) {
                 val = "move";
-            } else if ("text" == (cursor)) {
+            } else if ("text" == cursor) {
                 val = "text";
-            } else if ("wait" == (cursor)) {
+            } else if ("wait" == cursor) {
                 val = "wait";
-            } else if ("none" ==(cursor)) {
+            } else if ("none" == cursor) {
                 val = "url(" + SGF.engineRoot + "blank." + (Prototype.Browser.IE ? "cur" : "gif") + "), none";
             }
         }
@@ -89,12 +88,9 @@ SGF.Screen = (function() {
         return getPixelHeight() / getScale();
     }
 
-    function remeasure() {
+    function reset() {
         SGF.Screen.width = getGameWidth();
         SGF.Screen.height = getGameHeight();
-    }
-
-    function resetColor() {
         if (SGF.Screen.color != lastColor) {
             SGF.Screen.element.style.backgroundColor = "#" + SGF.Screen.color;
             lastColor = SGF.Screen.color;
@@ -150,8 +146,7 @@ SGF.Screen = (function() {
         getGameHeight: getGameHeight,
         getScale: getScale,
         setScale: setScale,
-        remeasure: remeasure,
-        resetColor: resetColor
+        reset: reset
     }
 })();
 

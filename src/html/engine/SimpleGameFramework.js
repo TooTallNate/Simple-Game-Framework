@@ -17,6 +17,7 @@ var SGF = (function() {
         scriptNode = findScriptNode(),
         engineRoot = getEngineRoot(scriptNode),
         params = getScriptParams(scriptNode),
+        debugMode = "debug" in params ? !!params.debug : false,
         engineScripts = {
             "Game":     null,
             "Screen":   null,
@@ -34,7 +35,6 @@ var SGF = (function() {
         eventListeners = {
             "load" : []
         };
-
 
     // Engine Initialization
 
@@ -73,7 +73,7 @@ var SGF = (function() {
             script.parentNode.removeChild(script);
         // Now remove all properties on the object
         for (var prop in script)
-          delete script[prop];
+            delete script[prop];
         return script;
     }
 
@@ -335,11 +335,8 @@ var SGF = (function() {
      * the Java client, output is sent to `System.out.println`, etc.
      **/
     function log() {
-        if (window.console && window.console.log) {
-            for (var i=0; i<arguments.length; i++) {
-                window.console.log((new Date().getTime()) + ": " +
-                    (Object.inspect ? Object.inspect(arguments[i]) : String(arguments[i])));
-            }
+        if (debugMode && window.console && window.console.log) {
+            window.console.log(((new Date).getTime()) + ": " + String(arguments[0]));
         }
     }
 
@@ -357,6 +354,14 @@ var SGF = (function() {
         eventListeners[eventName].push(handler);
     }
 
+    function setDebugMode(bool) {
+        if (Object.isBoolean(bool)) {
+            debugMode = bool;
+        } else {
+            throw "SGF.setDebugMode: '" + bool + "' must be a Boolean!";
+        }
+    }
+
 
 
     
@@ -366,7 +371,7 @@ var SGF = (function() {
         params:     params,
         observe:    observe,
         loadScript: loadScript,
-        engineRoot: engineRoot
+        engineRoot: engineRoot,
+        setDebugMode: setDebugMode
     };
 })();
-
