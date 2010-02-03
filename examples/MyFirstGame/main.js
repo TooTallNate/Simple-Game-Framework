@@ -3,7 +3,7 @@ var Box = Class.create(SGF.Rectangle, {
         $super({
             width: 15,
             height: 20,
-            color: "FF0000"
+            color: "FF0000" // Red
         });
     },
     update: function() {
@@ -11,7 +11,8 @@ var Box = Class.create(SGF.Rectangle, {
             this.y--;
         } else if (SGF.Input.isKeyDown(SGF.Input.KEY_DOWN)) {
             this.y++;
-        } else if (SGF.Input.isKeyDown(SGF.Input.KEY_LEFT)) {
+        }
+        if (SGF.Input.isKeyDown(SGF.Input.KEY_LEFT)) {
             this.x--;
         } else if (SGF.Input.isKeyDown(SGF.Input.KEY_RIGHT)) {
             this.x++;
