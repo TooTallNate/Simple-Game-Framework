@@ -76,8 +76,8 @@ to learn it all!
 Additional Links
 ----------------
 
-["Simple Game Framework" Google Group](http://groups.google.com/group/simple-game-framework) - A Google Group dedicated to discussion of SGF game (or engine) development.
-[GitHub SGF Wiki](http://wiki.github.com/TooTallNate/Simple-Game-Framework) - The official Wiki for SGF, with community written guides/tutorials and good-to-know SGF info.
+ * ["Simple Game Framework" Google Group](http://groups.google.com/group/simple-game-framework) - A Google Group dedicated to discussion of SGF game (or engine) development.
+ * [GitHub SGF Wiki](http://wiki.github.com/TooTallNate/Simple-Game-Framework) - The official Wiki for SGF, with community written guides/tutorials and good-to-know SGF info.
 
 
 License
