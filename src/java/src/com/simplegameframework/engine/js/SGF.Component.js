@@ -7,7 +7,7 @@ SGF.Component = Class.create({
     getJavaComponent: function() {
         return new Packages.com.simplegameframework.engine.Component(this);
     },
-    update: function(updateCount) {
+    update: function() {
         if (this.dx !== 0) {
             this.x = this.x + this.dx;
         }
@@ -15,42 +15,16 @@ SGF.Component = Class.create({
             this.y = this.y + this.dy;
         }
     },
-    render: function(interpolation, renderCount) {
-
-    },
-    /**
-     * SGF.Component#left() -> Number
-     *
-     * Returns the number of pixels from left side of the screen to the left
-     * side of the [[SGF.Component]].
-     **/
+    render: Prototype.emptyFunction,
     left: function() {
         return this.x;
     },
-    /**
-     * SGF.Component#top() -> Number
-     *
-     * Returns the number of pixels from the top of the screen to the top
-     * of the [[SGF.Component]].
-     **/
     top: function() {
         return this.y;
     },
-    /**
-     * SGF.Component#right() -> Number
-     *
-     * Returns the number of pixels from left side of the screen to the right
-     * side of the [[SGF.Component]].
-     **/
     right: function() {
         return this.x + this.width - 1;
     },
-    /**
-     * SGF.Component#bottom() -> Number
-     *
-     * Returns the number of pixels from the top side of the screen to the
-     * bottom of the [[SGF.Component]].
-     **/
     bottom: function() {
         return this.y + this.height - 1;
     },

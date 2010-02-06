@@ -5,7 +5,7 @@ import java.awt.Graphics2D;
 
 /**
  * Shape is an abstract class that won't get instantiated directly. Instead,
- * Shape provides Color to its subclasses.
+ * Shape provides Color and a Fill property to its subclasses.
  * @author Nathan Rajlich
  */
 public abstract class Shape extends Component {

@@ -10,7 +10,10 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -84,6 +87,8 @@ public class Main extends JFrame implements ActionListener, WindowListener {
         Context cx = Context.enter();
         try {
             cx.setOptimizationLevel(9);
+            //cx.setOptimizationLevel(-1);
+
             this.globalScope = cx.initStandardObjects();
 
             // Load the Prototype lang extensions
@@ -167,8 +172,13 @@ public class Main extends JFrame implements ActionListener, WindowListener {
         if (this.currentGame != null) {
             this.currentGame.stop();
         }
-
-        this.currentGame = new Game(root, this.globalScope, this.screen);
+        URL rootUrl = null;
+        try {
+            rootUrl = root.toURI().toURL();
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+        }
+        this.currentGame = new Game(rootUrl, this.globalScope, this.screen);
         this.currentGame.start();
     }
 

@@ -9,7 +9,7 @@ SGF.Shape = Class.create(SGF.Component, {
         return this.color;
     },
     __getFill: function() {
-        return this.fill;
+        return this.fill === true;
     }
 });
 

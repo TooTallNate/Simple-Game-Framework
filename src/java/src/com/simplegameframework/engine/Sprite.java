@@ -26,8 +26,11 @@ public abstract class Sprite extends Component {
     public void doRender(Graphics2D g, double interpolation, long renderCount) {
         super.doRender(g, interpolation, renderCount);
 
+        Spriteset s = __getSpriteset();
+        if (!s.jsGet_loaded()) return;
+
         float opacity = (float)__getOpacity();
-        if (opacity <= 0) {
+        if (opacity <= 0.001) {
             return; // If the Component is invisible, then return without rendering anything!
         } else {
             g.setComposite(getAlphaComposite());
@@ -36,7 +39,6 @@ public abstract class Sprite extends Component {
         double width = __getWidth();
         double height = __getHeight();
 
-        Spriteset s = __getSpriteset();
         int spriteWidth = s.jsGet_spriteWidth();
         int spriteHeight = s.jsGet_spriteHeight();
         int sx1 = __getSpriteX() * spriteWidth;

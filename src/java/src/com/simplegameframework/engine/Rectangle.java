@@ -17,7 +17,7 @@ public abstract class Rectangle extends Shape {
         super.doRender(g, interpolation, renderCount);
 
         float opacity = (float)__getOpacity();
-        if (opacity <= 0) {
+        if (opacity <= 0.001) {
             return; // If the Component is invisible, then return without rendering anything!
         } else {
             g.setComposite(getAlphaComposite());

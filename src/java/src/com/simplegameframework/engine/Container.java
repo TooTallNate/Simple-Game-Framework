@@ -2,7 +2,7 @@ package com.simplegameframework.engine;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.image.VolatileImage;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.mozilla.javascript.Context;
@@ -21,7 +21,7 @@ public abstract class Container extends Component {
      * buffer is reused each render, and only recreated when the size of the
      * Container is changed.
      */
-    private VolatileImage buffer;
+    private BufferedImage buffer;
     /**
      * The width of the buffer, as to avoid calling buffer.getWidth(null), for
      * speed.
@@ -85,7 +85,7 @@ public abstract class Container extends Component {
         super.doRender(g, interpolation, renderCount);
 
         float opacity = (float)__getOpacity();
-        if (opacity <= 0) {
+        if (opacity <= 0.001) {
             return; // If the Component is invisible, then return without rendering anything!
         } else {
             g.setComposite(getAlphaComposite());
@@ -102,8 +102,7 @@ public abstract class Container extends Component {
 
         if (this.buffer == null ||
                 this.bufferWidth != iWidth ||
-                this.bufferHeight != iHeight ||
-                this.buffer.contentsLost()) {
+                this.bufferHeight != iHeight) {
 
             //System.out.println("Recreating Container Buffer");
 
@@ -112,7 +111,7 @@ public abstract class Container extends Component {
             
             this.bufferHeight = iHeight;
             this.bufferWidth = iWidth;
-            this.buffer = g.getDeviceConfiguration().createCompatibleVolatileImage(iWidth, iHeight, Color.TRANSLUCENT);
+            this.buffer = g.getDeviceConfiguration().createCompatibleImage(iWidth, iHeight, Color.TRANSLUCENT);
         }
         Graphics2D containerGraphics = this.buffer.createGraphics();
         //containerGraphics.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);

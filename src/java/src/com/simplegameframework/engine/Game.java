@@ -1,8 +1,8 @@
 package com.simplegameframework.engine;
 
 import java.awt.Graphics2D;
-import java.io.File;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -34,10 +34,10 @@ public class Game extends ScriptableObject implements Runnable {
      */
     private Screen screen;
     /**
-     * A <tt>File</tt> object that represenets the folder where this game's
+     * A <tt>URL</tt> object that represenets the folder where this game's
      * 'main.js' file (and rest of project) reside.
      */
-    private final File root;
+    private final URL root;
     /**
      * A <tt>CopyOnWriteArrayList</tt> containing all the {@link Component}s
      * that this game should update/render in the game loop.
@@ -92,7 +92,7 @@ public class Game extends ScriptableObject implements Runnable {
     private Thread runner;
 
     // Constructors ////////////////////////////////////////////////////////////
-    public Game(File root, Scriptable globalScope, Screen screen) {
+    public Game(URL root, Scriptable globalScope, Screen screen) {
 
         // Set the scope, and place 'this' as SGF.Game.current
         this.globalScope = globalScope;
@@ -111,7 +111,7 @@ public class Game extends ScriptableObject implements Runnable {
         this.root = root;
         
         try {
-            this.loadScript("main.js", null);
+            this.loadMainScript();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -157,28 +157,22 @@ public class Game extends ScriptableObject implements Runnable {
         throw Context.reportRuntimeError(Context.toString(o) + " is not an instance of SGF.Component!");
     }
 
-    /**
-     * Loads a JavaScript file from the game's folder and evaluates it into the
-     * "executing environment".
-     * @param name The relative file path and name of the JS file to load.
-     * @param loadedHandler The optional Function to execute after it has been
-     *                      fully evaluated.
-     * @throws Exception If the specified file does not exist.
-     */
-    public void loadScript(String name, Function loadedHandler) throws Exception {
+    public void loadMainScript() throws Exception {
         Context c = Context.enter();
         try {
-            File fileToLoad = new File(this.root + File.separator + name);
-            InputStreamReader r = new InputStreamReader(fileToLoad.toURI().toURL().openStream());
-            c.evaluateReader(this.globalScope, r, fileToLoad.toString(), 1, null);
-            if (loadedHandler != null) {
-                loadedHandler.call(c, loadedHandler, this, new Object[] {name});
-            }
+            URL scriptToLoad = new URL(this.root, "main.js");
+            InputStreamReader r = new InputStreamReader(scriptToLoad.openStream());
+            c.evaluateReader(this.globalScope, r, scriptToLoad.toString(), 1, null);
         } catch (Exception ex) {
             throw Context.throwAsScriptRuntimeEx(ex);
         } finally {
             Context.exit();
         }
+    }
+
+    public void loadScript(String name, Function onLoad) throws Exception {
+        URL scriptToLoad = new URL(this.root, name);
+        new ScriptLoader(this, this.globalScope, scriptToLoad, onLoad);
     }
 
     public void start() {
@@ -188,7 +182,7 @@ public class Game extends ScriptableObject implements Runnable {
         }
     }
 
-    public File getRoot() {
+    public URL getRoot() {
         return this.root;
     }
 
@@ -227,7 +221,7 @@ public class Game extends ScriptableObject implements Runnable {
 
             // Get the Graphics2D object we're going to draw onto
             Graphics2D g = (Graphics2D) screen.strategy.getDrawGraphics();
-            g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            //g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
 
             g.setColor(screen.getBackgroundColor());
             g.fillRect(0, 0, screen.getWidth(), screen.getHeight());
@@ -290,6 +284,6 @@ public class Game extends ScriptableObject implements Runnable {
 
     @Override
     public String toString() {
-        return this.root.toString();
+        return "[ SGF.Game " + this.root.toString() + " ]";
     }
 }
