@@ -1,3 +1,11 @@
+
+// Array Remove - By John Resig (MIT Licensed)
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+
 /**
  * == Core API ==
  * The lowest level functions and classes. The Core API contains objects
@@ -45,7 +53,7 @@ var SGF = (function() {
     });
     if (!window.WebSocket) {
         log("Native WebSocket implementation not detected, will load Flash fallback...");
-        loadSwfobject(function() {
+        loadSWFObject(function() {
             loadFABridge(function() {
                 loadWebSockets();
             });
@@ -206,9 +214,9 @@ var SGF = (function() {
         else if(Prototype.Browser.IE) transform = function(element, transform){
             if(!element._oDims)
                 element._oDims = [element.offsetWidth, element.offsetHeight];
-            var c = Math.cos(transform||0) * 1, s = Math.sin(transform||0) * 1,
-                filter = "progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
-            element.style.filter = filter;
+            var c = Math.cos(transform.rotation||0) * 1, s = Math.sin(transform.rotation||0) * 1;
+            element.style.filter = element.style.filter.replace(/progid:DXImageTransform.Microsoft.Matrix\([^\)]*\)/gi,'')
+                + "progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
             element.style.marginLeft = (element._oDims[0]-element.offsetWidth)/2+'px';
             element.style.marginTop = (element._oDims[1]-element.offsetHeight)/2+'px';
             return element;
@@ -246,18 +254,18 @@ var SGF = (function() {
             log("Loading Prototype");
             loadLib("Prototype" in params ? params.Prototype : engineRoot + "lib/prototype.js", onComplete);
         } else {
-            SGF.log("Prototype is already loaded, skipping...");
+            log("Prototype is already loaded, skipping...");
             libraryFileLoaded();
             onComplete();
         }
     }
     
-    function loadSwfobject(onComplete) {
+    function loadSWFObject(onComplete) {
         if (!(window.swfobject && Object.isFunction(swfobject.embedSWF))) {
             log("Loading SWFObject 2.0");
-            loadLib(engineRoot + "lib/swfobject.js", onComplete);
+            loadLib("SWFObject" in params ? params.SWFObject : engineRoot + "lib/swfobject.js", onComplete);
         } else {
-            SGF.log("SWFObject 2.0 is already loaded, skipping...");
+            log("SWFObject 2.0 is already loaded, skipping...");
             libraryFileLoaded();
             onComplete();
         }
@@ -268,7 +276,7 @@ var SGF = (function() {
             log("Loading FABridge");
             loadLib(engineRoot + "lib/FABridge.js", onComplete);
         } else {
-            SGF.log("FABridge is already loaded, skipping...");
+            log("FABridge is already loaded, skipping...");
             libraryFileLoaded();
             onComplete();
         }
@@ -361,8 +369,6 @@ var SGF = (function() {
             throw "SGF.setDebugMode: '" + bool + "' must be a Boolean!";
         }
     }
-
-
 
     
     

@@ -1,6 +1,7 @@
 SGF.Circle = Class.create(SGF.Shape, {
     initialize: function($super, options) {
         $super(Object.extend(Object.clone(SGF.Circle.DEFAULTS), options || {}));
+        this.radiusChanged();
     },
     
     getElement: function() {
@@ -18,23 +19,35 @@ SGF.Circle = Class.create(SGF.Shape, {
         $super();
     },
 
-    render: function($super, interpolation) {
-        $super(interpolation);
-        if (this.radius != this.__radius) {
-            if (Prototype.Browser.WebKit) {
-                this.element.style.webkitBorderRadius = (this.radius * SGF.Screen.getScale()) + "px";
-            } else if (Prototype.Browser.Gecko) {
-                this.element.style.MozBorderRadius = (this.radius * SGF.Screen.getScale()) + "px";
-            }
-            this.__radius = this.radius;
+    render: (function() {
+        if (Prototype.Browser.WebKit) {
+            return function($super, interpolation) {
+                $super(interpolation);
+                if (this.radius != this.__radius) {
+                    this.element.style.webkitBorderRadius = (this.radius * SGF.Screen.getScale()) + "px";
+                    this.__radius = this.radius;
+                }
+            };
+        } else if (Prototype.Browser.Gecko) {
+            return function($super, interpolation) {
+                $super(interpolation);
+                if (this.radius != this.__radius) {
+                    this.element.style.MozBorderRadius = (this.radius * SGF.Screen.getScale()) + "px";
+                    this.__radius = this.radius;
+                }
+            };
+        } else {
+            SGF.log("A form of Border Radius is not supported by this browser.");
+            return function($super, interpolation) {
+                $super(interpolation);
+            };
         }
-    },
+    })(),
 
     radiusChanged: function() {
         this.width = this.height = this.radius*2;
     }
 });
-
 
 SGF.Circle.DEFAULTS = {
     radius: 10

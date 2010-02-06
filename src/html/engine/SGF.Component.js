@@ -144,7 +144,10 @@ SGF.Component = Class.create({
      *                         has been updated.
      *
      * Updates the state of the individual [[SGF.Component]]. This is called in
-     * the game loop once this component has been added through [[SGF.Game#addComponent]].
+     * the game loop once this component has been added through
+     * [[SGF.Game#addComponent]].
+     *
+     * This function should be thought of as
      **/
     update: function() {
         if (this.dx !== 0) {
@@ -155,10 +158,10 @@ SGF.Component = Class.create({
         }
     },
     __fixZIndex: function() {
-        this.element.style.zIndex =
-            this.parent && this.parent.__computeChildZIndex ?
-                this.parent.__computeChildZIndex(this.zIndex) :
-                this.zIndex;
+        var z = this.parent && this.parent.__computeChildZIndex ?
+            this.parent.__computeChildZIndex(this.zIndex) :
+            this.zIndex;
+        this.element.style.zIndex = z;
     }
 });
 

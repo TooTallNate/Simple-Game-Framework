@@ -4,7 +4,7 @@
  * A `SGF.Container` is a concrete [[SGF.Component]] subclass, that acts
  * similar to the main [[SGF.Screen]] itself. That is, you can add
  * `SGF.Component`s into a container just like you would in your game.
- * Components placed inside containers are renders with their X and Y coordinates
+ * Components placed inside containers are rendered with their X and Y coordinates
  * relative to the Container's X and Y coordinates. `SGF.Container` supports
  * all the regular [[SGF.Component]] properties. I.e. `width`, `height`, `x`,
  * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`. Changing the properties
@@ -28,8 +28,8 @@ SGF.Container = Class.create(SGF.Component, {
      * in `components` initially.
      **/
     initialize: function($super, components, options) {
-        $super(Object.extend(Object.clone(SGF.Container.DEFAULTS), options || {}));
         this.components = [];
+        $super(Object.extend(Object.clone(SGF.Container.DEFAULTS), options || {}));
         if (Object.isArray(components)) {
             components.each(this.addComponent, this);
         }
@@ -56,6 +56,13 @@ SGF.Container = Class.create(SGF.Component, {
                 this.components[i].render(interpolation, renderCount);
         }
     },
+    scale: function($super, newScale) {
+        $super(newScale);
+        for (var i=0; i<this.components.length;i++) {
+            this.components[i].scale(newScale);
+        }
+    },
+
 
     /**
      * SGF.Container#addComponent(component) -> SGF.Container
@@ -75,16 +82,25 @@ SGF.Container = Class.create(SGF.Component, {
         return this;
     },
     
+    /**
+     * SGF.Container#removeComponent(component) -> SGF.Container
+     * - component (SGF.Component): The `SGF.Component` instance to add to this
+     *                              container.
+     *
+     * Removes an [[SGF.Component]] from the container that has previously been
+     * added to this container via [[SGF.Container#addComponent]].
+     **/
     removeComponent: function(component) {
-        if (this.components.include(component)) {
-            this.components = this.components.without(component);
-            component.toElement().remove();
+        var index = this.components.indexOf(component);
+        if (index > -1) {
+            this.components.remove(index);
+            component.element.remove();
             component.parent = null;
         }
         return this;
     },
     __computeChildZIndex: function(zIndex) {
-        return parseInt(this.element.style.zIndex) + parseInt(zIndex);
+        return (parseInt(this.element.style.zIndex) || 0) + (parseInt(zIndex) || 0);
     },
     __fixZIndex: function($super) {
         $super();

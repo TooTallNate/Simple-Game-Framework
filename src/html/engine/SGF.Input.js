@@ -74,7 +74,9 @@ SGF.Input = (function() {
         if (!(eventName in listeners))
             throw "SGF.Input.stopObserving: '" + eventName + "' is not a recognized event name."
         if (typeof(handler) !== 'function') throw "'handler' must be a Function."
-        listeners[eventName] = listeners[eventName].without(handler);
+        var index = listeners[eventName].indexOf(handler);
+        if (index > -1)
+            listeners[eventName].remove(index);
         return this;
     }
 
@@ -197,7 +199,8 @@ SGF.Input = (function() {
             i = 0,
             eventObj = getPointerCoords(event);
         eventObj.button = event.button;
-        if (screenFocused && eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+        if (eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+            focus();
             event.stop();
             window.focus();
 
@@ -216,7 +219,8 @@ SGF.Input = (function() {
         var l = listeners.mousemove,
             i = 0,
             eventObj = getPointerCoords(event);
-        if (screenFocused && eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+        if (eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+            focus();
             event.stop();
 
             SGF.Input.pointerX = eventObj.x;

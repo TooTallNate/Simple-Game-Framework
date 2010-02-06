@@ -1,3 +1,13 @@
+/** section: Core API, related to: SGF.Game
+* $G() -> SGF.Game
+*
+* Convienience method for getting your game instance. All it does is return
+* `SGF.Game.current`.
+**/
+function $G() {
+    return SGF.Game.current;
+}
+
 /** section: Core API
  * class SGF.Game
  *
@@ -9,21 +19,18 @@
  * [[SGF.Game#removeComponent]], and [[SGF.Game#loadScript]]. But there are some
  * more advances features for the adventurous.
  **/
-
 /**
  * SGF.Game#updateCount -> Number
  *
  * The total number of times that [[SGF.Game#update]] has been called throughout
  * the lifetime of this game.
  **/
-
 /**
  * SGF.Game#renderCount -> Number
  *
  * The total number of times that [[SGF.Game#render]] has been called throughout
  * the lifetime of this game.
  **/
-
 SGF.Game = Class.create({
     initialize: function(rootUrl, options) {
         SGF.Game.current = this;
@@ -91,8 +98,9 @@ SGF.Game = Class.create({
      * loop via [[SGF.Game#addComponent]].
      **/
     removeComponent: function(component) {
-        if (this.components.include(component)) {
-            this.components = this.components.without(component);
+        var index = this.components.indexOf(component);
+        if (index > -1) {
+            this.components.remove(index);
             component.toElement().remove();
             component.parent = null;
         }
@@ -153,7 +161,7 @@ SGF.Game = Class.create({
         return (new Date).getTime();
     },
 
-    /*
+    //*
     recordStats: function() {
         var now = this.now(), totalDuration = now-this.statsTime;
 
@@ -164,7 +172,7 @@ SGF.Game = Class.create({
         this.fpsCount = this.upsCount = 0;
         this.statsTime = this.now();
     },
-    */
+    //*/
 
     /**
      * SGF.Game#render(interpolation) -> undefined
@@ -228,7 +236,7 @@ SGF.Game = Class.create({
 
 
         // DEBUG!! Display stats every second
-        //setInterval(this.recordStats.bind(this), 1000);
+        setInterval(this.recordStats.bind(this), 1000);
         // For FPS/UPS, probably temoprary
         this.fpsCount = this.upsCount = 0;
         this.statsTime = this.now();
@@ -266,6 +274,7 @@ SGF.Game = Class.create({
         // Continue the game loop, as soon as the browser has time for it,
         // allowing for other JS on the stack to be executed (events, etc.)
         setTimeout(this.__bindedStep, 0);
+        //setTimeout("SGF.Game.current.step()", 0); <- Appears to be the same speed
     },
 
     /*
@@ -304,10 +313,9 @@ SGF.Game = Class.create({
      * Computes the z-index of a component added through addComponent.
      **/
     __computeChildZIndex: function(zIndex) {
-        return parseInt(zIndex) * 1000;
+        return ((parseInt(zIndex)||0)+1) * 1000;
     }
 });
-
 
 // PUBLIC STATIC
 Object.extend(SGF.Game, {
