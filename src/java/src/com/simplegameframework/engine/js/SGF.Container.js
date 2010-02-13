@@ -17,14 +17,14 @@ SGF.Container = Class.create(SGF.Component, {
     removeComponent: function(component) {
         this.__component.remove(component);
         return this;
-    },
-
-    __shouldUpdateChildren: function() {
-        return this.updateChildren === true;
     }
+
+    //__shouldUpdateChildren: function() {
+    //    return this.updateChildren === true;
+    //}
 
 });
 
 SGF.Container.DEFAULTS = {
-    updateChildren: false
+    //updateChildren: false
 };

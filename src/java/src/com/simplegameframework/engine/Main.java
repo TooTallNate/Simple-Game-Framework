@@ -12,8 +12,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -48,6 +47,8 @@ public class Main extends JFrame implements ActionListener, WindowListener {
     private JMenu fileMenu;
     private JMenuItem loadGameMenuItem;
     private JMenuItem closeMenuItem;
+    private JMenu screenMenu;
+    private JCheckBoxMenuItem fullScreenMenuItem;
 
     /**
      *
@@ -71,6 +72,14 @@ public class Main extends JFrame implements ActionListener, WindowListener {
         this.closeMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         this.closeMenuItem.addActionListener(this);
         this.fileMenu.add(this.closeMenuItem);
+
+        this.screenMenu = new JMenu("Screen");
+        this.fullScreenMenuItem = new JCheckBoxMenuItem("Full Screen");
+        this.fullScreenMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_DOWN_MASK));
+        this.fullScreenMenuItem.addActionListener(this);
+        this.screenMenu.add(this.fullScreenMenuItem);
+        this.menu.add(this.screenMenu);
+
 
         this.setJMenuBar(this.menu);
 
@@ -138,6 +147,10 @@ public class Main extends JFrame implements ActionListener, WindowListener {
             resource = this.getClass().getResource("js/SGF.Container.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
 
+            // Add SGF.DumbContainer
+            resource = this.getClass().getResource("js/SGF.DumbContainer.js");
+            cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
+
             // Add SGF.Shape
             resource = this.getClass().getResource("js/SGF.Shape.js");
             cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
@@ -161,6 +174,13 @@ public class Main extends JFrame implements ActionListener, WindowListener {
             // Add SGF.Spriteset
             ScriptableObject.defineClass(this.sgfObj, Spriteset.class);
 
+            // Add SGF.Font
+            ScriptableObject.defineClass(this.sgfObj, Font.class);
+
+            // Add SGF.Client
+            resource = this.getClass().getResource("js/SGF.Label.js");
+            cx.evaluateReader(this.globalScope, new InputStreamReader(resource.openStream()), resource.getFile(), 1, null);
+
         } catch(Exception ex) {
             ex.printStackTrace();
         } finally {
@@ -182,6 +202,24 @@ public class Main extends JFrame implements ActionListener, WindowListener {
         this.currentGame.start();
     }
 
+    private void toggleFullscreen() {
+        if (this.fullScreenMenuItem.isSelected()) {
+            //System.out.println("Entering Full Screen");
+            this.dispose();
+            this.setUndecorated(true);
+            this.getGraphicsConfiguration().getDevice().setFullScreenWindow(this);
+            this.validate();
+            this.screen.requestFocus();
+        } else {
+            //System.out.println("Exiting Full Screen");
+            this.dispose();
+            this.setUndecorated(false);
+            this.getGraphicsConfiguration().getDevice().setFullScreenWindow(null);
+            this.setVisible(true);
+            this.screen.requestFocus();
+        }
+    }
+
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
         if (source == this.loadGameMenuItem) {
@@ -198,6 +236,8 @@ public class Main extends JFrame implements ActionListener, WindowListener {
                     java.awt.event.WindowEvent.WINDOW_CLOSING
                 )
             );
+        } else if (source == this.fullScreenMenuItem) {
+            toggleFullscreen();
         }
     }
 

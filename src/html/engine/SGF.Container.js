@@ -1,13 +1,13 @@
 /** section: Components API
- * class SGF.Container
+ * class SGF.Container < SGF.Component
  *
  * A `SGF.Container` is a concrete [[SGF.Component]] subclass, that acts
  * similar to the main [[SGF.Screen]] itself. That is, you can add
  * `SGF.Component`s into a container just like you would in your game.
- * Components placed inside containers are rendered with their X and Y coordinates
- * relative to the Container's X and Y coordinates. `SGF.Container` supports
- * all the regular [[SGF.Component]] properties. I.e. `width`, `height`, `x`,
- * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`. Changing the properties
+ * Components placed inside containers are rendered with their attributes
+ * relative to the Container's attributes. `SGF.Container` supports
+ * all the regular [[SGF.Component]] properties (i.e. `width`, `height`, `x`,
+ * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`) Changing the properties
  * on a Container affect the global properties of the Components placed inside.
  **/
 SGF.Container = Class.create(SGF.Component, {
@@ -33,6 +33,7 @@ SGF.Container = Class.create(SGF.Component, {
         if (Object.isArray(components)) {
             components.each(this.addComponent, this);
         }
+        this.__shouldUpdateComponents = this.__needsRender = true;
     },
     getElement: function() {
         return new Element("div").setStyle({
@@ -42,7 +43,7 @@ SGF.Container = Class.create(SGF.Component, {
     },
     update: function($super, updateCount) {
         $super(updateCount);
-        if (this.updateChildren) {
+        if (this.__shouldUpdateComponents) {
             for (var i=0; i<this.components.length; i++) {
                 if (this.components[i].update)
                     this.components[i].update(updateCount);
@@ -51,6 +52,11 @@ SGF.Container = Class.create(SGF.Component, {
     },
     render: function($super, interpolation, renderCount) {
         $super(interpolation, renderCount);
+        if (this.__needsRender) {
+            this.__renderComponents(interpolation, renderCount);
+        }
+    },
+    __renderComponents: function(interpolation, renderCount) {
         for (var i=0; i < this.components.length; i++) {
             if (this.components[i].render)
                 this.components[i].render(interpolation, renderCount);
@@ -111,5 +117,5 @@ SGF.Container = Class.create(SGF.Component, {
 });
 
 SGF.Container.DEFAULTS = {
-    updateChildren: false
+    //updateChildren: false
 };

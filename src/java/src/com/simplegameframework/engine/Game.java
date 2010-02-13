@@ -101,7 +101,10 @@ public class Game extends ScriptableObject implements Runnable {
         game.put("current", game, this);
 
         // Define the visible functions and properties on the "SGF.Game" object in JS
-        this.defineFunctionProperties(new String[] {"addComponent", "removeComponent", "setGameSpeed", "loadScript"}, this.getClass(), PERMANENT);
+        Class<?> thisClass = this.getClass();
+        this.defineFunctionProperties(new String[] {"addComponent", "removeComponent", "setGameSpeed", "loadScript"}, thisClass, PERMANENT);
+        this.defineProperty("updateCount", thisClass, READONLY);
+        this.defineProperty("renderCount", thisClass, READONLY);
 
         this.setScreen(screen);
         this.componentsArray = new CopyOnWriteArrayList<Component>();
@@ -157,14 +160,20 @@ public class Game extends ScriptableObject implements Runnable {
         throw Context.reportRuntimeError(Context.toString(o) + " is not an instance of SGF.Component!");
     }
 
+    public long getUpdateCount() {
+        return this.updateCount;
+    }
+
+    public long getRenderCount() {
+        return this.renderCount;
+    }
+
     public void loadMainScript() throws Exception {
         Context c = Context.enter();
         try {
             URL scriptToLoad = new URL(this.root, "main.js");
             InputStreamReader r = new InputStreamReader(scriptToLoad.openStream());
             c.evaluateReader(this.globalScope, r, scriptToLoad.toString(), 1, null);
-        } catch (Exception ex) {
-            throw Context.throwAsScriptRuntimeEx(ex);
         } finally {
             Context.exit();
         }
@@ -219,33 +228,37 @@ public class Game extends ScriptableObject implements Runnable {
             }
             //if (loops>1) System.out.println("Skipped " + loops + " frames");
 
-            // Get the Graphics2D object we're going to draw onto
-            Graphics2D g = (Graphics2D) screen.strategy.getDrawGraphics();
-            //g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            try {
+                // Get the Graphics2D object we're going to draw onto
+                Graphics2D g = (Graphics2D) screen.strategy.getDrawGraphics();
+                //g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
 
-            g.setColor(screen.getBackgroundColor());
-            g.fillRect(0, 0, screen.getWidth(), screen.getHeight());
+                g.setColor(screen.getBackgroundColor());
+                g.fillRect(0, 0, screen.getWidth(), screen.getHeight());
 
-            // Render all Components. Taking the interpolation value into account
-            render(g, (System.nanoTime() + this.period - nextGamePeriod) / this.period);
+                // Render all Components. Taking the interpolation value into account
+                render(g, (System.nanoTime() + this.period - nextGamePeriod) / this.period);
 
-            // DEBUG
-            //*
-            g.setColor(java.awt.Color.white);
-            g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
-            double duration =  (double)System.nanoTime() - (double)this.startTime;
-            g.drawString("FPS: " + (int)((double)this.renderCount/duration * 1000000000), 2, 15);
-            g.drawString("UPS: " + (int)((double)this.updateCount/duration * 1000000000), 2, 30);
-            g.drawString("Running Time: " + ((System.nanoTime() - this.startTime) / 1000000000), 2, 45);
-            g.drawString("Frames Rendered: " + this.renderCount, 2, 60);
-            g.drawString("Updates Processed: " + this.updateCount, 2, 75);
-            g.drawString("# of Components: " + this.componentsArray.size(), 2, 90);
-            //*/
+                // DEBUG
+                /*
+                g.setColor(java.awt.Color.white);
+                g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
+                double duration =  (double)System.nanoTime() - (double)this.startTime;
+                g.drawString("FPS: " + (int)((double)this.renderCount/duration * 1000000000), 2, 15);
+                g.drawString("UPS: " + (int)((double)this.updateCount/duration * 1000000000), 2, 30);
+                g.drawString("Running Time: " + ((System.nanoTime() - this.startTime) / 1000000000), 2, 45);
+                g.drawString("Frames Rendered: " + this.renderCount, 2, 60);
+                g.drawString("Updates Processed: " + this.updateCount, 2, 75);
+                g.drawString("# of Components: " + this.componentsArray.size(), 2, 90);
+                */
 
-            // Now that all rendering is done for this frame, dispose our
-            // reference and show what was drawn on the 'screen'.
-            g.dispose();
-            screen.strategy.show();
+                // Now that all rendering is done for this frame, dispose our
+                // reference and show what was drawn on the 'screen'.
+                g.dispose();
+                screen.strategy.show();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
 
             // Allow any starving Threads get some CPU time before continuing...
             Thread.yield();

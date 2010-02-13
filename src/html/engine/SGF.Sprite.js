@@ -56,7 +56,8 @@ SGF.Sprite = Class.create(SGF.Component, {
         }
     },
     render: function($super, interpolation, renderCount) {
-        if (this.__spriteX != this.spriteX || this.__spriteY != this.spriteY) {
+        if (this.__spriteX != this.spriteX || this.__spriteY != this.spriteY ||
+            this.__width != this.width || this.__height != this.height) {
             if (this.spriteset.loaded) {
                 this.resetSpriteset();
             } else {

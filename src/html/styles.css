@@ -7,7 +7,6 @@ body {
 #screen {
     width:400px;
     height:300px;
-    position:relative;
     border:Solid 1px #000000;
     margin:0 auto;
 }

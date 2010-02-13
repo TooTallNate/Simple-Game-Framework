@@ -25,15 +25,18 @@ var SGF = (function() {
         scriptNode = findScriptNode(),
         engineRoot = getEngineRoot(scriptNode),
         params = getScriptParams(scriptNode),
-        debugMode = "debug" in params ? !!params.debug : false,
+        debugMode = "debug" in params ? params.debug === "true" : false,
         engineScripts = {
             "Game":     null,
             "Screen":   null,
             "Input":    null,
             "Server":   null,
             "Client":   null,
+            "Font":     null,
             "Component":null,
             "Container":null,
+            "DumbContainer":null,
+            "Label":    null,
             "Spriteset":null,
             "Sprite":   null,
             "Shape":    null,
@@ -200,15 +203,18 @@ var SGF = (function() {
         var transform;
 
         if(window.CSSMatrix) transform = function(element, transform){
-            element.style.transform = 'scale(1) rotate('+(transform||0)+'rad)';
+            //element.style.transform = 'scale(1) rotate('+(transform||0)+'rad)';
+            element.style.transform = 'rotate('+(transform||0)+'rad)';
             return element;
         };
         else if(window.WebKitCSSMatrix) transform = function(element, transform){
-            element.style.webkitTransform = 'scale(1) rotate('+(transform||0)+'rad)';
+            //element.style.webkitTransform = 'scale(1) rotate('+(transform||0)+'rad)';
+            element.style.webkitTransform = 'rotate('+(transform||0)+'rad)';
             return element;
         };
         else if(Prototype.Browser.Gecko) transform = function(element, transform){
-            element.style.MozTransform = 'scale(1) rotate('+(transform||0)+'rad)';
+            //element.style.MozTransform = 'scale(1) rotate('+(transform||0)+'rad)';
+            element.style.MozTransform = 'rotate('+(transform||0)+'rad)';
             return element;
         };
         else if(Prototype.Browser.IE) transform = function(element, transform){

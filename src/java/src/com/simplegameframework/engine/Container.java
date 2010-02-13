@@ -32,12 +32,18 @@ public abstract class Container extends Component {
      * speed.
      */
     private int bufferHeight;
+    /**
+     *
+     */
+    protected boolean needsRender;
+    protected boolean shouldUpdateComponents;
 
     /**
      * Called when the Container is instantiated (through JS code).
      */
     public Container() {
         this.components = new CopyOnWriteArrayList<Component>();
+        this.needsRender = this.shouldUpdateComponents = true;
     }
 
     /**
@@ -91,9 +97,6 @@ public abstract class Container extends Component {
             g.setComposite(getAlphaComposite());
         }
 
-        // We need to ensure that Components are rendered according to their zIndex
-        Component[] sortedComponents = components.toArray(new Component[0]);
-        Arrays.sort(sortedComponents, Game.Z_INDEX_COMPARATOR);
 
         double width = __getWidth();
         double height = __getHeight();
@@ -103,27 +106,13 @@ public abstract class Container extends Component {
         if (this.buffer == null ||
                 this.bufferWidth != iWidth ||
                 this.bufferHeight != iHeight) {
-
-            //System.out.println("Recreating Container Buffer");
-
-            if (this.buffer != null)
-                this.buffer.flush();
-            
-            this.bufferHeight = iHeight;
-            this.bufferWidth = iWidth;
-            this.buffer = g.getDeviceConfiguration().createCompatibleImage(iWidth, iHeight, Color.TRANSLUCENT);
-        }
-        Graphics2D containerGraphics = this.buffer.createGraphics();
-        //containerGraphics.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-        containerGraphics.clearRect(0, 0, iWidth, iHeight);
-
-        // Render each individual component onto the intermediary Graphics object
-        for (Component c : sortedComponents) {
-            c.doRender(containerGraphics, interpolation, renderCount);
+            recreateBuffer(g, iWidth, iHeight);
         }
 
 
 
+        if (needsRender)
+            renderContainer(iWidth, iHeight, interpolation, renderCount);
 
 
 
@@ -137,7 +126,6 @@ public abstract class Container extends Component {
 
 
 
-        containerGraphics.dispose();
         g.drawImage(this.buffer, (int)currentFrameX, (int)currentFrameY, iWidth, iHeight, null);
 
 
@@ -146,23 +134,42 @@ public abstract class Container extends Component {
         }
     }
 
+    void recreateBuffer(Graphics2D g, int iWidth, int iHeight) {
+        //System.out.println("Recreating Container Buffer");
+
+        if (this.buffer != null)
+            this.buffer.flush();
+
+        this.bufferHeight = iHeight;
+        this.bufferWidth = iWidth;
+        this.buffer = g.getDeviceConfiguration().createCompatibleImage(iWidth, iHeight, Color.TRANSLUCENT);
+    }
+
+    void renderContainer(int w, int h, double interpolation, long renderCount) {
+        // We need to ensure that Components are rendered according to their zIndex
+        Component[] sortedComponents = components.toArray(new Component[0]);
+        Arrays.sort(sortedComponents, Game.Z_INDEX_COMPARATOR);
+
+        Graphics2D containerGraphics = this.buffer.createGraphics();
+        //containerGraphics.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+        containerGraphics.clearRect(0, 0, w, h);
+
+        // Render each individual component onto the intermediary Graphics object
+        for (Component c : sortedComponents) {
+            c.doRender(containerGraphics, interpolation, renderCount);
+        }
+
+        containerGraphics.dispose();
+    }
+
     public void doUpdate(long updateCount) {
         // Call the SGF.Container#update function always.
         super.doUpdate(updateCount);
 
-        // Check if the SGF.Container#updateChildren flag is true, and then
-        // call SGF.Component#update on all components if it is.
-        if (Boolean.TRUE.equals(__shouldUpdateChildren())) {
+        if (shouldUpdateComponents) {
             for (Component c : components) {
                 c.doUpdate(updateCount);
             }
         }
     }
-
-    /**
-     * Return value is used by doUpdate to determine whether or not to call
-     * SGF.Component#update on all components inside this Container.
-     * @return True or false
-     */
-    public abstract Boolean __shouldUpdateChildren();
 }

@@ -6,7 +6,8 @@
 SGF.Screen = (function() {
     var REQUIRED_OVERFLOW = "hidden",
         scale = 1,
-        lastColor = null;
+        lastColor = null
+        isFullScreen = false;
     
     function bind(element) {
         // First, we need to "normalize" the Screen element by first removing
@@ -28,6 +29,8 @@ SGF.Screen = (function() {
             SGF.Input.release();
             SGF.Input.grab();
         }
+
+        isFullScreen = element === document.body;
     }
 
     function getScale() {
@@ -73,11 +76,11 @@ SGF.Screen = (function() {
     }
 
     function getPixelWidth() {
-        return SGF.Screen.element.clientWidth;
+        return isFullScreen ? document.documentElement.clientWidth : SGF.Screen.element.clientWidth;
     }
 
     function getPixelHeight() {
-        return SGF.Screen.element.clientHeight;
+        return isFullScreen ? document.documentElement.clientHeight : SGF.Screen.element.clientHeight;
     }
 
     function getGameWidth() {

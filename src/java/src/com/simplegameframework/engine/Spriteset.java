@@ -195,7 +195,7 @@ public class Spriteset extends ScriptableObject implements ImageObserver, Action
      * method gets called when the Spriteset loads completely into memory.
      * It is responsible for calling all the functions that have been added
      * via `SGF.Spriteset#observe`.
-     * @param e
+     * @param e The ActionEvent instance
      */
     public void actionPerformed(ActionEvent e) {
         Context c = Context.enter();
