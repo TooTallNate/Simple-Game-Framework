@@ -157,9 +157,14 @@ SGF.Game = Class.create({
      * Returns the current timestamp in milliseconds.
      * Used continually by the game loop.
      **/
-    now: function() {
-        return (new Date).getTime();
-    },
+    now: (function() {
+        if ("now" in Date)
+            return Date.now;
+        else
+            return function() {
+                return (new Date).getTime();
+            };
+    })(),
 
     /*
     recordStats: function() {

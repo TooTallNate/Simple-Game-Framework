@@ -219,7 +219,10 @@ SGF.Input = (function() {
         var l = listeners.mousemove,
             i = 0,
             eventObj = getPointerCoords(event);
-        if (eventObj.x >= 0 && eventObj.y >= 0 && eventObj.x <= SGF.Screen.getGameWidth() && eventObj.y <= SGF.Screen.getGameHeight()) {
+        if (eventObj.x >= 0 && eventObj.y >= 0 &&
+            eventObj.x <= SGF.Screen.getGameWidth() &&
+            eventObj.y <= SGF.Screen.getGameHeight() &&
+            (SGF.Input.pointerX !== eventObj.x || SGF.Input.pointerY !== eventObj.y)) {
             focus();
             event.stop();
 

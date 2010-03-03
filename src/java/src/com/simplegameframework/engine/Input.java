@@ -5,8 +5,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.HashMap;
-import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
@@ -15,17 +15,17 @@ import org.mozilla.javascript.ScriptableObject;
 public class Input extends ScriptableObject implements KeyListener, MouseListener, MouseMotionListener {
 
 
-    private HashMap<Integer, Boolean> keysDown;
-    private HashMap<String, Vector<Function>> observers;
+    private ConcurrentHashMap<Integer, Boolean> keysDown;
+    private ConcurrentHashMap<String, CopyOnWriteArrayList<Function>> observers;
     private int pointerX;
     private int pointerY;
 
     public Input() {
-        this.keysDown = new HashMap<Integer, Boolean>();
-        this.observers = new HashMap<String, Vector<Function>>();
+        this.keysDown = new ConcurrentHashMap<Integer, Boolean>();
+        this.observers = new ConcurrentHashMap<String, CopyOnWriteArrayList<Function>>();
         for (String s : new String[] { "mousemove", "mouseup", "mousedown",
                             "keydown", "keyup" }) {
-            this.observers.put(s, new Vector<Function>());
+            this.observers.put(s, new CopyOnWriteArrayList<Function>());
         }
         this.pointerX = this.pointerY = 0;
     }
@@ -67,7 +67,7 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
         if (!this.observers.containsKey(eventName))
             return this;
 
-        Vector<Function> handlers = this.observers.get(eventName);
+        CopyOnWriteArrayList<Function> handlers = this.observers.get(eventName);
         handlers.add(handler);
         return this;
     }
@@ -82,7 +82,7 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
         if (!this.observers.containsKey(eventName))
             return this;
 
-        Vector<Function> handlers = this.observers.get(eventName);
+        CopyOnWriteArrayList<Function> handlers = this.observers.get(eventName);
         handlers.remove(handler);
         return this;
     }
@@ -96,14 +96,12 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
         this.keysDown.put(e.getKeyCode(), Boolean.TRUE);
 
         Context cx = Context.enter();
-        Scriptable arg = cx.newObject(this);
-        arg.put("keyCode", arg, e.getKeyCode());
         try {
+            Scriptable arg = cx.newObject(this);
+            arg.put("keyCode", arg, e.getKeyCode());
             for (Function func : this.observers.get("keydown")) {
                 func.call(cx, func, func, new Object[] { arg });
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         } finally {
             Context.exit();
         }
@@ -112,14 +110,12 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
     public void keyReleased(KeyEvent e) {
         this.keysDown.put(e.getKeyCode(), Boolean.FALSE);
         Context cx = Context.enter();
-        Scriptable arg = cx.newObject(this);
-        arg.put("keyCode", arg, e.getKeyCode());
         try {
+            Scriptable arg = cx.newObject(this);
+            arg.put("keyCode", arg, e.getKeyCode());
             for (Function func : this.observers.get("keyup")) {
                 func.call(cx, func, func, new Object[] { arg });
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         } finally {
             Context.exit();
         }
@@ -127,16 +123,16 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
 
     // MouseListener Implementation ////////////////////////////////////////////
     public void mousePressed(MouseEvent e) {
+        this.pointerX = e.getX();
+        this.pointerY = e.getY();
         Context cx = Context.enter();
-        Scriptable arg = cx.newObject(this);
-        arg.put("x", arg, e.getX());
-        arg.put("y", arg, e.getY());
         try {
+            Scriptable arg = cx.newObject(this);
+            arg.put("x", arg, this.pointerX);
+            arg.put("y", arg, this.pointerY);
             for (Function func : this.observers.get("mousedown")) {
                 func.call(cx, func, func, new Object[] { arg });
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         } finally {
             Context.exit();
         }
@@ -151,15 +147,13 @@ public class Input extends ScriptableObject implements KeyListener, MouseListene
         this.pointerX = e.getX();
         this.pointerY = e.getY();
         Context cx = Context.enter();
-        Scriptable arg = cx.newObject(this);
-        arg.put("x", arg, this.pointerX);
-        arg.put("y", arg, this.pointerY);
         try {
+            Scriptable arg = cx.newObject(this);
+            arg.put("x", arg, this.pointerX);
+            arg.put("y", arg, this.pointerY);
             for (Function func : this.observers.get("mousemove")) {
                 func.call(cx, func, func, new Object[] { arg });
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         } finally {
             Context.exit();
         }

@@ -203,26 +203,32 @@ var SGF = (function() {
         var transform;
 
         if(window.CSSMatrix) transform = function(element, transform){
-            //element.style.transform = 'scale(1) rotate('+(transform||0)+'rad)';
             element.style.transform = 'rotate('+(transform||0)+'rad)';
             return element;
         };
         else if(window.WebKitCSSMatrix) transform = function(element, transform){
-            //element.style.webkitTransform = 'scale(1) rotate('+(transform||0)+'rad)';
             element.style.webkitTransform = 'rotate('+(transform||0)+'rad)';
             return element;
         };
         else if(Prototype.Browser.Gecko) transform = function(element, transform){
-            //element.style.MozTransform = 'scale(1) rotate('+(transform||0)+'rad)';
             element.style.MozTransform = 'rotate('+(transform||0)+'rad)';
             return element;
         };
         else if(Prototype.Browser.IE) transform = function(element, transform){
             if(!element._oDims)
                 element._oDims = [element.offsetWidth, element.offsetHeight];
-            var c = Math.cos(transform.rotation||0) * 1, s = Math.sin(transform.rotation||0) * 1;
-            element.style.filter = element.style.filter.replace(/progid:DXImageTransform.Microsoft.Matrix\([^\)]*\)/gi,'')
-                + "progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
+            var c = Math.cos(transform||0) * 1, s = Math.sin(transform||0) * 1;
+            
+            try {
+                var matrix = element.filters("DXImageTransform.Microsoft.Matrix");
+                //matrix.sizingMethod = "auto expand";
+                matrix.M11 = c;
+                matrix.M21 = -s;
+                matrix.M12 = s;
+                matrix.M22 = c;
+            } catch (ex) {
+                element.style.filter += " progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
+            }
             element.style.marginLeft = (element._oDims[0]-element.offsetWidth)/2+'px';
             element.style.marginTop = (element._oDims[1]-element.offsetHeight)/2+'px';
             return element;
@@ -376,7 +382,6 @@ var SGF = (function() {
         }
     }
 
-    
     
     return {
         log:        log,

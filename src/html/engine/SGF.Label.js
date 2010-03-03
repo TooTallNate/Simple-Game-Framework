@@ -23,19 +23,19 @@ SGF.Label = Class.create(SGF.Component, {
     },
     render: function($super, renderCount) {
         $super(renderCount);
-        if (this.__align != this.align) {
+        if (this.__align !== this.align) {
             this.element.style.textAlign = this.align == 0 ? "left" : this.align == 1 ? "center" : "right";
             this.__align = this.align;
         }
-        if (this.__font != this.font) {
+        if (this.__font !== this.font) {
             this.element.style.fontFamily = this.font.__fontName;
             this.__font = this.font;
         }
-        if (this.__size != this.size) {
+        if (this.__size !== this.size) {
             this.element.style.fontSize = this.element.style.lineHeight = (this.size * SGF.Screen.getScale()) + "px";
             this.__size = this.size;
         }
-        if (this.__color != this.color) {
+        if (this.__color !== this.color) {
             this.element.style.color = "#" + this.color;
             this.__color = this.color;
         }
@@ -58,9 +58,7 @@ SGF.Label = Class.create(SGF.Component, {
                 }
             }
             if (SGF.Label.isIE7orLower) {
-                while (text.indexOf('\n') > -1) {
-                    text = text.replace('\n', '\r');
-                }
+                text = text.replace(/\n/g, '\r');
             }
             this.__textNode.nodeValue = text;
             this.__textNeedsUpdate = false;
@@ -70,8 +68,8 @@ SGF.Label = Class.create(SGF.Component, {
         return this.__text;
     },
     setText: function(textContent) {
-        this.__textNeedsUpdate = true;
         this.__text = textContent;
+        this.__textNeedsUpdate = true;
     }
 });
 

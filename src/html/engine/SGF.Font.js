@@ -8,8 +8,8 @@ SGF.Font = Class.create({
     initialize: function(pathOrData) {
         if (!Object.isString(pathOrData)) throw "SGF.Font constructor expects a path or Data URI of a font file.";
 
-        this.__fontName = "SGF_font"+(Math.random() * 10000).tofi;
-        if (pathOrData.startsWith("data:font")) { // An entire Data URI for a font has been embedded.
+        this.__fontName = "SGF_font"+(Math.random() * 10000).round();
+        if (pathOrData.startsWith("data:")) { // An entire Data URI for a font has been embedded.
             this.__styleNode = SGF.Font.embedCss(
                 '@font-face {'+
                 '  font-family: "' + this.__fontName + '";'+

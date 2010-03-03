@@ -16,10 +16,11 @@ Game Engine Clients
 
  * `HTML/DOM`: An engine that uses web browsers' native JavaScript engine
    to execute the game code, and the API manipulates DOM nodes and to
-   "render" your game. The HTML/DOM game engine can be found in `src/html/engine`.
+   "render" your game. The HTML/DOM game engine can be found in
+   `src/html/engine`.
 
  * `Java`: In conjunction with Rhino (<http://www.mozilla.org/rhino/>), Java
-   can interprit your SGF game code, and use Java2D or JOGL to render the
+   can interpret your SGF game code, and use Java2D or JOGL to render the
    game. The current version found in `src/java/src` uses Java2D to render
    SGF games.
 
@@ -28,7 +29,7 @@ Game Engine Clients
 
  * `C or C++ Based Player`: For a pure speed solution, there could be a
    SGF game engine written in C or C++, and using V8/Nitro/SpiderMonkey to
-   interprit game code. This would be the fastest version of the game
+   interpret game code. This would be the fastest version of the game
    engine. However, I (TooTallNate) have never programmed in C++, let alone
    developed games, so I probably won't be touching this one.
 
@@ -38,9 +39,9 @@ Game Engine Clients
    the `HTML/DOM` version, but I might make it at some point for demonstration
    purposes.
 
- * `HTML/WebGL`: For probably the best speed in the web browser, we could create
-   a client that renders the game using the draft WebGL. I've never touched
-   OpenGL, but might look into this one once WebGL is more standard.
+ * `HTML/WebGL`: For probably the best speed in the web browser, we could
+   create a client that renders the game using the draft WebGL. I've never
+   touched OpenGL, but might look into this one once WebGL is more standard.
 
  * `Flash`: A Flash engine could be written that (theoretically) uses
    ExternalInterface to communicate your game code with the Flash based

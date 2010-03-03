@@ -3,6 +3,7 @@ package com.simplegameframework.engine;
 import java.io.ByteArrayInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URI;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
@@ -20,7 +21,13 @@ public class Font extends ScriptableObject {
                                        boolean inNewExpr) {
         Font f = new Font();
         String font = cx.toString(args[0]);
-        if (font.startsWith("data:font")) {
+        if (font.startsWith("data:")) {
+			URI dataUri = null;
+			try {
+				new URI(font);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
             byte[] fontBytes = org.apache.commons.codec.binary.Base64.decodeBase64(font.substring(font.indexOf(',')+1));
             try {
                 f.setFont(java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, new ByteArrayInputStream(fontBytes)));
@@ -43,10 +50,10 @@ public class Font extends ScriptableObject {
 
             if (fontPath != null)
                 try {
-                f.setFont(java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontPath.openStream()));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+                    f.setFont(java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontPath.openStream()));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
         } else {
             f.setFont(new java.awt.Font(font, java.awt.Font.PLAIN, 1));
         }

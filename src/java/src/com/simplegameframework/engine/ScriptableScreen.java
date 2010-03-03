@@ -35,14 +35,6 @@ public class ScriptableScreen extends ScriptableObject {
         return screen.getHeight();
     }
 
-    public int jsFunction_getHeight() {
-        return jsGet_height();
-    }
-
-    public int jsFunction_getWidth() {
-        return jsGet_width();
-    }
-
     public String jsGet_color() {
         return colorStr;
     }
@@ -104,6 +96,6 @@ public class ScriptableScreen extends ScriptableObject {
     private static Cursor createEmptyCursor() {
         int[] pixels = new int[16 * 16];
         Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-        return Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+        return Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "emptyCursor");
     }
 }

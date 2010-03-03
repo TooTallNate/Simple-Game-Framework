@@ -76,11 +76,11 @@ SGF.Screen = (function() {
     }
 
     function getPixelWidth() {
-        return isFullScreen ? document.documentElement.clientWidth : SGF.Screen.element.clientWidth;
+        return isFullScreen && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : SGF.Screen.element.clientWidth;
     }
 
     function getPixelHeight() {
-        return isFullScreen ? document.documentElement.clientHeight : SGF.Screen.element.clientHeight;
+        return isFullScreen && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : SGF.Screen.element.clientHeight;
     }
 
     function getGameWidth() {
