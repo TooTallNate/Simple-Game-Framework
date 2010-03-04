@@ -31,7 +31,7 @@ BB.Paddle = Class.create(SGF.Rectangle, {
 
     onMouseMove: function(e) {
         if (e.x >= 0 && e.x <= BB.GAME_WIDTH) {
-            this.x = Math.min(Math.max(0, e.x), BB.GAME_WIDTH-this.width);
+            this.x = Math.min(Math.max(0, e.x - (this.width/2)), BB.GAME_WIDTH-this.width);
         }
     }
 });
