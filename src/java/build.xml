@@ -34,7 +34,7 @@
         </pathconvert>
         
         <jar jarfile="${jarName}" basedir="${classDir}">
-		    <fileset dir="${sourceDir}" includes="**/*.js" />
+            <fileset dir="${sourceDir}" includes="**/*.js" />
             <manifest>
                 <attribute name="Main-Class" value="com.simplegameframework.engine.Main" />
                 <attribute name="Class-Path" value="${classpathString}" />
