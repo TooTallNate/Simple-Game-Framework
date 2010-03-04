@@ -45,6 +45,7 @@ SGF.Spriteset = Class.create({
          * property is `-1` before it has loaded completely
          * (i.e. [[SGF.Spriteset#loaded]] == false).
          **/
+         this.width = -1;
         /**
          * SGF.Spriteset#height -> Number
          *
@@ -52,7 +53,7 @@ SGF.Spriteset = Class.create({
          * property is `-1` before it has loaded completely
          * (i.e. [[SGF.Spriteset#loaded]] == false).
          **/
-        this.width = this.height = -1; // Not loaded yet.
+        this.height = -1;
         /**
          * SGF.Spriteset#loaded -> Boolean
          *

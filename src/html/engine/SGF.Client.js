@@ -125,7 +125,7 @@ SGF.Client = Class.create({
     },
     /**
      * SGF.Client#send(message) -> undefined
-     * - message (String): The String that you will be sent to the server.
+     * - message (String): The String that you will be sending to the server.
      *
      * Sends `message` to the currently connected server if it is connected.
      * If this [[SGF.Client]] instance is not connected when this is called,
