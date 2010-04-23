@@ -234,7 +234,11 @@ SGF.Game = Class.create({
         this.updateCount = this.renderCount = 0;
 
         // Start the game loop itself!
-        setTimeout(this.__bindedStep, 0);
+        if (SGF.useZeroTimeout && SGF.zeroTimeout) {
+            SGF.zeroTimeout(this.__bindedStep);
+        } else {
+            setTimeout(this.__bindedStep, 0);
+        }    
 
         // Notify game's 'start' listeners
         this.listeners.start.invoke("call", this);
@@ -278,7 +282,12 @@ SGF.Game = Class.create({
 
         // Continue the game loop, as soon as the browser has time for it,
         // allowing for other JS on the stack to be executed (events, etc.)
-        setTimeout(this.__bindedStep, 0);
+        if (SGF.useZeroTimeout && SGF.zeroTimeout) {
+            SGF.zeroTimeout(this.__bindedStep);
+        } else {
+            setTimeout(this.__bindedStep, 0);
+        }
+        //setTimeout(this.__bindedStep, 0);
         //setTimeout("SGF.Game.current.step()", 0); <- Appears to be the same speed
     },
 

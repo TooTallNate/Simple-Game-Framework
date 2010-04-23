@@ -20,7 +20,12 @@ SGF.Component = Class.create({
      * SGF.Component#getElement() -> Element
      * Internal method. Game developers need not be aware.
      **/
-    getElement: function() { throw "SGF.Component can't be instatiated directly, please use a subclass."; },
+    getElement: function() {
+        var e = new Element("div");
+        e.setStyleI("position", "absolute");
+        e.setStyleI("overflow", "hidden");
+        return e;
+    },
     toElement: function() {
         return this.element;
     },
@@ -100,37 +105,36 @@ SGF.Component = Class.create({
         }
 
         if (this.__width != this.width) {
-            this.element.style.width = (this.width * scale) + "px";
+            this.element.setStyleI("width", (this.width * scale) + "px");
             this.__width = this.width;
         }
         if (this.__height != this.height) {
-            this.element.style.height = (this.height * scale) + "px";
+            this.element.setStyleI("height", (this.height * scale) + "px");
             this.__height = this.height;
         }
 
         if (this.dx !== 0) {
-            this.element.style.left = ((this.x + (this.dx * interpolation)) * scale) + "px";
+            this.element.setStyleI("left", ((this.x + (this.dx * interpolation)) * scale) + "px");
             this.__x = this.x;
         } else if (this.__x != this.x) {
             this.__x = this.x;
-            this.element.style.left = (this.x * scale) + "px";
+            this.element.setStyleI("left", (this.x * scale) + "px");
         }
 
         if (this.dy !== 0) {
-            this.element.style.top = ((this.y + (this.dy * interpolation)) * scale) + "px";
+            this.element.setStyleI("top", ((this.y + (this.dy * interpolation)) * scale) + "px");
             this.__y = this.y;
         } else if (this.__y != this.y) {
             this.__y = this.y;
-            this.element.style.top = (this.y * scale) + "px";
+            this.element.setStyleI("top", (this.y * scale) + "px");
         }
     },
     scale: function(currentScale) {
-        this.element.setStyle({
-            width: (this.width * currentScale) + "px",
-            height: (this.height * currentScale) + "px",
-            top: (this.y * currentScale) + "px",
-            left: (this.x * currentScale) + "px"
-        });
+        this.element.setStyleI("width", (this.width * currentScale) + "px");
+        this.element.setStyleI("height", (this.height * currentScale) + "px");
+        this.element.setStyleI("top", (this.y * currentScale) + "px");
+        this.element.setStyleI("left", (this.x * currentScale) + "px");
+
         this.__width = this.width;
         this.__height = this.height;
         this.__x = this.x;
@@ -147,7 +151,7 @@ SGF.Component = Class.create({
      * the game loop once this component has been added through
      * [[SGF.Game#addComponent]].
      *
-     * This function should be thought of as
+     * This function should be thought of as the "logic" function for the [[SGF.Component]].
      **/
     update: function() {
         if (this.dx !== 0) {
@@ -161,7 +165,7 @@ SGF.Component = Class.create({
         var z = this.parent && this.parent.__computeChildZIndex ?
             this.parent.__computeChildZIndex(this.zIndex) :
             this.zIndex;
-        this.element.style.zIndex = z;
+        this.element.setStyleI("z-index", z);
     }
 });
 

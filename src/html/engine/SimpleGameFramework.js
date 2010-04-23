@@ -26,6 +26,7 @@ var SGF = (function() {
         engineRoot = getEngineRoot(scriptNode),
         params = getScriptParams(scriptNode),
         debugMode = "debug" in params ? params.debug === "true" : false,
+        htmlMediaReady = false,
         engineScripts = {
             "Game":     null,
             "Screen":   null,
@@ -34,6 +35,7 @@ var SGF = (function() {
             "Client":   null,
             "Font":     null,
             "Component":null,
+            "Audio":    null,
             "Container":null,
             "DumbContainer":null,
             "Label":    null,
@@ -45,26 +47,60 @@ var SGF = (function() {
         },
         eventListeners = {
             "load" : []
-        };
+        },
+        useZeroTimeout = "fastRendering" in params ? params.fastRendering === "true" : false,
+        zeroTimeout = (function() {
+            if (!window.addEventListener || !window.postMessage) return null;
+            
+            var timeouts = [];
+            var messageName = "zero-timeout-message";
 
-    // Engine Initialization
+            function setZeroTimeout(fn) {
+                timeouts.push(fn);
+                window.postMessage(messageName, "*");
+            }
+    
+            function handleMessage(event) {
+                if (event.source == window && event.data == messageName) {
+                    event.stopPropagation();
+                    if (timeouts.length > 0) {
+                        var fn = timeouts.shift();
+                        fn();
+                    }
+                }
+            }
 
-    // The first matter of buisiness is to load all libraray files (Prototype,
-    // SoundManager, etc.) if they need to be.
+            window.addEventListener("message", handleMessage, true);
+            return setZeroTimeout;
+        })();
+        
+    // The zeroTimeout is an event workaround that places a function in the
+    // event queue and will execute sooner than setTimeout(fn, 0) would.
+    if (zeroTimeout) {
+        zeroTimeout(function() {
+            SGF.zeroTimeout = zeroTimeout;
+        });
+    }
+    
+    // Engine Initialization, first all libraries are loaded. After all
+    // dependencies are detected, the engine script files will load.
+        // Load Prototype
     loadLibPrototype(function() {
+        loadElementSetStyleImportant();
         loadElementSetRotation();
     });
+        // Load Flash WebSocket fallback (if needed)
     if (!window.WebSocket) {
-        log("Native WebSocket implementation not detected, will load Flash fallback...");
+        log("Native WebSocket implementation not detected, loading Flash fallback:");
         loadSWFObject(function() {
+            //loadHtmlMedia();
             loadFABridge(function() {
                 loadWebSockets();
             });
         });
     } else {
-        log("Native WebSocket implementation detected, will use...");
+        log("Native WebSocket implementation detected ☺");
     }
-    // TODO: loadSoundManager();
 
 
 
@@ -74,6 +110,8 @@ var SGF = (function() {
 
 
 
+
+    
     /*
      * Expects a <script> node reference, and removes it from the DOM, and
      * destroys the object in a memory leak free manner.
@@ -102,6 +140,8 @@ var SGF = (function() {
         // Set the 'loaded' flag to 'true'
         SGF.loaded = true;
 
+        log("SGF HTML/DOM engine loaded! Invoking 'load' listeners ☺");
+
         // Notify all the 'load' listeners.
         eventListeners.load.invoke("call", SGF);
 
@@ -122,16 +162,17 @@ var SGF = (function() {
      * once, and at the end.
      **/
     function engineScriptLoaded(loadEvent) {
-        //SGF.log(loadEvent.target.src + " finished loading!");
-
         // We loop through, looking for a script that hasn't been loaded yet.
-        var engineFinishedLoading = true;
+        var engineFinishedLoading = true, shortName;
         for (var script in engineScripts) {
+            if (engineScripts[script] == this) shortName = script;
             if (!engineScripts[script].loaded) {
                 engineFinishedLoading = false;
                 break;
             }
         }
+        
+        log("\tEngine script loaded: " + shortName);
 
         // But if the loop finishes and the flag is still true, call 'engineLoaded'
         if (engineFinishedLoading) engineLoaded();
@@ -181,8 +222,9 @@ var SGF = (function() {
      * core scripts.
      **/
     function libraryFileLoaded() {
-        if (typeof Prototype !== 'undefined' && // Check for Prototype
-            "WebSocket" in window) { // Check for WebSockets (native or Flash)
+        if (typeof Prototype === 'object' && // Check for Prototype
+            "WebSocket" in window && // Check for WebSockets (native or Flash)
+            htmlMediaReady === false) { // Ensure the 'HtmlMedia' library is ready
             
             // Horray! All library files are loaded!
             
@@ -192,6 +234,30 @@ var SGF = (function() {
                 engineScripts[script] = loadEngineScript(script);
             }
         }
+    }
+    
+    /* The DOM nodes that SGF manipulates are always modified through
+     * JavaScript, but just setting style.blah won't overwrite !important
+     * in CSS style sheets. In order to compensate, all style changes must
+     * be ensured that they use !important as well
+     **/
+    function loadElementSetStyleImportant() {
+        Element.addMethods({
+            setStyleI: (function(){ 
+                if (document.documentElement.style.setProperty) {
+                    // W3C says use setProperty, with the "important" 3rd param
+                    return function(element, prop, value) {
+                        element.style.setProperty(prop, value, "important");
+                    }                    
+                } else {
+                    // IE doesn't support setProperty, so we must manually set
+                    // the cssText, including the !important statement
+                    return function(element, prop, value) {
+                        element.style.cssText += ";"+prop+":"+value+" !important;";
+                    }
+                }
+            })()
+        });
     }
 
     /*
@@ -272,12 +338,24 @@ var SGF = (function() {
         }
     }
     
+    function loadHtmlMedia() {
+        loadLib(engineRoot + "lib/HtmlMedia.js?path="+engineRoot+"lib&onready=_HtmlMediaReady", e);
+    }
+    
+    
+    window._HtmlMediaReady = function() {
+        console.log("HtmlMedia is ready!");
+        htmlMediaReady = true;
+        libraryFileLoaded();
+        delete window._HtmlMediaReady;
+    };
+    
     function loadSWFObject(onComplete) {
         if (!(window.swfobject && Object.isFunction(swfobject.embedSWF))) {
-            log("Loading SWFObject 2.0");
+            log("\tLoading SWFObject 2.0");
             loadLib("SWFObject" in params ? params.SWFObject : engineRoot + "lib/swfobject.js", onComplete);
         } else {
-            log("SWFObject 2.0 is already loaded, skipping...");
+            log("\tSWFObject 2.0 is already loaded, skipping...");
             libraryFileLoaded();
             onComplete();
         }
@@ -285,17 +363,17 @@ var SGF = (function() {
 
     function loadFABridge(onComplete) {
         if (!window.FABridge) {
-            log("Loading FABridge");
+            log("\tLoading FABridge");
             loadLib(engineRoot + "lib/FABridge.js", onComplete);
         } else {
-            log("FABridge is already loaded, skipping...");
+            log("\tFABridge is already loaded, skipping...");
             libraryFileLoaded();
             onComplete();
         }
     }
 
     function loadWebSockets() {
-        log("Loading Flash WebSocket");
+        log("\tLoading Flash WebSocket");
         loadScript(engineRoot + "lib/web_socket.js", function() {
             (function() {
                 var body = document.getElementsByTagName("body");
@@ -382,13 +460,14 @@ var SGF = (function() {
         }
     }
 
-    
-    return {
+    var rtn = {
         log:        log,
         params:     params,
         observe:    observe,
         loadScript: loadScript,
         engineRoot: engineRoot,
-        setDebugMode: setDebugMode
+        setDebugMode: setDebugMode,
+        useZeroTimeout: useZeroTimeout
     };
+    return rtn;
 })();

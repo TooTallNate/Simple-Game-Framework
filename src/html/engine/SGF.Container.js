@@ -35,12 +35,6 @@ SGF.Container = Class.create(SGF.Component, {
         }
         this.__shouldUpdateComponents = this.__needsRender = true;
     },
-    getElement: function() {
-        return new Element("div").setStyle({
-            position: "absolute",
-            overflow: "hidden"
-        });
-    },
     update: function($super, updateCount) {
         $super(updateCount);
         if (this.__shouldUpdateComponents) {

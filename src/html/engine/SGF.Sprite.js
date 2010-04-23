@@ -40,11 +40,8 @@ SGF.Sprite = Class.create(SGF.Component, {
         this.spritesetImg = spriteset.toElement();
         $super(Object.extend(Object.clone(SGF.Sprite.DEFAULTS), options || {}));
     },
-    getElement: function() {
-        return new Element("div").setStyle({
-            position: "absolute",
-            overflow: "hidden"
-        }).insert(this.spritesetImg);
+    getElement: function($super) {
+        return $super().insert(this.spritesetImg);
     },
     scale: function($super, newScale) {
         $super(newScale);
@@ -60,18 +57,19 @@ SGF.Sprite = Class.create(SGF.Component, {
             this.__width != this.width || this.__height != this.height) {
             if (this.spriteset.loaded) {
                 this.resetSpriteset();
-            } else {
+            } else if (!this.__resetOnLoad) {
                 this.spriteset.observe("load", this.resetSpriteset.bind(this));
+                this.__resetOnLoad = true;
             }
         }
         $super(interpolation, renderCount);
     },
     resetSpriteset: function() {
         var scale = SGF.Screen.getScale();
-        this.spritesetImg.style.width = ((this.spriteset.width * (this.width/this.spriteset.spriteWidth)) * scale) + "px";
-        this.spritesetImg.style.height = ((this.spriteset.height * (this.height/this.spriteset.spriteHeight)) * scale) + "px";
-        this.spritesetImg.style.top = -((this.height * this.spriteY) * scale) + "px";
-        this.spritesetImg.style.left = -((this.width * this.spriteX) * scale) + "px";
+        this.spritesetImg.setStyleI("width", ((this.spriteset.width * (this.width/this.spriteset.spriteWidth)) * scale) + "px");
+        this.spritesetImg.setStyleI("height", ((this.spriteset.height * (this.height/this.spriteset.spriteHeight)) * scale) + "px");
+        this.spritesetImg.setStyleI("top", -((this.height * this.spriteY) * scale) + "px");
+        this.spritesetImg.setStyleI("left", -((this.width * this.spriteX) * scale) + "px");
         this.__spriteX = this.spriteX;
         this.__spriteY = this.spriteY;
     }

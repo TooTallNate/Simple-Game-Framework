@@ -62,10 +62,17 @@ SGF.Spriteset = Class.create({
          **/
         this.loaded = false;
 
-        this.loadListeners = [];
+        var loadListeners = [];
 
         this.image = new Image();
-        this.image.onload = this.__imageLoaded.bind(this);
+        this.image.onload = (function() {
+            this.width = this.image.width;
+            this.height = this.image.height;
+            this.loaded = true;
+            for (var i=0; i < loadListeners.length; i++) {
+                loadListeners[i].call(this, this);
+            }
+        }).bind(this);
         /**
          * SGF.Spriteset#src -> String
          * 
@@ -73,18 +80,11 @@ SGF.Spriteset = Class.create({
          **/
         this.src = this.image.src = SGF.Game.current.root + imgPath;
         this.image.style.position = "absolute";
-    },
-    __imageLoaded: function() {
-        this.width = this.image.width;
-        this.height = this.image.height;
-        this.loaded = true;
-        for (var i=0; i < this.loadListeners.length; i++) {
-            this.loadListeners[i].call(this, this);
-        }
-    },
-    observe: function(eventName, handler) {
-        this.loadListeners.push(handler);
-        return this;
+        
+        this.observe = function(eventName, handler) {
+            loadListeners.push(handler);
+            return this;
+        };
     },
     toElement: function() {
         return this.image.cloneNode(true);

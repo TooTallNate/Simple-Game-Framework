@@ -1,3 +1,15 @@
+var label = new SGF.Label({
+    width:100,
+    height:50
+});
+label.setText("Loading Box2D");
+var numBoxes = 1;
+function updateLabel() {
+    numBoxes++;
+    label.setText("Num Boxes:\t" + numBoxes);
+}
+SGF.Game.current.addComponent(label);
+
 SGF.Game.current.loadScript("box2d.min.js", function() {
     var gameSpeed = 30;
     SGF.Game.current.setGameSpeed(gameSpeed);
@@ -75,16 +87,6 @@ SGF.Game.current.loadScript("box2d.min.js", function() {
     });
     SGF.Game.current.addComponent(box);
 
-    var label = new SGF.Label({
-        width:100,
-        height:50
-    });
-    var numBoxes = 1;
-    function updateLabel() {
-        numBoxes++;
-        label.setText("Num Boxes:\t" + numBoxes);
-    }
-    SGF.Game.current.addComponent(label);
     function newBox(x, y) {
         // Create a Box
         var size = ((Math.random() * 18) + 2).round();

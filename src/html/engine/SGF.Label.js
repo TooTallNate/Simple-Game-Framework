@@ -9,34 +9,40 @@ SGF.Label = Class.create(SGF.Component, {
         this.__color = this.color;
         this.__font = this.font;
         this.__size = this.size;
-        return new Element("pre").setStyle({
-        //return new Element("div").setStyle({
-            position: "absolute",
-            overflow: "hidden",
-            color: "#" + this.color,
-            fontFamily: this.font.__fontName,
-            fontSize: (this.size * SGF.Screen.getScale()) + "px",
-            lineHeight: (this.size * SGF.Screen.getScale()) + "px",
-            margin: 0,
-            padding:0
+        var e = new Element("pre"), size = (this.size * SGF.Screen.getScale()) + "px";
+        $H({
+            "background-color":"transparent",
+            "position":"absolute",
+            "overflow":"hidden",
+            "color":"#"+this.color,
+            "font-family":this.font.__fontName,
+            "font-size":size,
+            "line-height":size,
+            "margin":"0",
+            "padding":"0"
+        }).each(function(prop) {
+            e.setStyleI(prop.key, prop.value);
         });
+        return e;
     },
     render: function($super, renderCount) {
         $super(renderCount);
         if (this.__align !== this.align) {
-            this.element.style.textAlign = this.align == 0 ? "left" : this.align == 1 ? "center" : "right";
+            this.element.setStyleI("text-align", this.align == 0 ? "left" : this.align == 1 ? "center" : "right");
             this.__align = this.align;
         }
         if (this.__font !== this.font) {
-            this.element.style.fontFamily = this.font.__fontName;
+            this.element.setStyleI("font-family", this.font.__fontName);
             this.__font = this.font;
         }
         if (this.__size !== this.size) {
-            this.element.style.fontSize = this.element.style.lineHeight = (this.size * SGF.Screen.getScale()) + "px";
+            var val = (this.size * SGF.Screen.getScale()) + "px";
+            this.element.setStyleI("font-size", val);
+            this.element.setStyleI("line-height", val);            
             this.__size = this.size;
         }
         if (this.__color !== this.color) {
-            this.element.style.color = "#" + this.color;
+            this.element.setStyleI("color", "#"+this.color);
             this.__color = this.color;
         }
         if (this.__textNeedsUpdate === true) {
@@ -83,6 +89,7 @@ Object.extend(SGF.Label, {
     LEFT: 0,
     CENTER: 1,
     RIGHT: 2,
+    
     TAB_WIDTH: 4
 });
 
