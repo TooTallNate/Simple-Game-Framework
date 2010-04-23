@@ -11,6 +11,7 @@ SGF.Label = Class.create(SGF.Component, {
         this.__size = this.size;
         var e = new Element("pre"), size = (this.size * SGF.Screen.getScale()) + "px";
         $H({
+            "border":"0",
             "background-color":"transparent",
             "position":"absolute",
             "overflow":"hidden",
