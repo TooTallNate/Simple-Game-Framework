@@ -73,7 +73,9 @@ SGF.Container = Class.create(SGF.Component, {
      * will be rendered in relation to the attributes of this `SGF.Container`.
      **/
     addComponent: function(component) {
-        if (!this.components.include(component)) {
+        if (component.parent !== this) {
+            if (component.parent)
+                component.parent.removeComponent(component);
             this.components.push(component);
             this.element.insert(component);
             component.parent = this;

@@ -80,7 +80,18 @@ SGF.Game = Class.create({
      * for chaining.
      **/
     addComponent: function(component) {
+        /*
         if (!this.components.include(component)) {
+            this.components.push(component);
+            SGF.Screen.element.insert(component);
+            component.parent = this;
+            component.__fixZIndex();
+        }
+        return this;
+        */
+        if (component.parent !== this) {
+            if (component.parent)
+                component.parent.removeComponent(component);
             this.components.push(component);
             SGF.Screen.element.insert(component);
             component.parent = this;

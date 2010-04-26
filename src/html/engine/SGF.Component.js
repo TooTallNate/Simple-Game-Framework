@@ -288,5 +288,16 @@ SGF.Component.DEFAULTS = {
      * other [[SGF.Component]]s will render this [[SGF.Component]] above ones
      * with a lower **zIndex**.
      **/
-    zIndex: 0
+    zIndex: 0,
+    /**
+     * SGF.Component#parent -> SGF.Container | SGF.Game 
+     *  
+     * A reference to the current parent component of this component, or `null`
+     * if the component is not currently placed inside any containing component.
+     *
+     * If the component is a top-level component (added through
+     * [[SGF.Game#addComponent]]) then [[SGF.Component#parent]] will be
+     * [[SGF.Game.current]] (your game instance).
+     **/
+    parent: null
 };
