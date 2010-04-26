@@ -7,6 +7,7 @@ K.Character = Class.create(SGF.Sprite, {
             height: spriteset.spriteHeight,
             zIndex:10
         });
+        this.moveQueue = [];
         this.mapSpeed = 2;
         this.state = null;
         this.direction = "S";
@@ -32,9 +33,7 @@ K.Character = Class.create(SGF.Sprite, {
                             this.y-=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[1] * K.TILE_SIZE)-this.bottom())/K.TILE_SIZE)*3).floor()+2)%3;
                             if ((this.bottom()+1) % K.TILE_SIZE == 0) {
-                                if (K.mapData[this.currentTile[1]][this.currentTile[0]].event) {
-                                    K.mapData[this.currentTile[1]][this.currentTile[0]].event(this);
-                                }
+                                K.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
@@ -42,9 +41,7 @@ K.Character = Class.create(SGF.Sprite, {
                             this.y+=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[1] * K.TILE_SIZE)-this.bottom())/K.TILE_SIZE)*3).floor()+2)%3;
                             if ((this.bottom()+1) % K.TILE_SIZE == 0) {
-                                if (K.mapData[this.currentTile[1]][this.currentTile[0]].event) {
-                                    K.mapData[this.currentTile[1]][this.currentTile[0]].event(this);
-                                }
+                                K.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
@@ -52,9 +49,7 @@ K.Character = Class.create(SGF.Sprite, {
                             this.x-=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[0] * K.TILE_SIZE)-this.x)/K.TILE_SIZE)*3).floor()+1)%3;
                             if (this.x % K.TILE_SIZE == 0) {
-                                if (K.mapData[this.currentTile[1]][this.currentTile[0]].event) {
-                                    K.mapData[this.currentTile[1]][this.currentTile[0]].event(this);
-                                }
+                                K.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
@@ -62,15 +57,16 @@ K.Character = Class.create(SGF.Sprite, {
                             this.x+=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[0] * K.TILE_SIZE)-this.x)/K.TILE_SIZE)*3).floor()+1)%3;
                             if (this.x % K.TILE_SIZE == 0) {
-                                if (K.mapData[this.currentTile[1]][this.currentTile[0]].event) {
-                                    K.mapData[this.currentTile[1]][this.currentTile[0]].event(this);
-                                }
+                                K.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
                     }
                     break;
             }
+        } else if (this.moveQueue.length > 0) {
+            var action = this.moveQueue.shift();
+            action.call(this);
         } else {
             this.checkForInput(uc);
         }
@@ -78,8 +74,7 @@ K.Character = Class.create(SGF.Sprite, {
     checkForInput: function() {
         this.state = null;
         if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_UP)) {
-            this.spriteY = 1;
-            this.direction = "N";
+            this.faceNorth();
             var possibleTile =  $A(this.currentTile);
             possibleTile[1]--;
             if (K.isTilePassable(possibleTile)) {
@@ -87,8 +82,7 @@ K.Character = Class.create(SGF.Sprite, {
                 this.state = "moving";
             }
         } else if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_DOWN)) {
-            this.spriteY = 0;
-            this.direction = "S";
+            this.faceSouth();
             var possibleTile =  $A(this.currentTile);
             possibleTile[1]++;
             if (K.isTilePassable(possibleTile)) {
@@ -96,8 +90,7 @@ K.Character = Class.create(SGF.Sprite, {
                 this.state = "moving";
             }
         } else if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_LEFT)) {
-            this.spriteY = 2;
-            this.direction = "W";
+            this.faceWest();
             var possibleTile =  $A(this.currentTile);
             possibleTile[0]--;
             if (K.isTilePassable(possibleTile)) {
@@ -105,8 +98,7 @@ K.Character = Class.create(SGF.Sprite, {
                 this.state = "moving";
             }
         } else if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_RIGHT)) {
-            this.spriteY = 3;
-            this.direction = "E";
+            this.faceEast();
             var possibleTile =  $A(this.currentTile);
             possibleTile[0]++;
             if (K.isTilePassable(possibleTile)) {
@@ -114,5 +106,67 @@ K.Character = Class.create(SGF.Sprite, {
                 this.state = "moving";
             }
         }
+    },
+    
+    faceNorth: function() {
+        this.spriteY = 1;
+        this.direction = "N";
+    },
+    faceSouth: function() {
+        this.spriteY = 0;
+        this.direction = "S";
+    },
+    faceEast: function() {
+        this.spriteY = 3;
+        this.direction = "E";
+    },
+    faceWest: function() {
+        this.spriteY = 2;
+        this.direction = "W";
+    },
+    
+    stepNorth: function() {
+        this.moveQueue.push(function() {
+            this.faceNorth();
+            var possibleTile =  $A(this.currentTile);
+            possibleTile[1]--;
+            if (K.isTilePassable(possibleTile)) {
+                this.currentTile = possibleTile;
+                this.state = "moving";
+            }
+        });
+    },
+    stepSouth: function() {
+        this.moveQueue.push(function() {
+            this.faceSouth();
+            var possibleTile =  $A(this.currentTile);
+            possibleTile[1]++;
+            if (K.isTilePassable(possibleTile)) {
+                this.currentTile = possibleTile;
+                this.state = "moving";
+            }
+        });
+    },
+    stepEast: function() {
+        this.moveQueue.push(function() {
+            this.faceEast();
+            var possibleTile =  $A(this.currentTile);
+            possibleTile[0]++;
+            if (K.isTilePassable(possibleTile)) {
+                this.currentTile = possibleTile;
+                this.state = "moving";
+            }
+        });
+    },
+    stepWest: function() {
+        this.moveQueue.push(function() {
+            this.faceWest();
+            var possibleTile =  $A(this.currentTile);
+            possibleTile[0]--;
+            if (K.isTilePassable(possibleTile)) {
+                this.currentTile = possibleTile;
+                this.state = "moving";
+            }
+        });        
     }
 });
