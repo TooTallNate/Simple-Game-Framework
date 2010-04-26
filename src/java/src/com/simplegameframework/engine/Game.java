@@ -133,13 +133,31 @@ public class Game extends ScriptableObject implements Runnable {
      * Adds the specified SGF.Component into the game loop.
      * @param o Expected to be an instance of SGF.Component.
      */
-    public void addComponent(Scriptable o) {
+    public Game addComponent(Scriptable o) {
+        // First ensure that this is a valid SGF.Component, throw an exception otherwise.
         Object javaComponent = o.get("__component", o);
         if (javaComponent instanceof NativeJavaObject) {
             javaComponent = ((NativeJavaObject)javaComponent).unwrap();
             if (javaComponent instanceof Component) {
-                this.componentsArray.add((Component)javaComponent);
-                return;
+
+                Object currentParent = o.get("parent", o);
+                // Check if the component's parent is already the parent
+                if (!this.equals(currentParent)) {
+                    // If the current parent isn't the Game, and not null, then
+                    // it must be removed from its current parent.
+                    if (currentParent != null) {
+                        Scriptable curPar = (Scriptable)currentParent;
+                        Context c = Context.enter();
+                        try {
+                            ((Function)curPar.get("removeComponent", curPar)).call(c, curPar, curPar, new Object[] { o });
+                        } finally {
+                            Context.exit();
+                        }
+                    }
+                    this.componentsArray.add((Component)javaComponent);
+                    o.put("parent", o, this);
+                }
+                return this;
             }
         }
         throw Context.reportRuntimeError(Context.toString(o) + " is not an instance of SGF.Component!");
@@ -149,13 +167,14 @@ public class Game extends ScriptableObject implements Runnable {
      * Removes the specified SGF.Component from the game loop.
      * @param o Expected to be an instance of SGF.Component.
      */
-    public void removeComponent(Scriptable o) {
+    public Game removeComponent(Scriptable o) {
         Object javaComponent = o.get("__component", o);
         if (javaComponent instanceof NativeJavaObject) {
             javaComponent = ((NativeJavaObject)javaComponent).unwrap();
             if (javaComponent instanceof Component) {
                 this.componentsArray.remove((Component)javaComponent);
-                return;
+                o.put("parent", o, null);
+                return this;
             }
         }
         throw Context.reportRuntimeError(Context.toString(o) + " is not an instance of SGF.Component!");

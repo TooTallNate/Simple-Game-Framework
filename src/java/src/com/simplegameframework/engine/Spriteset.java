@@ -150,7 +150,18 @@ public class Spriteset extends ScriptableObject implements ImageObserver, Action
 
     public Spriteset jsFunction_observe(String eventName, Function function) {
         if ("load".equals(eventName)) {
-            this.loadObservers.add(function);
+            if (this.loaded) {
+                Context c = Context.enter();
+                try {
+                    function.call(c, function, this, new Object[] { this });
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    Context.exit();
+                }                
+            } else {
+                this.loadObservers.add(function);
+            }
         } else {
             throw Context.reportRuntimeError(eventName + " is not a valid event name.");
         }

@@ -74,5 +74,6 @@ SGF.Component.DEFAULTS = {
     dy:       0,
     opacity:  1.0,
     rotation: 0,
-    zIndex:   0
+    zIndex:   0,
+    parent:   null
 };

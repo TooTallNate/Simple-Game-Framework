@@ -10,19 +10,23 @@ SGF.Container = Class.create(SGF.Component, {
     },
 
     addComponent: function(component) {
-        this.__component.add(component);
+        if (component.parent !== this) {
+            if (component.parent) {
+                // The component was already inserted into a different
+                // container, so we must remove it from there first 
+                component.parent.removeComponent(component);
+            }
+            this.__component.add(component);
+            component.parent = this;
+        }
         return this;
     },
     
     removeComponent: function(component) {
         this.__component.remove(component);
+        component.parent = null;
         return this;
     }
-
-    //__shouldUpdateChildren: function() {
-    //    return this.updateChildren === true;
-    //}
-
 });
 
 SGF.Container.DEFAULTS = {
