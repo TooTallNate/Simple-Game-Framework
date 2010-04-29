@@ -1,3 +1,5 @@
+// requires Component
+
 /** section: Components API
  * class SGF.Container < SGF.Component
  *

@@ -1,3 +1,5 @@
+// requires container
+
 /** section: Components API
  * class SGF.DumbContainer < SGF.Container
  *

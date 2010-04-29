@@ -14,6 +14,11 @@ SGF.Screen = (function() {
         // all previous elements, and then setting some standard styles
         element.style.padding = 0;
         element.style.overflow = REQUIRED_OVERFLOW;
+        if (element.style.MozUserSelect !== undefined) {
+            element.style.MozUserSelect = "moz-none";
+        } else if (element.style.webkitUserSelect !== undefined) {
+            element.style.webkitUserSelect = "none";
+        }
         Element.makePositioned(element);
         Element.immediateDescendants(element).without($("webSocketContainer")).invoke("remove");
 

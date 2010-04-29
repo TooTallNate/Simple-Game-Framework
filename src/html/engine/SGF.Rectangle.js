@@ -1,3 +1,5 @@
+// requires Shape
+
 /** section: Components API
  * class SGF.Rectangle < SGF.Shape
  *

@@ -1,3 +1,5 @@
+// requires Component
+
 SGF.Label = Class.create(SGF.Component, {
     initialize: function($super, options) {
         $super(Object.extend(Object.clone(SGF.Label.DEFAULTS), options || {}));
@@ -5,45 +7,49 @@ SGF.Label = Class.create(SGF.Component, {
         this.__textNode = document.createTextNode(this.__text);
         this.element.appendChild(this.__textNode);
     },
-    getElement: function() {
-        this.__color = this.color;
-        this.__font = this.font;
-        this.__size = this.size;
-        var e = new Element("pre"), size = (this.size * SGF.Screen.getScale()) + "px";
+    getElement: (function() {
+        var e = document.createElement("pre");
         $H({
-            "border":"0",
+            "border":"none 0px #000000",
             "background-color":"transparent",
             "position":"absolute",
             "overflow":"hidden",
-            "color":"#"+this.color,
-            "font-family":this.font.__fontName,
-            "font-size":size,
-            "line-height":size,
-            "margin":"0",
-            "padding":"0"
+            "margin":"0px",
+            "padding":"0px"
         }).each(function(prop) {
-            e.setStyleI(prop.key, prop.value);
+            Element.setStyleI(e, prop.key, prop.value);
         });
-        return e;
-    },
+        return function() {
+            var size = (this.size * SGF.Screen.getScale()) + "px",
+                el = e.cloneNode(false);
+            Element.setStyleI(el, "color", "#"+this.color);
+            this.__color = this.color;
+            Element.setStyleI(el, "font-family", this.font.__fontName);
+            this.__font = this.font;
+            Element.setStyleI(el, "font-size", size);
+            Element.setStyleI(el, "line-height", size);
+            this.__size = this.size;
+            return el;
+        }
+    })(),
     render: function($super, renderCount) {
         $super(renderCount);
         if (this.__align !== this.align) {
-            this.element.setStyleI("text-align", this.align == 0 ? "left" : this.align == 1 ? "center" : "right");
+            Element.setStyleI(this.element, "text-align", this.align == 0 ? "left" : this.align == 1 ? "center" : "right");
             this.__align = this.align;
         }
         if (this.__font !== this.font) {
-            this.element.setStyleI("font-family", this.font.__fontName);
+            Element.setStyleI(this.element, "font-family", this.font.__fontName);
             this.__font = this.font;
         }
         if (this.__size !== this.size) {
             var val = (this.size * SGF.Screen.getScale()) + "px";
-            this.element.setStyleI("font-size", val);
-            this.element.setStyleI("line-height", val);            
+            Element.setStyleI(this.element, "font-size", val);
+            Element.setStyleI(this.element, "line-height", val);            
             this.__size = this.size;
         }
         if (this.__color !== this.color) {
-            this.element.setStyleI("color", "#"+this.color);
+            Element.setStyleI(this.element, "color", "#"+this.color);
             this.__color = this.color;
         }
         if (this.__textNeedsUpdate === true) {

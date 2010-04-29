@@ -20,12 +20,14 @@ SGF.Component = Class.create({
      * SGF.Component#getElement() -> Element
      * Internal method. Game developers need not be aware.
      **/
-    getElement: function() {
-        var e = new Element("div");
-        e.setStyleI("position", "absolute");
-        e.setStyleI("overflow", "hidden");
-        return e;
-    },
+    getElement: (function() {
+        var e = document.createElement("div");
+        Element.setStyleI(e, "position", "absolute");
+        Element.setStyleI(e, "overflow", "hidden");
+        return function() {
+            return e.cloneNode(false);
+        }
+    })(),
     toElement: function() {
         return this.element;
     },
@@ -90,12 +92,12 @@ SGF.Component = Class.create({
         var scale = SGF.Screen.getScale();
 
         if (this.__rotation != this.rotation) {
-            this.element.setRotation(this.rotation); // Radians
+            Element.setRotation(this.element, this.rotation); // Radians
             this.__rotation = this.rotation;
         }
 
         if (this.__opacity != this.opacity) {
-            this.element.setOpacity(this.opacity);
+            Element.setOpacity(this.element, this.opacity);
             this.__opacity = this.opacity;
         }
 
@@ -105,35 +107,35 @@ SGF.Component = Class.create({
         }
 
         if (this.__width != this.width) {
-            this.element.setStyleI("width", (this.width * scale) + "px");
+            Element.setStyleI(this.element, "width", (this.width * scale) + "px");
             this.__width = this.width;
         }
         if (this.__height != this.height) {
-            this.element.setStyleI("height", (this.height * scale) + "px");
+            Element.setStyleI(this.element, "height", (this.height * scale) + "px");
             this.__height = this.height;
         }
 
         if (this.dx !== 0) {
-            this.element.setStyleI("left", ((this.x + (this.dx * interpolation)) * scale) + "px");
+            Element.setStyleI(this.element, "left", ((this.x + (this.dx * interpolation)) * scale) + "px");
             this.__x = this.x;
         } else if (this.__x != this.x) {
             this.__x = this.x;
-            this.element.setStyleI("left", (this.x * scale) + "px");
+            Element.setStyleI(this.element, "left", (this.x * scale) + "px");
         }
 
         if (this.dy !== 0) {
-            this.element.setStyleI("top", ((this.y + (this.dy * interpolation)) * scale) + "px");
+            Element.setStyleI(this.element, "top", ((this.y + (this.dy * interpolation)) * scale) + "px");
             this.__y = this.y;
         } else if (this.__y != this.y) {
             this.__y = this.y;
-            this.element.setStyleI("top", (this.y * scale) + "px");
+            Element.setStyleI(this.element, "top", (this.y * scale) + "px");
         }
     },
     scale: function(currentScale) {
-        this.element.setStyleI("width", (this.width * currentScale) + "px");
-        this.element.setStyleI("height", (this.height * currentScale) + "px");
-        this.element.setStyleI("top", (this.y * currentScale) + "px");
-        this.element.setStyleI("left", (this.x * currentScale) + "px");
+        Element.setStyleI(this.element, "width", (this.width * currentScale) + "px");
+        Element.setStyleI(this.element, "height", (this.height * currentScale) + "px");
+        Element.setStyleI(this.element, "top", (this.y * currentScale) + "px");
+        Element.setStyleI(this.element, "left", (this.x * currentScale) + "px");
 
         this.__width = this.width;
         this.__height = this.height;
@@ -165,7 +167,7 @@ SGF.Component = Class.create({
         var z = this.parent && this.parent.__computeChildZIndex ?
             this.parent.__computeChildZIndex(this.zIndex) :
             this.zIndex;
-        this.element.setStyleI("z-index", z);
+        Element.setStyleI(this.element, "z-index", z);
     }
 });
 

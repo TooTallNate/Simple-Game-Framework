@@ -42,8 +42,8 @@ var SGF = (function() {
             "Spriteset":null,
             "Sprite":   null,
             "Shape":    null,
-            "Rectangle":null,
-            "Circle":   null
+            "Rectangle":null//,
+            //"Circle":   null
         },
         eventListeners = {
             "load" : []
@@ -451,6 +451,13 @@ var SGF = (function() {
         if (typeof(handler) !== 'function') throw "func must be a Function."
         eventListeners[eventName].push(handler);
     }
+    
+    /*
+     * SGF.require
+     **/
+    function require(scripts) {
+        
+    }
 
     function setDebugMode(bool) {
         if (Object.isBoolean(bool)) {
@@ -467,6 +474,7 @@ var SGF = (function() {
         loadScript: loadScript,
         engineRoot: engineRoot,
         setDebugMode: setDebugMode,
+        require:    require,
         useZeroTimeout: useZeroTimeout
     };
     return rtn;
