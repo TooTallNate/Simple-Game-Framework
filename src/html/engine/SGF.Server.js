@@ -27,7 +27,7 @@ SGF.Server = Class.create({
      **/
     initialize: function() {
         throw "The HTML/DOM client is not capable of starting a Server.";
-    }
+    },
     /**
      * SGF.Server#start() -> undefined
      *
