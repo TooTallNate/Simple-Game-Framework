@@ -19,12 +19,14 @@ function $G() {
  * [[SGF.Game#removeComponent]], and [[SGF.Game#loadScript]]. But there are some
  * more advances features for the adventurous.
  **/
+ 
 /**
  * SGF.Game#updateCount -> Number
  *
  * The total number of times that [[SGF.Game#update]] has been called throughout
  * the lifetime of this game.
  **/
+ 
 /**
  * SGF.Game#renderCount -> Number
  *
@@ -177,19 +179,6 @@ SGF.Game = Class.create({
             };
     })(),
 
-    /*
-    recordStats: function() {
-        var now = this.now(), totalDuration = now-this.statsTime;
-
-        $("fps").update(((this.fpsCount/totalDuration)*1000).toFixed(2));
-        $("ups").update(((this.upsCount/totalDuration)*1000).toFixed(2));
-        $("timeInGame").update(((now-this.startTime)/1000).toFixed(2));
-
-        this.fpsCount = this.upsCount = 0;
-        this.statsTime = this.now();
-    },
-    */
-
     /**
      * SGF.Game#render(interpolation) -> undefined
      * - interpolation (Number): The percentage (value between 0.0 and 1.0)
@@ -320,10 +309,10 @@ SGF.Game = Class.create({
 
     /**
      * SGF.Game#update() -> undefined
-     * The update function for the game loop. Calls SGF.Component#update on all
-     * components added through [[SGF.Game#addComponent]]. Afterwards, increments
-     * the [[SGF.Game#updateCount]] value by 1. Game code should never have to call
-     * this method, however.
+     * The update function for the game loop. Calls [[SGF.Component#update]]
+     * on all components added through [[SGF.Game#addComponent]]. Afterwards,
+     * increments the [[SGF.Game#updateCount]] value by 1. Game code should
+     * never have to call this method, however.
      **/
     update: function() {
         for (var i=0; i<this.components.length; i++) {

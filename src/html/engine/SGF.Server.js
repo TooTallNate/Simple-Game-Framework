@@ -34,6 +34,7 @@ SGF.Server = Class.create({
      * Starts the underlying WebSocket server listening on the currently
      * configured port number.
      **/
+     start:null,
     /**
      * SGF.Server#stop() -> undefined
      *
@@ -41,18 +42,21 @@ SGF.Server = Class.create({
      * currently running, then [[SGF.Server#onClientClose]] will be called for
      * all current connections.
      **/
+     stop:null,
     /**
      * SGF.Server#connections() -> Array
      *
      * Gets an [[SGF.Client]] array of the currerntly connected clients. These
      * instances can be used to individually send messages or close a client.
      **/
+     
     /**
      * SGF.Server#sendToAll(message) -> undefined
      * - message (String): The message to send to all current connections.
      *
      * Sends `message` to all currently connected game clients.
      **/
+     sendToAll:null,
     /**
      * SGF.Server#onClientOpen(client) -> undefined
      * - client (SGF.Client): The connection instance, in case you would like to
@@ -63,6 +67,7 @@ SGF.Server = Class.create({
      * connection to this server. This function should be overridden in a
      * subclass to actually be any useful.
      **/
+     onClientOpen:null,
     /**
      * SGF.Server#onClientClose(client) -> undefined
      * - client (SGF.Client): The connection instance. Note that the connection
@@ -76,6 +81,7 @@ SGF.Server = Class.create({
      * [[SGF.Client#close]] on the `client` instance, since it's socket
      * connection has been closed.
      **/
+     onClientClose:null,
     /**
      * SGF.Server#onClientMessage(client, message) -> undefined
      * - client (SGF.Client): The connection instance, in case you would like to
@@ -87,6 +93,7 @@ SGF.Server = Class.create({
      * message to this server. This function should be overridden in a subclass
      * to actually be any useful.
      **/
+     onClientMessage:null
 });
 
 /**
