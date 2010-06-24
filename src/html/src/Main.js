@@ -39,9 +39,9 @@
     ,   params = {
         'prototype':    'lib/prototype.js',
         'swfobject':    'lib/swfobject.js',
-        'fabridge':     'lib/fabridge.js',
-        'soundjs':      'lib/sound.min.js',
-        'soundjs-swf':  'lib/sound.swf',
+        'fabridge':     'lib/FABridge.js',
+        'soundjs':      'lib/Sound.min.js',
+        'soundjs-swf':  'lib/Sound.swf',
         'websocket':    'lib/web_socket.js',
         'websocket-swf':'lib/WebSocketMain.swf'
     },
