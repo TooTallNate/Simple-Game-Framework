@@ -5,7 +5,7 @@
  * sprite state on a spriteset as a [[SGF.Component]]. The state of the sprite
  * can be changed at any time.
  **/
-SGF.Sprite = Class.create(SGF.Component, {
+var Sprite = Class.create(Component, {
     /**
      * new SGF.Sprite(spriteset[, options])
      * - spriteset (SGF.Spriteset): The spriteset for this Sprite to use. This is
@@ -38,7 +38,7 @@ SGF.Sprite = Class.create(SGF.Component, {
     initialize: function($super, spriteset, options) {
         this.spriteset = spriteset;
         this.spritesetImg = spriteset.toElement();
-        $super(Object.extend(Object.clone(SGF.Sprite.DEFAULTS), options || {}));
+        $super(Object.extend(Object.clone(Sprite.DEFAULTS), options || {}));
     },
     getElement: function($super) {
         return $super().insert(this.spritesetImg);
@@ -58,50 +58,38 @@ SGF.Sprite = Class.create(SGF.Component, {
             if (this.spriteset.loaded) {
                 this.resetSpriteset();
             } else if (!this.__resetOnLoad) {
-                this.spriteset.observe("load", this.resetSpriteset.bind(this));
+                this.spriteset.addListener("load", this.resetSpriteset.bind(this));
                 this.__resetOnLoad = true;
             }
         }
         $super(interpolation, renderCount);
     },
     resetSpriteset: function() {
-        var scale = SGF.Screen.getScale();
-        this.spritesetImg.setStyleI("width", ((this.spriteset.width * (this.width/this.spriteset.spriteWidth)) * scale) + "px");
-        this.spritesetImg.setStyleI("height", ((this.spriteset.height * (this.height/this.spriteset.spriteHeight)) * scale) + "px");
-        this.spritesetImg.setStyleI("top", -((this.height * this.spriteY) * scale) + "px");
-        this.spritesetImg.setStyleI("left", -((this.width * this.spriteX) * scale) + "px");
+        this.spritesetImg.setStyleI("width", (this.spriteset.width * (this.width/this.spriteset.spriteWidth)) + "px");
+        this.spritesetImg.setStyleI("height", (this.spriteset.height * (this.height/this.spriteset.spriteHeight)) + "px");
+        this.spritesetImg.setStyleI("top", -(this.height * this.spriteY) + "px");
+        this.spritesetImg.setStyleI("left", -(this.width * this.spriteX) + "px");
         this.__spriteX = this.spriteX;
         this.__spriteY = this.spriteY;
     }
 });
 
 /**
- * SGF.Sprite.DEFAULTS -> Object
+ * SGF.Sprite#spriteX -> Number
  *
- * The default values used when creating [[SGF.Sprite]]s. These values, as well
- * as the values from [[SGF.Component.DEFAULTS]] are copied onto the [[SGF.Sprite]],
- * if they are not found in the `options` argument.
- *
- * The [[SGF.Sprite.DEFAULTS]] object contains the default values:
- * 
- *     - spriteX: 0
- *     - spriteY: 0
+ * The X coordinate of the sprite to use from the spriteset. The units are
+ * whole [[SGF.Sprite]] widths. So to use the 3rd sprite across on the spriteset,
+ * set this value to 3.
  **/
-SGF.Sprite.DEFAULTS = {
-    /**
-     * SGF.Sprite#spriteX -> Number
-     *
-     * The X coordinate of the sprite to use from the spriteset. The units are
-     * whole [[SGF.Sprite]] widths. So to use the 3rd sprite across on the spriteset,
-     * set this value to 3.
-     **/
-    spriteX: 0,
-    /**
-     * SGF.Sprite#spriteY -> Number
-     *
-     * The Y coordinate of the sprite to use from the spriteset. The units are
-     * whole [[SGF.Sprite]] heights. So to use the 4th sprite down on the spriteset,
-     * set this value to 4.
-     **/
-    spriteY: 0
-};
+Sprite.prototype['spriteX'] = 0;
+
+/**
+ * SGF.Sprite#spriteY -> Number
+ *
+ * The Y coordinate of the sprite to use from the spriteset. The units are
+ * whole [[SGF.Sprite]] heights. So to use the 4th sprite down on the spriteset,
+ * set this value to 4.
+ **/
+Sprite.prototype['spriteY'] = 0;
+
+modules['sprite'] = Sprite;

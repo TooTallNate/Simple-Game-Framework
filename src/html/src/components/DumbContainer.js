@@ -1,5 +1,3 @@
-// requires container
-
 /** section: Components API
  * class SGF.DumbContainer < SGF.Container
  *
@@ -16,7 +14,7 @@
  * So in short, use [[SGF.DumbContainer]] when the components inside will never
  * need to be changed, and save a lot of processing power.
  **/
-SGF.DumbContainer = Class.create(SGF.Container, {
+var DumbContainer = Class.create(Container, {
     initialize: function($super, components, options) {
         $super(components, options);
         this.__shouldUpdateComponents = this.__needsRender = false;
@@ -38,6 +36,7 @@ SGF.DumbContainer = Class.create(SGF.Container, {
             this.__needsRender = true;
         $super(interpolation, renderCount);
     },
+    
     __renderComponents: function($super, interpolation, renderCount) {
         $super(interpolation, renderCount);
         this.__needsRender = false;
@@ -47,3 +46,5 @@ SGF.DumbContainer = Class.create(SGF.Container, {
         this.__needsRender = true;
     }
 });
+
+modules['dumbcontainer'] = DumbContainer;

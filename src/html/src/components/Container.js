@@ -1,5 +1,3 @@
-// requires Component
-
 /** section: Components API
  * class SGF.Container < SGF.Component
  *
@@ -12,7 +10,7 @@
  * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`) Changing the properties
  * on a Container affect the global properties of the Components placed inside.
  **/
-SGF.Container = Class.create(SGF.Component, {
+var Container = Class.create(Component, {
     /**
      * new SGF.Container(components[, options])
      * - components (Array): An array of [[SGF.Component]]s that should initally
@@ -31,7 +29,7 @@ SGF.Container = Class.create(SGF.Component, {
      **/
     initialize: function($super, components, options) {
         this.components = [];
-        $super(Object.extend(Object.clone(SGF.Container.DEFAULTS), options || {}));
+        $super(Object.extend(this, options || {}));
         if (Object.isArray(components)) {
             components.each(this.addComponent, this);
         }
@@ -46,22 +44,16 @@ SGF.Container = Class.create(SGF.Component, {
             }
         }
     },
-    render: function($super, interpolation, renderCount) {
-        $super(interpolation, renderCount);
+    render: function($super, renderCount) {
+        $super(renderCount);
         if (this.__needsRender) {
-            this.__renderComponents(interpolation, renderCount);
+            this.__renderComponents(renderCount);
         }
     },
-    __renderComponents: function(interpolation, renderCount) {
+    __renderComponents: function(renderCount) {
         for (var i=0; i < this.components.length; i++) {
             if (this.components[i].render)
-                this.components[i].render(interpolation, renderCount);
-        }
-    },
-    scale: function($super, newScale) {
-        $super(newScale);
-        for (var i=0; i<this.components.length;i++) {
-            this.components[i].scale(newScale);
+                this.components[i].render(renderCount);
         }
     },
 
@@ -79,7 +71,7 @@ SGF.Container = Class.create(SGF.Component, {
             if (component.parent)
                 component.parent.removeComponent(component);
             this.components.push(component);
-            this.element.insert(component);
+            this.element.appendChild(component.element);
             component.parent = this;
             component.__fixZIndex();
         }
@@ -97,7 +89,7 @@ SGF.Container = Class.create(SGF.Component, {
     removeComponent: function(component) {
         var index = this.components.indexOf(component);
         if (index > -1) {
-            this.components.remove(index);
+            arrayRemove(this.components, index);
             component.element.remove();
             component.parent = null;
         }
@@ -114,6 +106,4 @@ SGF.Container = Class.create(SGF.Component, {
     }
 });
 
-SGF.Container.DEFAULTS = {
-    //updateChildren: false
-};
+modules['container'] = Container;

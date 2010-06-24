@@ -1,4 +1,7 @@
-K.Character = Class.create(SGF.Sprite, {
+var Sprite = SGF.require("sprite");
+var Input = SGF.require("input");
+
+K.Character = Class.create(Sprite, {
     initialize: function($super, spriteset) {
         $super(spriteset, {
             spriteX:1,
@@ -33,7 +36,7 @@ K.Character = Class.create(SGF.Sprite, {
                             this.y-=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[1] * K.TILE_SIZE)-this.bottom())/K.TILE_SIZE)*3).floor()+2)%3;
                             if ((this.bottom()+1) % K.TILE_SIZE == 0) {
-                                K.characterOnTile(this);
+                                this.parent.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
@@ -41,7 +44,7 @@ K.Character = Class.create(SGF.Sprite, {
                             this.y+=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[1] * K.TILE_SIZE)-this.bottom())/K.TILE_SIZE)*3).floor()+2)%3;
                             if ((this.bottom()+1) % K.TILE_SIZE == 0) {
-                                K.characterOnTile(this);
+                                this.parent.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
@@ -49,7 +52,7 @@ K.Character = Class.create(SGF.Sprite, {
                             this.x-=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[0] * K.TILE_SIZE)-this.x)/K.TILE_SIZE)*3).floor()+1)%3;
                             if (this.x % K.TILE_SIZE == 0) {
-                                K.characterOnTile(this);
+                                this.parent.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
@@ -57,7 +60,7 @@ K.Character = Class.create(SGF.Sprite, {
                             this.x+=this.mapSpeed;
                             this.spriteX = (Math.abs((((this.currentTile[0] * K.TILE_SIZE)-this.x)/K.TILE_SIZE)*3).floor()+1)%3;
                             if (this.x % K.TILE_SIZE == 0) {
-                                K.characterOnTile(this);
+                                this.parent.characterOnTile(this);
                                 this.checkForInput();
                             }
                             break;
@@ -73,35 +76,35 @@ K.Character = Class.create(SGF.Sprite, {
     },
     checkForInput: function() {
         this.state = null;
-        if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_UP)) {
+        if (this.__hasInput && K.input.isKeyDown(Input.KEY_UP)) {
             this.faceNorth();
             var possibleTile =  $A(this.currentTile);
             possibleTile[1]--;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }
-        } else if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_DOWN)) {
+        } else if (this.__hasInput && K.input.isKeyDown(Input.KEY_DOWN)) {
             this.faceSouth();
             var possibleTile =  $A(this.currentTile);
             possibleTile[1]++;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }
-        } else if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_LEFT)) {
+        } else if (this.__hasInput && K.input.isKeyDown(Input.KEY_LEFT)) {
             this.faceWest();
             var possibleTile =  $A(this.currentTile);
             possibleTile[0]--;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }
-        } else if (this.__hasInput && SGF.Input.isKeyDown(SGF.Input.KEY_RIGHT)) {
+        } else if (this.__hasInput && K.input.isKeyDown(Input.KEY_RIGHT)) {
             this.faceEast();
             var possibleTile =  $A(this.currentTile);
             possibleTile[0]++;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }
@@ -130,7 +133,7 @@ K.Character = Class.create(SGF.Sprite, {
             this.faceNorth();
             var possibleTile =  $A(this.currentTile);
             possibleTile[1]--;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }
@@ -141,7 +144,7 @@ K.Character = Class.create(SGF.Sprite, {
             this.faceSouth();
             var possibleTile =  $A(this.currentTile);
             possibleTile[1]++;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }
@@ -152,7 +155,7 @@ K.Character = Class.create(SGF.Sprite, {
             this.faceEast();
             var possibleTile =  $A(this.currentTile);
             possibleTile[0]++;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }
@@ -163,7 +166,7 @@ K.Character = Class.create(SGF.Sprite, {
             this.faceWest();
             var possibleTile =  $A(this.currentTile);
             possibleTile[0]--;
-            if (K.isTilePassable(possibleTile)) {
+            if (this.parent.isTilePassable(possibleTile)) {
                 this.currentTile = possibleTile;
                 this.state = "moving";
             }

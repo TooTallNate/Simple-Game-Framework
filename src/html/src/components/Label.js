@@ -1,8 +1,7 @@
-// requires Component
 
-SGF.Label = Class.create(SGF.Component, {
+var Label = Class.create(Component, {
     initialize: function($super, options) {
-        $super(Object.extend(Object.clone(SGF.Label.DEFAULTS), options || {}));
+        $super(Object.extend(Object.clone(Label.DEFAULTS), options || {}));
         this.__text = "";
         this.__textNode = document.createTextNode(this.__text);
         this.element.appendChild(this.__textNode);
@@ -16,18 +15,17 @@ SGF.Label = Class.create(SGF.Component, {
             "overflow":"hidden",
             "margin":"0px",
             "padding":"0px"
-        }).each(function(prop) {
-            Element.setStyleI(e, prop.key, prop.value);
+        })['each'](function(prop) {
+            Element['setStyleI'](e, prop['key'], prop['value']);
         });
         return function() {
-            var size = (this.size * SGF.Screen.getScale()) + "px",
-                el = e.cloneNode(false);
-            Element.setStyleI(el, "color", "#"+this.color);
+            var el = e.cloneNode(false);
+            Element['setStyleI'](el, "color", "#"+this.color);
             this.__color = this.color;
-            Element.setStyleI(el, "font-family", this.font.__fontName);
+            Element['setStyleI'](el, "font-family", this.font.__fontName);
             this.__font = this.font;
-            Element.setStyleI(el, "font-size", size);
-            Element.setStyleI(el, "line-height", size);
+            Element['setStyleI'](el, "font-size", this.size + "px");
+            Element['setStyleI'](el, "line-height", this.size + "px");
             this.__size = this.size;
             return el;
         }
@@ -35,21 +33,21 @@ SGF.Label = Class.create(SGF.Component, {
     render: function($super, renderCount) {
         $super(renderCount);
         if (this.__align !== this.align) {
-            Element.setStyleI(this.element, "text-align", this.align == 0 ? "left" : this.align == 1 ? "center" : "right");
+            Element['setStyleI'](this.element, "text-align", this.align == 0 ? "left" : this.align == 1 ? "center" : "right");
             this.__align = this.align;
         }
         if (this.__font !== this.font) {
-            Element.setStyleI(this.element, "font-family", this.font.__fontName);
+            Element['setStyleI'](this.element, "font-family", this.font.__fontName);
             this.__font = this.font;
         }
         if (this.__size !== this.size) {
-            var val = (this.size * SGF.Screen.getScale()) + "px";
-            Element.setStyleI(this.element, "font-size", val);
-            Element.setStyleI(this.element, "line-height", val);            
+            var val = (this.size) + "px";
+            Element['setStyleI'](this.element, "font-size", val);
+            Element['setStyleI'](this.element, "line-height", val);            
             this.__size = this.size;
         }
         if (this.__color !== this.color) {
-            Element.setStyleI(this.element, "color", "#"+this.color);
+            Element['setStyleI'](this.element, "color", "#"+this.color);
             this.__color = this.color;
         }
         if (this.__textNeedsUpdate === true) {
@@ -60,7 +58,7 @@ SGF.Label = Class.create(SGF.Component, {
                     pos = 0;
                     text += cur;
                 } else if (cur === '\t') {
-                    numSpaces = SGF.Label.TAB_WIDTH-(pos%SGF.Label.TAB_WIDTH);
+                    numSpaces = Label.TAB_WIDTH - (pos % Label.TAB_WIDTH);
                     for (j=0; j<numSpaces; j++) {
                         text += ' ';
                     }
@@ -70,7 +68,7 @@ SGF.Label = Class.create(SGF.Component, {
                     pos++;
                 }
             }
-            if (SGF.Label.isIE7orLower) {
+            if (isIE7orLower) {
                 text = text.replace(/\n/g, '\r');
             }
             this.__textNode.nodeValue = text;
@@ -86,21 +84,23 @@ SGF.Label = Class.create(SGF.Component, {
     }
 });
 
-Object.extend(SGF.Label, {
-    DEFAULTS: {
-        align: 0,
-        color: "FFFFFF",
-        font: new SGF.Font("monospace"),
-        size: 12
-    },
-    LEFT: 0,
-    CENTER: 1,
-    RIGHT: 2,
-    
-    TAB_WIDTH: 4
-});
-
-SGF.Label.isIE7orLower = (function() {
+var isIE7orLower = (function() {
     /MSIE (\d+\.\d+);/.test(navigator.userAgent);
     return (new Number(RegExp.$1)) <= 7;
 })();
+
+Object.extend(Label, {
+    'DEFAULTS': {
+        'align': 0,
+        'color': "FFFFFF",
+        'font': new Font("monospace"),
+        'size': 12
+    },
+    'LEFT': 0,
+    'CENTER': 1,
+    'RIGHT': 2,
+    
+    'TAB_WIDTH': 4
+});
+
+modules['label'] = Label;

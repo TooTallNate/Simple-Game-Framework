@@ -1,67 +1,71 @@
-// First set the background color to a solid black
-SGF.Screen.color = "000001";
+var Label = SGF.require("Label")
+,   Script = SGF.require("Script")
+,   Sprite = SGF.require("Sprite")
+,   Font = SGF.require("Font")
+,   Spriteset = SGF.require("Spriteset");
 
-// We'll use the 'K' object for our namespace
-K = {};
+// We'll use the 'K' object for our namespace, and to store a reference to
+// the Game instance.
+K = SGF.require("Game").getInstance();
+
+// First set the background color to a solid black
+K.screen.color = "000001";
+
+// The mouse isn't used in this demo, so we'll hide it
+K.screen.useNativeCursor("none");
 
 // All tiles are 16x16
 K.TILE_SIZE = 16;
-
-// The mouse isn't used in this game, so we'll hide it
-SGF.Screen.useNativeCursor("none");
 
 
 // Here we begin loading all required external resources.
 // 'allResourcesLoaded' gets called after they've all loaded.
 
 // The 'loadingLabel' prints out the loading progress to the screen
-K.loadingLabel = new SGF.Label({
+K.loadingLabel = new Label({
     width: 100,
     height: 50,
-    align:SGF.Label.CENTER
+    align: Label.CENTER
 });
 K.loadingLabel.update = K.loadingLabel.update.wrap(function($super, uc) {
     $super(uc);
-    var sw = SGF.Screen.width, sh = SGF.Screen.height;
+    var sw = K.screen.width, sh = K.screen.height;
     this.x = (sw/2)-(this.width/2);
     this.y = (sh/2)-(this.height/2);
 });
-SGF.Game.current.addComponent(K.loadingLabel);
+K.addComponent(K.loadingLabel);
 
 // These two properties and function are responsible for screen notification
 // of the loading progress to the user
 K.resourcesLoaded = 0;
-K.numResources = 6;
+K.numResources = 7;
 function resourceLoaded(e) {
     //SGF.log(e);
     K.resourcesLoaded++;
     SGF.log(K.resourcesLoaded + " / " + K.numResources + " resources loaded!");
     K.loadingLabel.setText(K.resourcesLoaded + " / " + K.numResources + " resources loaded!");
     if (K.resourcesLoaded === K.numResources) {
-        SGF.Game.current.removeComponent(K.loadingLabel);
-        allResourcesLoaded.defer();
+        K.removeComponent(K.loadingLabel);
+        allResourcesLoaded();
     }
 }
 
 // Start actually loading resources, calling 'resourceLoaded' after each one loads
-SGF.Game.current.loadScript("map.js", resourceLoaded);
-SGF.Game.current.loadScript("character.js", resourceLoaded);
+K.mapScript = K.getScript("map.js", resourceLoaded);
+K.dialogScript = K.getScript("dialog.js", resourceLoaded);
+K.characterScript = K.getScript("character.js", resourceLoaded);
 
-K.kefkaSpriteset = new SGF.Spriteset("kefka.gif", 16, 24);
-K.cavehouse = new SGF.Spriteset("cavehouse.gif", 16, 16);
-K.inside = new SGF.Spriteset("inside.gif", 16, 16);
-K.dialog = new SGF.Spriteset("dialog.gif", 7, 7);
-
-K.kefkaSpriteset.observe("load", resourceLoaded);
-K.cavehouse.observe("load", resourceLoaded);
-K.inside.observe("load", resourceLoaded);
-K.dialog.observe("load", resourceLoaded);
+K.kefkaSpriteset = K.getSpriteset("kefka.gif", 16, 24, resourceLoaded);
+K.cavehouse = K.getSpriteset("cavehouse.gif", 16, 16, resourceLoaded);
+K.inside = K.getSpriteset("inside.gif", 16, 16, resourceLoaded);
+K.dialog = K.getSpriteset("dialog.gif", 7, 7, resourceLoaded);
 
 
 
 
 function allResourcesLoaded() {
     var map = getOutside();
+    var cave = getCave();
 
     // 'kefka' is our Character instance for the player
     K.kefka = new K.Character(K.kefkaSpriteset);
@@ -69,31 +73,7 @@ function allResourcesLoaded() {
     K.kefka.teleport(10, 6);
     K.map.addComponent(K.kefka);
 
-
-    // 'fader' is a black rectangle that is used to fade the screen in and out
-    K.fader = new SGF.Rectangle({
-        width: K.map.width,
-        height: K.map.height,
-        zIndex: 99999,
-        opacity: 0
-    });
-    K.fader.fadeIn = function() {
-        this.opacity += .05;
-        if (this.opacity > 1) {
-            this.opacity = 1;
-            this.done();
-        }
-    }
-    K.fader.fadeOut = function() {
-        this.opacity -= .05;
-        if (this.opacity < 0) {
-            this.opacity = 0;
-            this.done();
-        }
-    }
-
-
-
+    /*
     K.isTilePassable = function(coords) {
         if (coords[1]>=0 && K.currentMap.layers[0].length > coords[1]) {
             if (coords[0]>=0 && K.currentMap.layers[0][coords[1]].length > coords[0]) {
@@ -114,6 +94,7 @@ function allResourcesLoaded() {
             }
         }
     }
+    */
 
     // Create a simple NPC to talk to and perform random movement
     K.npc = new K.Character(K.kefkaSpriteset);
@@ -153,7 +134,7 @@ function allResourcesLoaded() {
 
 
     K.currentMap = map;
-    SGF.Game.current.addComponent(map);
+    K.addComponent(map);
     
 }
 
@@ -194,10 +175,11 @@ function getOutside() {
 
     K.map.update = K.map.update.wrap(function($super, uc) {
         $super(uc);
-        var sw = SGF.Screen.width, sh = SGF.Screen.height;
+        var sw = K.screen.width, sh = K.screen.height;
         this.x = this.width < sw ? (sw/2)-(this.width/2) : ((-K.kefka.x - (K.kefka.width/2)) + (sw/2)).constrain(sw-this.width, 0);
         this.y = this.height < sh ? (sh/2)-(this.height/2) : ((-K.kefka.y - (K.kefka.height/2)) + (sh/2)).constrain(sh-this.height, 0);
     });
+    K.map.origUpdate = K.map.update;
 
     SGF.log("created outside!");
     return K.map;
@@ -240,10 +222,11 @@ function getCave() {
 
     K.cave.update = K.cave.update.wrap(function($super, uc) {
         $super(uc);
-        var sw = SGF.Screen.width, sh = SGF.Screen.height;
+        var sw = K.screen.width, sh = K.screen.height;
         this.x = this.width < sw ? (sw/2)-(this.width/2) : ((-K.kefka.x - (K.kefka.width/2)) + (sw/2)).constrain(sw-this.width, 0);
         this.y = this.height < sh ? (sh/2)-(this.height/2) : ((-K.kefka.y - (K.kefka.height/2)) + (sh/2)).constrain(sh-this.height, 0);
     });
+    K.cave.origUpdate = K.cave.update;
 
     SGF.log("created cave!");
     return K.cave;
@@ -254,91 +237,99 @@ function getCave() {
 
 // Called when the player enters the cave
 function caveEntered(character) {
-    //SGF.log("entered cave");
+    
+    //K.kefka.parent.addComponent(new K.Dialog("this is a test!"));
+    
+    if (character === K.kefka) {
 
-    K.kefka.hasInput(false);
+        K.kefka.hasInput(false);
 
-    K.fader.update = K.fader.fadeIn;
-    K.fader.done = function() {
+        K.currentMap = K.cave;
 
-        var cave = getCave();
+        K.cave.opacity = 0;
+        K.cave.addComponent(K.kefka);
+        K.cave.update = K.cave.origUpdate.wrap(function($super, uc) {
+            $super(uc);
+            this.opacity += (1.0/30);
+            if (this.opacity >= 1) {
+                this.opacity = 1;
+                this.update = this.origUpdate;
+            }
+        });
+        K.map.update = K.map.origUpdate.wrap(function($super, uc) {
+            $super(uc);
+            this.opacity -= (1.0/30);
+            if (this.opacity <= 0) {
+                this.opacity = 0;
+                this.update = this.origUpdate;
+                K.removeComponent(this);
+                K.kefka.hasInput(true);
+            }
+        });
 
-
-        cave.addComponent(K.kefka);
-        cave.addComponent(K.fader);
-
-        K.fader.update = K.fader.fadeOut;
-
-        K.fader.done = function() {
-            cave.removeComponent(this);
-        }
-
-        K.currentMap = cave;
-        SGF.Game.current.addComponent(cave);
-        SGF.Game.current.removeComponent(K.map);
 
         K.kefka.teleport(13,7);
         K.kefka.stepNorth();
-        K.kefka.hasInput(true);
+
+        K.addComponent(K.cave);
+    } else {
+        character.stepSouth();
     }
-
-    K.map.addComponent(K.fader);
 }
-
-
 
 
 // Called when the player exits the inside area
 function caveExited(character) {
-
     K.kefka.hasInput(false);
 
-    K.fader.update = K.fader.fadeIn;
-    K.fader.done = function() {
+    K.currentMap = K.map;
 
-        var map = getOutside();
-
-        map.addComponent(K.kefka);
-        map.addComponent(K.fader);
-
-        K.fader.update = K.fader.fadeOut;
-
-        K.fader.done = function() {
-            map.removeComponent(this);
+    K.map.opacity = 0;
+    K.map.addComponent(K.kefka);
+    K.map.update = K.map.origUpdate.wrap(function($super, uc) {
+        $super(uc);
+        this.opacity += (1.0/30);
+        if (this.opacity >= 1) {
+            this.opacity = 1;
+            this.update = this.origUpdate;
         }
+    });
+    K.cave.update = K.cave.origUpdate.wrap(function($super, uc) {
+        $super(uc);
+        this.opacity -= (1.0/30);
+        if (this.opacity <= 0) {
+            this.opacity = 0;
+            this.update = this.origUpdate;
+            K.removeComponent(this);
+            K.kefka.hasInput(true);
+        }
+    });
 
-        K.currentMap = map;
-        SGF.Game.current.addComponent(map);
-        SGF.Game.current.removeComponent(K.cave);
 
-        K.kefka.teleport(6,4);
-        K.kefka.stepSouth();
-        K.kefka.hasInput(true);
-    }
+    K.kefka.teleport(6,4);
+    K.kefka.stepSouth();
 
-    K.cave.addComponent(K.fader);
+    K.addComponent(K.map);
 }
 
 
 
 
 // STATS PRINTOUT
-K.label = new SGF.Label({
+K.label = new Label({
     width: 400,
     height: 150,
     size:10,
     //align:SGF.Label.CENTER,
-    font: new SGF.Font("Comic Sans MS"),
+    font: new Font("Comic Sans MS"),
     zIndex:5000,
     update: function() {
-        //this.width = SGF.Screen.width;
-        var g = SGF.Game.current;
-        if (g.updateCount%2===0)
+        if (K.updateCount%2===0)
             this.setText(
-                "Updates Processed:\t" + g.updateCount + "\n" +
-                "Frames Rendered:\t" + g.renderCount + "\n" +
-                "Frames / Second:\t" + ((g.renderCount/((new Date).getTime() - g.startTime))*1000).toFixed(2) + "\n" +
-                "Updates / Second:\t" + ((g.updateCount/((new Date).getTime() - g.startTime))*1000).toFixed(2));
+                "Updates Processed:\t" + K.updateCount + "\n" +
+                "Frames Rendered:\t" + K.renderCount + "\n" +
+                "Frames / Second:\t" + ((K.renderCount/((new Date).getTime() - K.startTime))*1000).toFixed(2) + "\n" +
+                "Updates / Second:\t" + ((K.updateCount/((new Date).getTime() - K.startTime))*1000).toFixed(2));
     }
 });
-SGF.Game.current.addComponent(K.label);
+K.addComponent(K.label);

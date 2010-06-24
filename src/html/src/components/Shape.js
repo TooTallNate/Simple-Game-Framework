@@ -6,7 +6,7 @@
  * functionality that this class itself adds to a regular [[SGF.Component]] is
  * [[SGF.Shape#color]], since all shapes can have a color set for them.
  **/
-SGF.Shape = Class.create(SGF.Component, {
+var Shape = Class.create(Component, {
     /**
      * new SGF.Shape([options])
      * - options (Object): The optional 'options' object's properties are copied
@@ -18,7 +18,7 @@ SGF.Shape = Class.create(SGF.Component, {
      * to instantiate [[SGF.Shape]]s.
      **/
     initialize: function($super, options) {
-        $super(Object.extend(Object.clone(SGF.Shape.DEFAULTS), options || {}));
+        $super(Object.extend(Object.clone(Shape.DEFAULTS), options || {}));
     },
     render: function($super, interpolation) {
         //var scale = SGF.Screen.getScale();
@@ -73,7 +73,7 @@ SGF.Shape = Class.create(SGF.Component, {
  *     - color: "000000"
  *     - fill: true
  **/
-SGF.Shape.DEFAULTS = {
+Shape.DEFAULTS = {
     /**
      * SGF.Shape#color -> String
      *
@@ -91,3 +91,5 @@ SGF.Shape.DEFAULTS = {
      **/
     fill: true
 };
+
+modules['shape'] = Shape;

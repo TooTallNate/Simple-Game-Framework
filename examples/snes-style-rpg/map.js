@@ -6,8 +6,11 @@ Number.prototype.constrain = function(n1, n2) {
     if (num > max) num = max;
     return num;
 }
+var Container = SGF.require("container");
+var DumbContainer = SGF.require("dumbcontainer");
+var Sprite = SGF.require("sprite");
 
-K.Map = Class.create(SGF.Container, {
+K.Map = Class.create(Container, {
     initialize: function($super) {
         var layerData = $A(arguments), layerContainers = [], i=0; j=0; l=0, xLen = 0, yLen = 0;
         layerData.shift();
@@ -22,7 +25,7 @@ K.Map = Class.create(SGF.Container, {
             for (j=0; j<yLen; j++) {
                 for (l=0; l<xLen; l++) {
 
-                    layer[j][l] = new SGF.Sprite(this.spriteset, {
+                    layer[j][l] = new Sprite(this.spriteset, {
                         width: K.TILE_SIZE,
                         height: K.TILE_SIZE,
                         x: l*K.TILE_SIZE,
@@ -40,7 +43,8 @@ K.Map = Class.create(SGF.Container, {
                 }
             }
             
-            layerContainers.push(new SGF.DumbContainer(tiles, {
+            
+            layerContainers.push(new DumbContainer(tiles, {
                 width: K.TILE_SIZE * xLen,
                 height: K.TILE_SIZE * yLen
             }));
@@ -50,5 +54,30 @@ K.Map = Class.create(SGF.Container, {
             width: K.TILE_SIZE * xLen,
             height: K.TILE_SIZE * yLen
         });
+    },
+    addComponent: function($super, component) {
+        $super(component);
+    },
+    removeComponent: function($super, component) {
+        $super(component);        
+    },
+    isTilePassable: function(coords) {
+        if (coords[1]>=0 && this.layers[0].length > coords[1]) {
+            if (coords[0]>=0 && this.layers[0][coords[1]].length > coords[0]) {
+                for (var i=0; i < this.layers.length; i++) {
+                    if (!this.layers[i][coords[1]][coords[0]].passable)
+                        return false;
+                }
+                return true;
+            }
+        }
+        return false;
+    },
+    characterOnTile: function(character) {
+        for (var i=0; i < this.layers.length; i++) {
+            if (this.layers[i][character.currentTile[1]][character.currentTile[0]].event) {
+                this.layers[i][character.currentTile[1]][character.currentTile[0]].event(character);
+            }
+        }
     }
 });

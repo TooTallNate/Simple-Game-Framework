@@ -1,22 +1,14 @@
-/**
- * == Networking API ==
- * SGF offers a low-level socket connection through the WebSocket protocol.
- * This allows for real time networking inside your game.
- * All game clients **MUST** implement [[SGF.Client]], but only capable game
- * clients should implement [[SGF.Server]].
- **/
-
 /** section: Networking API
- * class SGF.Client
+ * class Client
  *
- * Connects to remote instances of [[SGF.Server]], or any other compliant
+ * Connects to remote instances of [[Server]], or any other compliant
  * WebSocket server.
  *
- * An [[SGF.Client]] instance by itself does nothing except connect to the
+ * An [[Client]] instance by itself does nothing except connect to the
  * specified server. You must implement an `onOpen`, `onClose`, and `onMessage`
  * function in either a subclass:
  *
- *     Class.create(SGF.Client, {
+ *     Class.create(Client, {
  *         onOpen: function() {
  *             // Connection to WebSocket has been established.
  *         },
@@ -31,7 +23,7 @@
  *
  * or by directly setting the functions on a standard [[SGF.Client]] instance:
  *
- *     var conn = new SGF.Client("ws://somegameserver");
+ *     var conn = new Client("ws://somegameserver");
  *     conn.onOpen = function() {
  *         // Connection to WebSocket has been established.
  *     };
@@ -43,7 +35,7 @@
  *         SGF.log(message);
  *     };
  **/
-SGF.Client = Class.create({
+var Client = Class.create({
     /**
      * new SGF.Client(url[, options])
      * - url (String): The WebSocket URL to the server to connect to. This should
@@ -156,7 +148,7 @@ SGF.Client = Class.create({
     }
 });
 
-Object.extend(SGF.Client, {
+Object.extend(Client, {
     /**
      * SGF.Client.DEFAULTS -> Object
      *
@@ -177,3 +169,4 @@ Object.extend(SGF.Client, {
     CLOSED:     2
 });
 
+modules['client'] = Client;

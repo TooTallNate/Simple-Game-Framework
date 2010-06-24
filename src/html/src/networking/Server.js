@@ -15,7 +15,7 @@
  * the server address at that point in your game, making it more seamless for
  * your users.
  **/
-SGF.Server = Class.create({
+var Server = Class.create({
     /**
      * new SGF.Server([options])
      * - options (Object): The optional `options` object's properties are copied
@@ -110,7 +110,7 @@ SGF.Server = Class.create({
  *         server.start();
  *     }
  **/
-SGF.Server.canServe = false;
+Server.canServe = false;
 
 /**
  * SGF.Server.DEFAULTS -> Object
@@ -129,3 +129,5 @@ SGF.Server.canServe = false;
  *  - `autostart`: Default `false`. Boolean determining whether to call
  *  [[SGF.Server#start]] at the end of construction.
  **/
+
+modules['server'] = Server;

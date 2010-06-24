@@ -1,4 +1,4 @@
-SGF.Circle = Class.create(SGF.Shape, {
+var Circle = Class.create(Shape, {
     initialize: function($super, options) {
         $super(Object.extend(Object.clone(SGF.Circle.DEFAULTS), options || {}));
         this.radiusChanged();
@@ -49,6 +49,8 @@ SGF.Circle = Class.create(SGF.Shape, {
     }
 });
 
-SGF.Circle.DEFAULTS = {
+Circle.DEFAULTS = {
     radius: 10
 };
+
+modules['circle'] = Circle;
