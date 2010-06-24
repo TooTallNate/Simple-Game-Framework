@@ -9,24 +9,24 @@ the game developer writes games using one code base, written in JavaScript,
 and incorporating the SGF API. That code base can then be deployed to any
 number of SGF game engine clients.
 
-Game Engine Clients
--------------------
+Game Engines
+------------
 
 ### Currently Being Developed ###
 
  * `HTML/DOM`: An engine that uses web browsers' native JavaScript engine
    to execute the game code, and the API manipulates DOM nodes to "render"
-   your game. The HTML/DOM game engine can be found in `src/html/engine`.
+   your game. The HTML/DOM game engine can be found in `src/html/`.
 
  * `Java`: In conjunction with [Rhino](http://www.mozilla.org/rhino/), Java
    interprets your JavaScript game code, and uses Java2D or JOGL to render the
-   game. The current version found in `src/java/src` uses Java2D to render
+   game. The current version found in `src/java/` uses Java2D to render
    SGF games.
 
 
 ### Future Thoughts ###
 
- * `iPhone/iPad/iPod Touch`: A game engine for Apple's line of hardware is
+ * `iOS`: A game engine for Apple's line of hardware is
    high on the list of future plans. Apple allows JavaScript code to be
    executed in a native app as long as it's running through a WebKit instance.
    The plan is to render the game through Objective-C and OpenGL ES, and
@@ -56,7 +56,7 @@ Game Engine Clients
    engine. However, I (TooTallNate) have never programmed in C++, let alone
    developed games, so I probably won't be touching this one.
 
- * `Any other language that has a JavaScript Interpreter`: In theory,
+ * `Any other platform with a JavaScript Interpreter`: In theory,
    your game written using the SGF API is reusable anywhere that JavaScript
    can be implemented! That's the beauty of developing your game in an
    interpreted language.
@@ -76,15 +76,14 @@ Additional game resources like additional `*.js` files, images and sound files
 can be placed inside that same folder, or any number of folders inside your
 root game folder (the folder where `main.js` is located).
 
-You can view the full [Simple Game Framework API Docs](http://tootallnate.github.com/Simple-Game-Framework/doc/)
+You can view the full [Simple Game Framework API Docs](http://api.simplegameframework.com)
 to learn it all!
 
 Additional Links
 ----------------
 
- * ["Simple Game Framework" Google Group](http://groups.google.com/group/simple-game-framework) - A Google Group dedicated to discussion of SGF game (or engine) development.
- * [GitHub SGF Wiki](http://wiki.github.com/TooTallNate/Simple-Game-Framework) - The official Wiki for SGF, with community written guides/tutorials and good-to-know SGF info.
-
+ * ["Simple Game Framework" Google Group](http://groups.google.com/group/simple-game-framework) - The official mailing list  dedicated to discussion of SGF game and engine development.
+ * [GitHub SGF Wiki](http://wiki.github.com/TooTallNate/Simple-Game-Framework) - The official Wiki for SGF, with community written guides/tutorials/examples and good-to-know SGF info.
 
 License
 -------
