@@ -290,7 +290,7 @@
         if (isSwfObjectLoaded()) {
             swfObjectLoaded();
         } else {
-            new Script(engineRoot + params['swfobject'], swfObjectLoaded);
+            new Script((params['swfobject'].indexOf("lib") === 0 ? engineRoot : "") + params['swfobject'], swfObjectLoaded);
         }
         
     }
