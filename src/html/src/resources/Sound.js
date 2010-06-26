@@ -7,4 +7,6 @@ Sound['subclasses'] = [];
 // so that (soundInstance instanceof EventEmitter) === true
 Sound.prototype = new EventEmitter(true);
 
+Sound.prototype['toString'] = functionReturnString("[object Sound]");
+
 modules['sound'] = Sound;

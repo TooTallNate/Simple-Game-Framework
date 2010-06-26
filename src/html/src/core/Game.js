@@ -48,18 +48,20 @@ function Game(rootUrl, screen, options) {
      * and considered in the game loop. Returns the [[SGF.Game]] object (this),
      * for chaining.
      **/
+     /*
     self['addComponent'] = function(component) {
         var currentParent = component['parent'];
         if (currentParent !== self) {
             if (currentParent)
                 currentParent['removeComponent'](component);
             components.push(component);
-            self['screen'].element.insert(component);
+            self['screen']['element']['insert'](component);
             component['parent'] = self;
             component['__fixZIndex']();
         }
         return self;
     }
+    */
 
     /**
      * SGF.Game#removeComponent(component) -> SGF.Game
@@ -69,15 +71,17 @@ function Game(rootUrl, screen, options) {
      * Removes a [[SGF.Component]] that has previously been added to the game
      * loop via [[SGF.Game#addComponent]].
      **/
+     /*
     self['removeComponent'] = function(component) {
         var index = components.indexOf(component);
         if (index > -1) {
             arrayRemove(components, index);
-            component.toElement().remove();
+            component['toElement']()['remove']();
             component['parent'] = null;
         }
         return self;
     }
+    */
 
 
     /**
@@ -121,136 +125,28 @@ function Game(rootUrl, screen, options) {
     }
     */
 
-    /**
-     * SGF.Game#render(interpolation) -> undefined
-     * - interpolation (Number): The percentage (value between 0.0 and 1.0)
-     *                           between the last call to update and the next
-     *                           call to update this call to render is taking place.
-     *                           This number is used to "predict" locations of
-     *                           Components when the FPS are higher than UPS.
-     *                           
-     * The game render function that gets called automatically during each pass
-     * in the game loop. Calls [[SGF.Component#render]] on all components added
-     * through [[SGF.Game#addComponent]]. Afterwards, increments the
-     * [[SGF.Game#renderCount]] value by 1. Game code should never have to call
-     * this method, however.
-     **/
-    self['render'] = function() {
-        for (var i=0; i<components.length; i++) {
-            if (components[i]['render'])
-                components[i]['render'](self['renderCount']);
-        }
-        self['renderCount']++;
-    }
 
 
-    /*
-     * The main iterator function. Called as fast as the browser can handle
-     * (i.e. setTimeout(this.step, 0)) in order to implement variable FPS.
-     * This method, however, ensures that update() is called at the requested
-     * "gameSpeed", so long as hardware is capable.
-     **/
-    self['step'] = function() {
-        // Stop the loop if the 'running' flag is changed.
-        if (!self.running) return self.stopped();
-
-        currentGame = self;
-
-        // This while loop calls update() as many times as required depending
-        // on the current time and the last time update() was called. This
-        // could happen 0 times if the hardware is calling step() more times
-        // than the requested 'gameSpeed'. This will result in higher FPS than UPS
-        var loops = 0;
-        while (now() > self.nextGamePeriod && loops < self.maxFrameSkips) {
-            self.update();
-            self.nextGamePeriod += self.period;
-            loops++;
-        }
-
-        // Sets the screen background color, screen width and height
-        self.screen['_r']();
-
-        // Renders all game components, taking the interpolation value
-        // to predict where the game objects will be placed.
-        //this.render((this.now() + this.period - this.nextGamePeriod) / this.period);
-        self.render(0);
-
-        // Continue the game loop, as soon as the browser has time for it,
-        // allowing for other JS on the stack to be executed (events, etc.)
-        setTimeout(self['_s'], 0);
-        //setTimeout("SGF.Game.current.step()", 0); <- Appears to be the same speed
-    }
-
-    /*
-     * Stops the game loop if the game is running.
-     **/
-    self['stop'] = function() {
-        self.fireEvent("stopping");
-        self.running = false;
-        return self;
-    }
-
-    self['stopped'] = function() {
-        //if (SGF.Input.grabbed) SGF.Input.release();
-        self['screen']['useNativeCursor'](true);
-        currentGame = null;
-        self['fireEvent']("stopped");
-    }
-
-    /**
-     * SGF.Game#update() -> undefined
-     * The update function for the game loop. Calls [[SGF.Component#update]]
-     * on all components added through [[SGF.Game#addComponent]]. Afterwards,
-     * increments the [[SGF.Game#updateCount]] value by 1. Game code should
-     * never have to call this method, however.
-     **/
-    self['update'] = function() {
-        for (var i=0; i<components.length; i++) {
-            if (components[i]['update'])
-                components[i]['update'](self['updateCount']);
-        }
-        self['updateCount']++;
-    }
-
-    /* HTML/DOM Client specific function
-     * Computes the z-index of a component added through addComponent.
-     **/
-    self['__computeChildZIndex'] = function(zIndex) {
-        return ((parseInt(zIndex)||0)+1) * 1000;
-    }
 
 
 
 
     EventEmitter.call(self);
     
+    Container.call(self, options);
+    
+    
     self['input'] = new Input(self);
+    
     self['screen'] = new Screen(self);
     self['screen']['_bind'](screen);
 
 
 
-
-    //log("new Game: " + rootUrl);
-    
-    var components = [];
-    /*,
-        listeners = {
-            "load":     [],
-            "start":    [],
-            "stopping": [],
-            "stopped":  []
-        };*/
-
     // 'root' is the path to the folder containing the Game's 'main.js' file.
-    if (rootUrl.endsWith("main.js")) rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("main.js"));
-    self['root'] = rootUrl.endsWith('/') ? rootUrl : rootUrl + '/';
+    if (rootUrl['endsWith']("main.js")) rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("main.js"));
+    self['root'] = rootUrl['endsWith']('/') ? rootUrl : rootUrl + '/';
     
-    // Override the default options with the user defined options
-    if (options) {
-        Object.extend(self, options);
-    }
-
     // Set the initial game speed. This can be changed during gameplay.
     self['setGameSpeed'](self['gameSpeed']);
 
@@ -261,6 +157,7 @@ function Game(rootUrl, screen, options) {
     // Set as currentGame for Game.getInstance
     currentGame = self;
 
+    // A binded 'step' function
     self['_s'] = function() {
         self['step']();
     }
@@ -270,11 +167,24 @@ function Game(rootUrl, screen, options) {
         self['loaded'] = true;
         // Notify all the game's 'load' listeners
         self['fireEvent']('load');
-        if (self['autostart'] === true) {
-            self['start']();
-        }
+        self['start']();
     });
 }
+
+Game.prototype = new Container(true);
+
+/**
+ * The current target updates per seconds to achieve. This is meant
+ * to be read-only. If you must dynamically change the game speed,
+ * use [[Game#setGameSpeed]] instead.
+ */
+Game.prototype['gameSpeed'] = 30;
+
+/**
+ * The maximum allowed number of updates to call in between render calls
+ * if the game's demand is more than current harware is capable of.
+ */
+Game.prototype['maxFrameSkips'] = 5;
 
 /**
  * Game#setGameSpeed(updatesPerSecond) -> Game
@@ -296,18 +206,16 @@ Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
 Game.prototype['start'] = function() {
     //log("Starting " + this.root);
 
-    //Input.focus();
-
     // The 'running' flag is used by step() to determine if the loop should
     // continue or end. No not set directly, use stop() to kill game loop.
-    this.running = true;
+    this['running'] = true;
 
     runningGameInstances.push(this);
 
     // Note when the game started, and when the next
     // call to update() should take place.
-    this.startTime = this.nextGamePeriod = now();
-    this.updateCount = this.renderCount = 0;
+    this['startTime'] = this['nextGamePeriod'] = now();
+    this['updateCount'] = this['renderCount'] = 0;
 
     // Start the game loop itself!
     setTimeout(this['_s'], 0);
@@ -333,30 +241,111 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
 }
 
 /**
- * If true, start the game loop immediately after 'main.js' loads.
- */
-Game.prototype['autostart'] = true;
+ * SGF.Game#render(interpolation) -> undefined
+ * - interpolation (Number): The percentage (value between 0.0 and 1.0)
+ *                           between the last call to update and the next
+ *                           call to update this call to render is taking place.
+ *                           This number is used to "predict" locations of
+ *                           Components when the FPS are higher than UPS.
+ *                           
+ * The game render function that gets called automatically during each pass
+ * in the game loop. Calls [[SGF.Component#render]] on all components added
+ * through [[SGF.Game#addComponent]]. Afterwards, increments the
+ * [[SGF.Game#renderCount]] value by 1. Game code should never have to call
+ * this method, however.
+ **/
+Game.prototype['render'] = function() {
+    for (var i=0, cur=null; i<this['components'].length; i++) {
+        cur = this['components'][i];
+        if (cur['render']) {
+            cur['render'](this['renderCount']);
+        }
+    }
+    this['renderCount']++;
+}
+
+
+/*
+ * The main iterator function. Called as fast as the browser can handle
+ * (i.e. setTimeout(this.step, 0)) in order to implement variable FPS.
+ * This method, however, ensures that update() is called at the requested
+ * "gameSpeed", so long as hardware is capable.
+ **/
+Game.prototype['step'] = function() {
+    // Stop the loop if the 'running' flag is changed.
+    if (!this['running']) return this['stopped']();
+
+    currentGame = this;
+
+    // This while loop calls update() as many times as required depending
+    // on the current time and the last time update() was called. This
+    // could happen 0 times if the hardware is calling step() more times
+    // than the requested 'gameSpeed'. This will result in higher FPS than UPS
+    var loops = 0;
+    while (now() > this['nextGamePeriod'] && loops < this['maxFrameSkips']) {
+        this['update']();
+        this['nextGamePeriod'] += this['period'];
+        loops++;
+    }
+
+    // Sets the screen background color, screen width and height
+    this['screen']['_r']();
+
+    // Renders all game components, taking the interpolation value
+    // to predict where the game objects will be placed.
+    this['render']();
+
+    // Continue the game loop, as soon as the browser has time for it,
+    // allowing for other JS on the stack to be executed (events, etc.)
+    setTimeout(this['_s'], 0);
+}
+
+/*
+ * Stops the game loop if the game is running.
+ **/
+Game.prototype['stop'] = function() {
+    this['fireEvent']("stopping");
+    this['running'] = false;
+    return this;
+}
+
+Game.prototype['stopped'] = function() {
+    //if (SGF.Input.grabbed) SGF.Input.release();
+    this['screen']['useNativeCursor'](true);
+    currentGame = null;
+    this['fireEvent']("stopped");
+}
+
 /**
- * The current target updates per seconds to achieve. This is meant
- * to be read-only. If you must dynamically change the game speed,
- * use [[Game#setGameSpeed]] instead.
- */
-Game.prototype['gameSpeed'] = 30;
-/**
- * The maximum allowed number of updates to call in between render calls
- * if the game's demand is more than current harware is capable of.
- */
-Game.prototype['maxFrameSkips'] = 5;
+ * SGF.Game#update() -> undefined
+ * The update function for the game loop. Calls [[SGF.Component#update]]
+ * on all components added through [[SGF.Game#addComponent]]. Afterwards,
+ * increments the [[SGF.Game#updateCount]] value by 1. Game code should
+ * never have to call this method, however.
+ **/
+Game.prototype['update'] = function() {
+    for (var i=0, cur=null; i<this['components'].length; i++) {
+        cur = this['components'][i];
+        if (cur['update']) {
+            cur['update'](this['updateCount']);
+        }
+    }
+    this['updateCount']++;
+}
+
+/* HTML/DOM Client specific function
+ * Computes the z-index of a component added through addComponent.
+ **/
+Game.prototype['__computeChildZIndex'] = function(zIndex) {
+    return ((parseInt(zIndex)||0)+1) * 1000;
+}
+
 /**
  * Game#toString -> String
  *
  * String representation of the `Game` class.
  **/
-Game.prototype['toString'] = function() {
-    return "[object Game]";
-}
-
-Game['subclasses'] = [];
+Game.prototype['toString'] = functionReturnString("[object Game]");
 
 /**
  * Game.getInstance() -> Game
@@ -366,5 +355,7 @@ Game['subclasses'] = [];
 Game['getInstance'] = function() {
     return currentGame;
 }
+
+makePrototypeClassCompatible(Game);
 
 modules['game'] = Game;

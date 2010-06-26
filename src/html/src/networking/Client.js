@@ -50,13 +50,13 @@ var Client = Class.create({
      * the server, the [[SGF.Client#connect]] method must be called first.
      **/
     initialize: function(url, options) {
-        Object.extend(this, Object.extend(Object.clone(SGF.Client.DEFAULTS), options || {}));
+        Object.extend(this, options || {});
         this.URL = url;
         this.__bindedOnOpen = this.__onOpen.bind(this);
         this.__bindedOnClose = this.__onClose.bind(this);
         this.__bindedOnMessage = this.__onMessage.bind(this);
 
-        if (this.autoconnect === true) this.connect();
+        if (this['autoconnect']) this['connect']();
     },
     /**
      * SGF.Client#onOpen() -> undefined
@@ -65,7 +65,7 @@ var Client = Class.create({
      * has been successful, and a proper WebSocket connection has been established.
      * You must implement this function in a subclass to be useful.
      **/
-    onOpen: Prototype.emptyFunction,
+    onOpen: Prototype['emptyFunction'],
     /**
      * SGF.Client#onClose() -> undefined
      *
@@ -77,7 +77,7 @@ var Client = Class.create({
      * the connection (either directly through code or otherwise).
      * You must implement this function in a subclass to be useful.
      **/
-    onClose: Prototype.emptyFunction,
+    onClose: Prototype['emptyFunction'],
     /**
      * SGF.Client#onMessage(message) -> undefined
      * - message (String): The String value of the message sent from the server.
@@ -86,7 +86,7 @@ var Client = Class.create({
      * instance through the network. You must implement this function in a
      * subclass to be useful with the `message` value in your game.
      **/
-    onMessage: Prototype.emptyFunction,
+    onMessage: Prototype['emptyFunction'],
     /**
      * SGF.Client#connect() -> undefined
      *
@@ -148,22 +148,10 @@ var Client = Class.create({
     }
 });
 
+Client.prototype['autoconnect'] = false;
+Client.prototype['toString'] = functionReturnString("[object Client]");
+
 Object.extend(Client, {
-    /**
-     * SGF.Client.DEFAULTS -> Object
-     *
-     * The default values used when creating [[SGF.Client]]s. These values are
-     * copied onto the [[SGF.Client]] instance, if they are not found in the
-     * `options` parameter in the constructor.
-     *
-     * The [[SGF.Client.DEFAULTS]] object contains the default values:
-     *
-     *  - `autoconnect`: Default `false`. Boolean determining whether to call
-     *  [[SGF.Client#connect]] at the end of construction.
-     **/
-    DEFAULTS: {
-        autoconnect: false
-    },
     CONNECTING: 0,
     OPEN:       1,
     CLOSED:     2

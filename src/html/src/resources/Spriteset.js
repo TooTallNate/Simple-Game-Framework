@@ -49,7 +49,9 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
     // Finally begin loading the image itself!
     self['src'] = img['src'] = game['root'] + path;
 }
+
 Spriteset['subclasses'] = [];
+
 // so that (spritesetInstance instanceof EventEmitter) === true
 Spriteset.prototype = new EventEmitter(true);
 
@@ -103,11 +105,9 @@ Spriteset.prototype['spriteHeight'] = -1;
 Spriteset.prototype['src'] = null;
 
 Spriteset.prototype['toElement'] = function() {
-    return this.image.cloneNode(true);
+    return this['image'].cloneNode(true);
 }
 
-Spriteset.prototype['toString'] = function() {
-    return "[object Spriteset]";
-}
+Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
 
 modules['spriteset'] = Spriteset;

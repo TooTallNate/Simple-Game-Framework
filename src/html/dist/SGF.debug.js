@@ -47,7 +47,819 @@
     },
     loadStartTime = new Date(),
     // "Modules" are the classes retrieved from calling SGF.require().
-    modules = {};
+    modules = {},
+    
+    
+    
+    
+    
+    // browser sniffs
+    userAgent = navigator.userAgent,
+    isOpera = Object.prototype.toString.call(window['opera']) == '[object Opera]',
+    isIE = !!window['attachEvent'] && !isOpera,
+    isIE7orLower =  isIE && parseFloat(navigator.userAgent.split("MSIE")[1]) <= 7,
+    isWebKit = userAgent.indexOf('AppleWebKit/') > -1,
+    isGecko = userAgent.indexOf('Gecko') > -1 && userAgent.indexOf('KHTML') === -1,
+    isMobileSafari = /Apple.*Mobile/.test(userAgent);
+
+
+
+
+    /* The DOM nodes that SGF manipulates are always modified through
+     * JavaScript, but just setting style.blah won't overwrite !important
+     * in CSS style sheets. In order to compensate, all style changes must
+     * be ensured that they use !important as well
+     **/
+    var setStyleImportant = (function(){ 
+        if (document['documentElement']['style']['setProperty']) {
+            // W3C says use setProperty, with the "important" 3rd param
+            return function(element, prop, value) {
+                element['style']['setProperty'](prop, value, "important");
+            }                    
+        } else {
+            // IE doesn't support setProperty, so we must manually set
+            // the cssText, including the !important statement
+            return function(element, prop, value) {
+                element['style']['cssText'] += ";"+prop+":"+value+" !important;";
+            }
+        }
+    })();
+
+
+
+
+
+
+
+    var setRotation;
+    if(window['CSSMatrix']) setRotation = function(element, rotation){
+        element.style['transform'] = 'rotate('+(rotation||0)+'rad)';
+        return element;
+    };
+    else if(window['WebKitCSSMatrix']) setRotation = function(element, rotation){
+        element.style['webkitTransform'] = 'rotate('+(rotation||0)+'rad)';
+        return element;
+    };
+    else if(isGecko) setRotation = function(element, rotation){
+        element.style['MozTransform'] = 'rotate('+(rotation||0)+'rad)';
+        return element;
+    };
+    else if(isIE) setRotation = function(element, rotation){
+        if(!element._oDims)
+            element._oDims = [element.offsetWidth, element.offsetHeight];
+        var c = Math.cos(rotation||0) * 1, s = Math.sin(rotation||0) * 1;
+        
+        try {
+            var matrix = element['filters']("DXImageTransform.Microsoft.Matrix");
+            //matrix.sizingMethod = "auto expand";
+            matrix['M11'] = c;
+            matrix['M21'] = -s;
+            matrix['M12'] = s;
+            matrix['M22'] = c;
+        } catch (ex) {
+            element.style['filter'] += " progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
+        }
+        element.style.marginLeft = (element._oDims[0]-element.offsetWidth)/2+'px';
+        element.style.marginTop = (element._oDims[1]-element.offsetHeight)/2+'px';
+        return element;
+    };
+    else setRotation = function(element){ return element; }
+
+
+
+    /**
+ * == Components API ==
+ * "Components" are the Object Oriented classes that are created by your game code,
+ * added to your game loop and rendered on the screen.
+ **/
+
+/** section: Components API
+ * class SGF.Component
+ *
+ * An abstract base class for game components. It cannot be instantiated
+ * directly, but its subclasses are the building blocks for SGF games.
+ **/
+function Component(options) {
+    // Passing 'true' to the constructor is for extending classes (Container)
+    if (options !== true) {
+        extend(this, options || {});
+        this['element'] = this['getElement']();
+    }
+}
+
+/*
+ * SGF.Component#getElement() -> Element
+ * Internal method. Game developers need not be aware.
+ **/
+Component.prototype['getElement'] = (function() {
+    var e = document.createElement("div");
+    setStyleImportant(e, "position", "absolute");
+    setStyleImportant(e, "overflow", "hidden");
+    return function() {
+        return e.cloneNode(false);
+    }
+})();
+
+Component.prototype['toElement'] = returnThisProp("element");
+
+/**
+ * SGF.Component#left() -> Number
+ * 
+ * Returns the number of pixels from left side of the screen to the left
+ * side of the [[SGF.Component]].
+ **/
+Component.prototype['left'] = returnThisProp("x");
+
+/**
+ * SGF.Component#top() -> Number
+ *
+ * Returns the number of pixels from the top of the screen to the top
+ * of the [[SGF.Component]].
+ **/
+Component.prototype['top'] = returnThisProp("y");
+
+/**
+ * SGF.Component#right() -> Number
+ *
+ * Returns the number of pixels from left side of the screen to the right
+ * side of the [[SGF.Component]].
+ **/
+Component.prototype['right'] = function() {
+    return this['x'] + this['width'] - 1;
+}
+
+/**
+ * SGF.Component#bottom() -> Number
+ * 
+ * Returns the number of pixels from the top side of the screen to the
+ * bottom of the [[SGF.Component]].
+ **/
+Component.prototype['bottom'] = function() {
+    return this['y'] + this['height'] - 1;
+}
+
+/**
+ * Component#render(renderCount) -> undefined
+ * - renderCount (Number): The total number of times that [[SGF.Game#render]]
+ *                         has been called for this game. This value has nothing
+ *                         to do with the number of times this [[SGF.Component]]
+ *                         has been rendered.
+ * 
+ * Renders the individual [[SGF.Component]]. This is called automatically in
+ * the game loop once this component has been added through [[SGF.Game#addComponent]].
+ *
+ * Subclasses of [[SGF.Component]] override this method, and render how it
+ * should be rendered. This default implementation does nothing, since
+ * a [[SGF.Component]] itself cannot be rendered/instantiated.
+ **/
+Component.prototype['render'] = function(renderCount) {
+    var self = this;
+    
+    if (self['__rotation'] != self['rotation']) {
+        setRotation(self['element'], self['rotation']); // Radians
+        self['__rotation'] = self['rotation'];
+    }
+
+    if (self['__opacity'] != self['opacity']) {
+        Element['setOpacity'](self['element'], self['opacity']);
+        self['__opacity'] = self['opacity'];
+    }
+
+    if (self['__zIndex'] != self['zIndex']) {
+        self['__fixZIndex']();
+        self['__zIndex'] = self['zIndex'];
+    }
+
+    if (self['__width'] != self['width']) {
+        setStyleImportant(self['element'], "width", self['width'] + "px");
+        self['__width'] = self['width'];
+    }
+    
+    if (self['__height'] != self['height']) {
+        setStyleImportant(self['element'], "height", self['height'] + "px");
+        self['__height'] = self['height'];
+    }
+
+    if (self['__x'] != self['x']) {
+        setStyleImportant(self['element'], "left", self['x'] + "px");
+        self['__x'] = self['x'];
+    }
+
+    if (self['__y'] != self['y']) {
+        self['__y'] = self['y'];
+        setStyleImportant(self['element'], "top", self['y'] + "px");
+    }
+}
+
+/**
+ * SGF.Component#update(updateCount) -> undefined
+ * - updateCount (Number): The total number of times that [[SGF.Game#update]]
+ *                         has been called for this game. This value has nothing
+ *                         to do with the number of times this [[SGF.Component]]
+ *                         has been updated.
+ *
+ * Updates the state of the individual [[SGF.Component]]. This is called in
+ * the game loop once this component has been added through
+ * [[SGF.Game#addComponent]].
+ *
+ * This function should be thought of as the "logic" function for the [[SGF.Component]].
+ **/
+Component.prototype['update'] = function() {
+
+}
+
+Component.prototype['__fixZIndex'] = function() {
+    var z = this.parent && this.parent.__computeChildZIndex ?
+        this.parent.__computeChildZIndex(this.zIndex) :
+        this.zIndex;
+    setStyleImportant(this['element'], "z-index", z);
+}
+
+/**
+ * SGF.Component#width -> Number
+ *
+ * The width of the [[SGF.Component]]. This is a readable and writable
+ * property. That is, if you would like to reize the [[SGF.Component]],
+ * you could try something like:
+ *
+ *     this.width = this.width * 2;
+ *
+ * To double the current width of the [[SGF.Component]].
+ **/
+Component.prototype['width'] = 10;
+
+/**
+ * SGF.Component#height -> Number
+ *
+ * The height of the [[SGF.Component]]. This is a readable and writable
+ * property. That is, if you would like to reize the [[SGF.Component]],
+ * you could try something like:
+ *
+ *     this.height = SGF.Screen.height;
+ *
+ * To set the height of this [[SGF.Component]] to the current height of the
+ * game screen.
+ **/
+Component.prototype['height'] = 10;
+
+/**
+ * SGF.Component#x -> Number
+ *
+ * The X coordinate of the top-left point of the [[SGF.Component]] from the
+ * top-left of the game screen.
+ *
+ *     update: function($super) {
+ *         this.x++;
+ *         $super();
+ *     }
+ *
+ * This is an example of overwritting the [[SGF.Component#update]] method,
+ * and incrementing the X coordinate every step through the game loop.
+ * This will smoothly pan the [[SGF.Component]] across the game screen at
+ * the [[SGF.Game]]'s set game speed.
+ **/
+Component.prototype['x'] = 0;
+
+/**
+ * SGF.Component#y -> Number
+ *
+ * The Y coordinate of the top-left point of the [[SGF.Component]] from the
+ * top-left of the game screen.
+ **/
+Component.prototype['y'] = 0;
+/**
+ * SGF.Component#opacity -> Number
+ *
+ * A percentage value (between 0.0 and 1.0, inclusive) that describes the
+ * [[SGF.Component]]'s opacity. Setting this value to 1.0 (default) will
+ * make the [[SGF.Component]] fully opaque. Setting to 0.0 will make it
+ * fully transparent, or invisible. Setting to 0.5 will make it 50%
+ * transparent. You get the idea...
+ **/
+Component.prototype['opacity'] = 1.0;
+/**
+ * SGF.Component#rotation -> Number
+ *
+ * The rotation value of the [[SGF.Component]] in degrees. Note that the
+ * [[SGF.Component#x]], [[SGF.Component#y]] properties, and values returned
+ * from [[SGF.Component#left]], [[SGF.Component#right]], [[SGF.Component#top]],
+ * and [[SGF.Component#bottom]] are not affected by this value. Therefore,
+ * any calculations that require the rotation to be a factor, your game code
+ * must calculate itself.
+ **/
+Component.prototype['rotation'] = 0;
+
+/**
+ * SGF.Component#zIndex -> Number
+ *
+ * The Z index of this [[SGF.Component]]. Setting this value higher than
+ * other [[SGF.Component]]s will render this [[SGF.Component]] above ones
+ * with a lower **zIndex**.
+ **/
+Component.prototype['zIndex'] = 0;
+
+/**
+ * Component#parent -> Container | null
+ *  
+ * A reference to the current parent component of this component, or `null`
+ * if the component is not currently placed inside any containing component.
+ *
+ * If the component is a top-level component (added through
+ * [[SGF.Game#addComponent]]) then [[SGF.Component#parent]] will be
+ * [[SGF.Game.current]] (your game instance).
+ **/
+Component.prototype['parent'] = null;
+Component.prototype['element'] = null;
+
+Component.prototype['toString'] = functionReturnString("[object Component]");
+
+makePrototypeClassCompatible(Component);
+
+modules['component'] = Component;
+
+/** section: Components API
+ * class SGF.Container < SGF.Component
+ *
+ * A `SGF.Container` is a concrete [[SGF.Component]] subclass, that acts
+ * similar to the main [[SGF.Screen]] itself. That is, you can add
+ * `SGF.Component`s into a container just like you would in your game.
+ * Components placed inside containers are rendered with their attributes
+ * relative to the Container's attributes. `SGF.Container` supports
+ * all the regular [[SGF.Component]] properties (i.e. `width`, `height`, `x`,
+ * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`) Changing the properties
+ * on a Container affect the global properties of the Components placed inside.
+ **/
+
+
+/**
+ * new SGF.Container(components[, options])
+ * - components (Array): An array of [[SGF.Component]]s that should initally
+ *                       be placed into the container. This is a required
+ *                       argument, however it can be an empty array. Also
+ *                       note that you can add or remove `SGF.Component`s
+ *                       at any time via [[SGF.Container#addComponent]] and
+ *                       [[SGF.Container#removeComponent]].
+ *                       
+ * - options (Object): The optional 'options' object's properties are copied
+ *                     this [[SGF.Container]] in the constructor. It allows all
+ *                     the same default properties as [[SGF.Component]].
+ *
+ * Instantiates a new [[SGF.Container]], adding the [[SGF.Component]]s found
+ * in `components` initially.
+ **/
+function Container(components, options) {
+    if (components !== true) {
+        var self = this;
+        self['components'] = [];
+        Component.call(self, options || {});
+        if (Object['isArray'](components)) {
+            components['each'](self['addComponent'], self);
+        }
+        this['__shouldUpdateComponents'] = this['__needsRender'] = true;
+    }
+}
+
+Container.prototype = new Component(true);
+
+Container.prototype['update'] = function(updateCount) {
+    var self = this;
+    
+    // Not needed, since Component#update is empty
+    //Component.prototype.update.call(self, updateCount);
+    
+    if (self['__shouldUpdateComponents']) {
+        for (var i=0; i<self['components'].length; i++) {
+            if (self['components'][i]['update'])
+                self['components'][i]['update'](updateCount);
+        }
+    }
+}
+
+Container.prototype['render'] = function(renderCount) {
+    var self = this;
+    
+    Component.prototype['render'].call(self, renderCount);
+    
+    if (self['__needsRender']) {
+        self['__renderComponents'](renderCount);
+    }
+}
+
+Container.prototype['__renderComponents'] = function(renderCount) {
+    for (var i=0; i < this['components'].length; i++) {
+        if (this['components'][i]['render'])
+            this['components'][i]['render'](renderCount);
+    }
+}
+
+/**
+ * Container#addComponent(component) -> Container
+ * - component (Component): The [[Component]] instance to add to this
+ *                              container.
+ *
+ * Adds a [[Component]] into the container. `component`'s attributes
+ * will be rendered to the screen in relation to the attributes of this `Container`.
+ **/
+Container.prototype['addComponent'] = function(component) {
+    if (component.parent !== this) {
+        if (component.parent)
+            component.parent['removeComponent'](component);
+        this['components'].push(component);
+        this['element'].appendChild(component['element']);
+        component.parent = this;
+        component['__fixZIndex']();
+    }
+    return this;
+}
+
+/**
+ * SGF.Container#removeComponent(component) -> SGF.Container
+ * - component (SGF.Component): The `SGF.Component` instance to add to this
+ *                              container.
+ *
+ * Removes an [[SGF.Component]] from the container that has previously been
+ * added to this container via [[SGF.Container#addComponent]].
+ **/
+Container.prototype['removeComponent'] = function(component) {
+    var index = this['components'].indexOf(component);
+    if (index > -1) {
+        arrayRemove(this['components'], index);
+        this['element'].removeChild(component['element']);
+        component.parent = null;
+    }
+    return this;
+}
+
+Container.prototype['__computeChildZIndex'] = function(zIndex) {
+    return (parseInt(this.element.style.zIndex) || 0) + (parseInt(zIndex) || 0);
+}
+
+Container.prototype['__fixZIndex'] = function() {
+    Component.prototype['__fixZIndex'].call(this);
+    for (var i=0; i < this['components'].length; i++) {
+        this['components'][i]['__fixZIndex']();
+    }
+}
+
+Container.prototype['toString'] = functionReturnString("[object Container]");
+
+makePrototypeClassCompatible(Container);
+
+modules['container'] = Container;
+/** section: Components API
+ * class SGF.DumbContainer < SGF.Container
+ *
+ * There are plenty of cases where a large amount of [[SGF.Component]]s are going
+ * to be placed inside of a [[SGF.Container]], BUT NEVER CHANGE. This scenario
+ * can be brought up by creating a tile based map using [[SGF.Sprite]]. Map's don't
+ * change beyond their initialization (usually), so it's a waste of CPU to
+ * re-render and check for updates of each individual tile, because we know that
+ * they will never need to change. That very scenario is why [[SGF.DumbContainer]]
+ * exists. Using a `DumbContainer`, all the tile sprites that were added to the
+ * container will only be rendered once, and then re-blitted to the screen for
+ * maximum speed.
+ *
+ * So in short, use [[SGF.DumbContainer]] when the components inside will never
+ * need to be changed, and save a lot of processing power.
+ **/
+function DumbContainer(components, options) {
+    var self = this;
+    Container.call(self, components, options);
+    self['__shouldUpdateComponents'] = self['__needsRender'] = false;
+}
+
+DumbContainer.prototype = new Container(true);
+
+DumbContainer.prototype['addComponent'] = function(component) {
+    Container.prototype['addComponent'].call(this, component);
+    this['__needsRender'] = true;
+    return this;
+}
+
+DumbContainer.prototype['removeComponent'] = function(component) {
+    Container.prototype['removeComponent'].call(this, component);
+    this['__needsRender'] = true;
+    return this;
+}
+
+DumbContainer.prototype['render'] = function(renderCount) {
+    if (this['width'] != this['__width'] || this['height'] != this['__height'])
+        this['__needsRender'] = true;
+    Container.prototype['render'].call(this, renderCount);
+}
+
+DumbContainer.prototype['__renderComponents'] = function(renderCount) {
+    Container.prototype['__renderComponents'].call(this, renderCount);
+    this['__needsRender'] = false;
+}
+
+DumbContainer.prototype['renderComponents'] = function() {
+    this['__needsRender'] = true;
+}
+
+
+DumbContainer.prototype['toString'] = functionReturnString("[object DumbContainer]");
+
+makePrototypeClassCompatible(DumbContainer);
+
+modules['dumbcontainer'] = DumbContainer;
+
+
+function Label(options) {
+    var self = this;
+    
+    Component.call(self, options);
+    
+    self['_t'] = "";
+    self['_n'] = document.createTextNode(self['_t']);
+    self['element'].appendChild(self['_n']);
+}
+
+Label.prototype = new Component(true);
+
+Label.prototype['getElement'] = (function() {
+    var e = document.createElement("pre"), props = {
+        "border":"none 0px #000000",
+        "background-color":"transparent",
+        "position":"absolute",
+        "overflow":"hidden",
+        "margin":"0px",
+        "padding":"0px"
+    };
+    for (var key in props) {
+        setStyleImportant(e, key, props[key]);
+    }
+    return function() {
+        var el = e.cloneNode(false);
+        setStyleImportant(el, "color", "#" + this['color']);
+        this['_c'] = this['color'];
+        setStyleImportant(el, "font-family", this['font']['__fontName']);
+        this['_f'] = this['font'];
+        setStyleImportant(el, "font-size", this['size'] + "px");
+        setStyleImportant(el, "line-height", this['size'] + "px");
+        this['_s'] = this['size'];
+        return el;
+    }
+})();
+
+Label.prototype['render'] = function(renderCount) {
+    var self = this;
+
+    Component.prototype['render'].call(self, renderCount);
+
+    if (self['__align'] !== self['align']) {
+        setStyleImportant(self['element'], "text-align", self['align'] == 0 ? "left" : self['align'] == 1 ? "center" : "right");
+        self['__align'] = self['align'];
+    }
+
+    if (self['__font'] !== self['font']) {
+        setStyleImportant(self['element'], "font-family", self['font']['__fontName']);
+        self['__font'] = self['font'];
+    }
+
+    if (self['__size'] !== self['size']) {
+        var val = self['size'] + "px";
+        setStyleImportant(self['element'], "font-size", val);
+        setStyleImportant(self['element'], "line-height", val);            
+        self['__size'] = self['size'];
+    }
+
+    if (self['_c'] !== self['color']) {
+        setStyleImportant(self['element'], "color", "#" + self['color']);
+        self['_c'] = self['color'];
+    }
+
+    if (self['_U']) {
+        var text = "", l = self['_t'].length, i=0, pos=0, cur, numSpaces, j;
+        for (; i<l; i++) {
+            cur = self['_t'].charAt(i);
+            if (cur === '\n') {
+                pos = 0;
+                text += cur;
+            } else if (cur === '\t') {
+                numSpaces = Label['TAB_WIDTH'] - (pos % Label['TAB_WIDTH']);
+                for (j=0; j<numSpaces; j++) {
+                    text += ' ';
+                }
+                pos += numSpaces;
+            } else {
+                text += cur;
+                pos++;
+            }
+        }
+        if (isIE7orLower) {
+            text = text.replace(/\n/g, '\r');
+        }
+        self['_n']['nodeValue'] = text;
+        self['_U'] = false;
+    }
+}
+Label.prototype['getText'] = function() {
+    return this['_t'];
+}
+Label.prototype['setText'] = function(textContent) {
+    this['_t'] = textContent;
+    this['_U'] = true;
+}
+
+Label.prototype['align'] = 0;
+Label.prototype['color'] ="FFFFFF";
+Label.prototype['font'] = new Font("monospace");
+Label.prototype['size'] = 12;
+Label.prototype['toString'] = functionReturnString("[object Label]");
+
+extend(Label, {
+    'LEFT': 0,
+    'CENTER': 1,
+    'RIGHT': 2,
+    
+    'TAB_WIDTH': 4
+});
+
+makePrototypeClassCompatible(Label);
+
+modules['label'] = Label;
+
+/** section: Components API
+ * class SGF.Sprite < SGF.Component
+ *
+ * Probably the most used Class in SGF to develop your games. Represents a single
+ * sprite state on a spriteset as a [[SGF.Component]]. The state of the sprite
+ * can be changed at any time.
+ **/
+
+
+/**
+ * new SGF.Sprite(spriteset[, options])
+ * - spriteset (SGF.Spriteset): The spriteset for this Sprite to use. This is
+ *                              final once instantiated, and cannot be changed.
+ * - options (Object): The optional 'options' object's properties are copied
+ *                     this [[SGF.Sprite]] in the constructor. It allows all
+ *                     the same default properties as [[SGF.Component]], but
+ *                     also adds [[SGF.Sprite#spriteX]] and [[SGF.Sprite#spriteY]].
+ *
+ * Instantiates a new [[SGF.Sprite]] based on the given [[SGF.Spriteset]].
+ * It's more common, however, to make your own subclass of [[SGF.Sprite]] in
+ * your game code. For example:
+ *
+ *     var AlienClass = Class.create(SGF.Sprite, {
+ *         initialize: function($super, options) {
+ *             $super(AlienClass.sharedSpriteset, options);
+ *         },
+ *         update: function($super) {
+ *             // Some cool game logic here...
+ *             $super();
+ *         }
+ *     });
+ *
+ *     AlienClass.sharedSpriteset = new SGF.Spriteset("alien.png", 25, 25);
+ *
+ * Here we are creating a [[SGF.Sprite]] subclass called **AlienClass** that
+ * reuses the same [[SGF.Spriteset]] object for all instances, and centralizes
+ * logic code by overriding the [[SGF.Component#update]] method.
+ **/
+function Sprite(spriteset, options) {
+    this['spriteset'] = spriteset;
+    this['spritesetImg'] = spriteset['image'].cloneNode(false);
+    Component.call(this, options);
+}
+
+Sprite.prototype = new Component(true);
+
+Sprite.prototype['getElement'] = function() {
+    var element = Component.prototype['getElement'].call(this);
+    element.appendChild(this['spritesetImg']);
+    return element;
+};
+
+Sprite.prototype['render'] = function(renderCount) {
+    var self = this;
+    if (self['__spriteX'] != self['spriteX'] || self['__spriteY'] != self['spriteY'] ||
+        self['__width'] != self['width'] || self['__height'] != self['height']) {
+        if (self['spriteset']['loaded']) {
+            self['resetSpriteset']();
+        } else if (!self['__resetOnLoad']) {
+            self['spriteset']['addListener']("load", self['resetSpriteset'].bind(self));
+            self['__resetOnLoad'] = true;
+        }
+    }
+    Component.prototype['render'].call(self, renderCount);
+};
+
+Sprite.prototype['resetSpriteset'] = function() {
+    var self = this, image = self['spritesetImg'];
+    setStyleImportant(image, "width", (self['spriteset']['width'] * (self['width']/self['spriteset']['spriteWidth'])) + "px");
+    setStyleImportant(image, "height", (self['spriteset']['height'] * (self['height']/self['spriteset']['spriteHeight'])) + "px");
+    setStyleImportant(image, "top", -(self['height'] * self['spriteY']) + "px");
+    setStyleImportant(image, "left", -(self['width'] * self['spriteX']) + "px");
+    self['__spriteX'] = self['spriteX'];
+    self['__spriteY'] = self['spriteY'];
+}
+
+/**
+ * SGF.Sprite#spriteX -> Number
+ *
+ * The X coordinate of the sprite to use from the spriteset. The units are
+ * whole [[SGF.Sprite]] widths. So to use the 3rd sprite across on the spriteset,
+ * set this value to 3.
+ **/
+Sprite.prototype['spriteX'] = 0;
+
+/**
+ * SGF.Sprite#spriteY -> Number
+ *
+ * The Y coordinate of the sprite to use from the spriteset. The units are
+ * whole [[SGF.Sprite]] heights. So to use the 4th sprite down on the spriteset,
+ * set this value to 4.
+ **/
+Sprite.prototype['spriteY'] = 0;
+
+Sprite.prototype['toString'] = functionReturnString("[object Sprite]");
+
+makePrototypeClassCompatible(Sprite);
+
+modules['sprite'] = Sprite;
+
+/** section: Components API
+ * class Shape < Component
+ *
+ * Another abstract class, not meant to be instantiated directly. All "shape"
+ * type [[SGF.Component]] classes use this class as a base class. The only
+ * functionality that this class itself adds to a regular [[SGF.Component]] is
+ * [[SGF.Shape#color]], since all shapes can have a color set for them.
+ **/
+
+/**
+ * new SGF.Shape([options])
+ * - options (Object): The optional 'options' object's properties are copied
+ *                     this [[SGF.Shape]] in the constructor. It allows all
+ *                     the same default properties as [[SGF.Component]], but
+ *                     also adds [[SGF.Shape#color]].
+ *
+ * This will never be called directly in your code, use one of the subclasses
+ * to instantiate [[SGF.Shape]]s.
+ **/
+function Shape(options) {
+    Component.call(this, options);
+}
+
+Shape.prototype = new Component(true);
+
+Shape.prototype['render'] = function(renderCount) {
+
+    if (this['__color'] !== this['color']) {
+        setStyleImportant(this['element'], 'background-color', "#" + this['color']);
+        this['__color'] = this['color'];
+    }
+
+    Component.prototype['render'].call(this, renderCount);
+}
+
+/**
+ * SGF.Shape#color -> String
+ *
+ * The color of the [[SGF.Shape]]. The String value is expected to be like
+ * a CSS color string. So it should be a **six** (not three) character
+ * String formatted in `RRGGBB` form. Each color is a 2-digit hex number
+ * between 0 and 255.
+ **/
+Shape.prototype['color'] = "000000";
+
+Shape.prototype['toString'] = functionReturnString("[object Shape]");
+
+makePrototypeClassCompatible(Shape);
+
+modules['shape'] = Shape;
+
+/** section: Components API
+ * class Rectangle < Shape
+ *
+ * A [[Component]] that renders a single rectangle onto the screen
+ * as a solid color.
+ **/
+function Rectangle(options) {
+    Shape.call(this, options);
+}
+
+Rectangle.prototype = new Shape(true);
+
+Rectangle.prototype['getElement'] = function() {
+    this['__color'] = this['color'];
+    var element = new Element("div");
+    setStyleImportant(element, 'position', "absolute");
+    setStyleImportant(element, 'background-color', "#" + this['color']);
+    return element;
+}
+
+
+Rectangle.prototype['toString'] = functionReturnString("[object Rectangle]");
+
+makePrototypeClassCompatible(Rectangle);
+
+modules['rectangle'] = Rectangle;
+
+
+//components/Circle.js remove for now
 
     /* EventEmitter is an internal class that a lot of main SGF classes inherit 
  * from. The class implements the common listener pattern used throughout SGF.
@@ -105,6 +917,9 @@ EventEmitter.prototype['fireEvent'] = function(eventName, args) {
     return this;
 }
 
+//EventEmitter.prototype['toString'] = functionReturnString("[object EventEmitter]");
+
+
 // Deprecated
 var observeMessage = false;
 EventEmitter.prototype['observe'] = function() {
@@ -136,7 +951,7 @@ var REQUIRED_OVERFLOW = "hidden";
  *
  * Contains information about the screen the game is being rendered to.
  **/
-Screen = function(game) {
+var Screen = function(game) {
     var self = this;
     
     EventEmitter.call(self);
@@ -152,18 +967,19 @@ Screen = function(game) {
         } else if (style['webkitUserSelect'] !== undefined) {
             style['webkitUserSelect'] = "none";
         }
-        Element.makePositioned(element);
-        Element.immediateDescendants(element).without($("webSocketContainer")).invoke("remove");
+        Element['makePositioned'](element);
+        Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
 
         // If SGF.Screen#bind has been called prevously, then this call has to
         // essentially move all game elements to the new Screen element
-        if (this['element'] !== null && Object.isElement(this['element'])) {
-            Element.immediateDescendants(this['element']).invoke("remove").each(element['insert'], element);
+        if (self['element'] !== null && Object['isElement'](self['element'])) {
+            Element['immediateDescendants'](self['element'])['invoke']("remove")['each'](element['insert'], element);
         }
         
-        this['element'] = element;
+        self['element'] = element;
+        game['element'] = element;
 
-        this['isFullScreen'] = (element === document.body);
+        self['isFullScreen'] = (element === document.body);
     }
 
     self['useNativeCursor'] = function(cursor) {
@@ -171,7 +987,7 @@ Screen = function(game) {
         if (Boolean(cursor) == false) {
             cursor = "none";
         }
-        if (Object.isString(cursor)) {
+        if (Object['isString'](cursor)) {
             cursor = cursor.toLowerCase();
             if ("default" == cursor) {
                 val = "default";
@@ -186,11 +1002,11 @@ Screen = function(game) {
             } else if ("wait" == cursor) {
                 val = "wait";
             } else if ("none" == cursor) {
-                val = "url(" + engineRoot + "blank." + (Prototype.Browser.IE ? "cur" : "gif") + "), none";
+                val = "url(" + engineRoot + "blank." + (isIE ? "cur" : "gif") + "), none";
             }
         }
 
-        this['element'].style.cursor = val;
+        self['element'].style.cursor = val;
     }
 
     // SGF API parts
@@ -232,8 +1048,6 @@ Screen = function(game) {
      **/
 }
 
-Screen['subclasses'] = [];
-
 // so that (screenInstance instanceof EventEmitter) === true
 Screen.prototype = new EventEmitter(true);
 
@@ -242,7 +1056,7 @@ Screen.prototype['_r'] = function() {
     self['width'] = self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth;
     self['height'] = self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight;
     if (color != self['_c']) {
-        element.style.backgroundColor = "#" + color;
+        element['style']['backgroundColor'] = "#" + color;
         self['_c'] = color;
     }
 }
@@ -251,9 +1065,7 @@ Screen.prototype['color'] = "000000";
 
 Screen.prototype['isFullScreen'] = false;
 
-Screen.prototype['toString'] = function() {
-    return "[object Screen]";
-}
+Screen.prototype['toString'] = functionReturnString("[object Screen]");
 
 modules['screen'] = Screen;
 
@@ -268,8 +1080,7 @@ var currentInput = null;
 function Input(game) {
     
     
-    var downKeys = {},
-    downMouseButtons = {},
+    var downMouseButtons = {},
     self = this;
 
     EventEmitter.call(self);
@@ -386,9 +1197,7 @@ Input.prototype['isKeyDown'] = function(keyCode) {
     return this['_k'][keyCode] === true;
 }
 
-Input.prototype['toString'] = function() {
-    return "[object Input]";
-}
+Input.prototype['toString'] = functionReturnString("[object Input]");
 
 // Constants
 /**
@@ -398,7 +1207,7 @@ Input.prototype['toString'] = function() {
  * usually the left mouse button for right-handed people, and the right
  * mouse button for left-handed people.
  **/
-Input.MOUSE_PRIMARY = 0;
+Input['MOUSE_PRIMARY'] = 0;
 /**
  * SGF.Input.MOUSE_MIDDLE -> ?
  *
@@ -407,7 +1216,7 @@ Input.MOUSE_PRIMARY = 0;
  * using this functionality, it would be a good idea to make to action
  * be performed some other way as well (like a keystroke).
  **/
-Input.MOUSE_MIDDLE = 1;
+Input['MOUSE_MIDDLE'] = 1;
 /**
  * SGF.Input.MOUSE_SECONDARY -> ?
  *
@@ -415,31 +1224,31 @@ Input.MOUSE_MIDDLE = 1;
  * usually the right mouse button for right-handed people, and the left
  * mouse button for left-handed people.
  **/
-Input.MOUSE_SECONDARY = 2;
+Input['MOUSE_SECONDARY'] = 2;
 /**
  * SGF.Input.KEY_DOWN -> ?
  *
  * Indicates that the `down` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_DOWN = 40;
+Input['KEY_DOWN'] = 40;
 /**
  * SGF.Input.KEY_UP -> ?
  *
  * Indicates that the `up` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_UP = 38;
+Input['KEY_UP'] = 38;
 /**
  * SGF.Input.KEY_LEFT -> ?
  *
  * Indicates that the `left` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_LEFT = 37;
+Input['KEY_LEFT'] = 37;
 /**
  * SGF.Input.KEY_RIGHT -> ?
  *
  * Indicates that the `right` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_RIGHT = 39;
+Input['KEY_RIGHT'] = 39;
 /**
  * SGF.Input.KEY_1 -> ?
  *
@@ -447,25 +1256,25 @@ Input.KEY_RIGHT = 39;
  * button" can be configurable to say a client with a keyboard, but if
  * a controller is being used, this should also be the value returned.
  **/
-Input.KEY_1 = 32;
+Input['KEY_1'] = 32;
 /**
  * SGF.Input.KEY_2 -> ?
  *
  * Indicates that second button on the keypad is being pressed.
  **/
-Input.KEY_2 = 33;
+Input['KEY_2'] = 33;
 /**
  * SGF.Input.KEY_3 -> ?
  *
  * Indicates that third button on the keypad is being pressed.
  **/
-Input.KEY_3 = 34;
+Input['KEY_3'] = 34;
 /**
  * SGF.Input.KEY_4 -> ?
  *
  * Indicates that fourth button on the keypad is being pressed.
  **/
-Input.KEY_4 = 35;
+Input['KEY_4'] = 35;
 
 function blur() {
     currentInput = null;
@@ -476,10 +1285,10 @@ function focus(input) {
 }
 
 function getPointerCoords(event) {
-    var offset = currentInput['game']['screen']['element'].cumulativeOffset();
+    var offset = currentInput['game']['screen']['element']['cumulativeOffset']();
     return {
-        'x': (event.pointerX() - offset['left']),
-        'y': (event.pointerY() - offset['top'])
+        'x': (event['pointerX']() - offset['left']),
+        'y': (event['pointerY']() - offset['top'])
     };
 }
 
@@ -560,11 +1369,11 @@ function mousedownHandler(event) {
         var i = runningGameInstances.length
         ,   offset = null
         ,   element = null
-        ,   pointerX = event.pointerX()
-        ,   pointerY = event.pointerY();
+        ,   pointerX = event['pointerX']()
+        ,   pointerY = event['pointerY']();
         while (i--) {
             element = runningGameInstances[i]['screen']['element'];
-            offset = element.cumulativeOffset();
+            offset = element['cumulativeOffset']();
             
             if (pointerX >= (offset['left'])
              && pointerX <= (offset['left'] + element['clientWidth'])
@@ -616,27 +1425,25 @@ function mousemoveHandler(event) {
     }
 }
 
-Input['subclasses'] = [];
-
 Input['grab'] = function() {
-    document.observe("keydown", keydownHandler)
-            .observe("keypress", keypressHandler)
-            .observe("keyup", keyupHandler)
-            .observe("mousemove", mousemoveHandler)
-            .observe("mousedown", mousedownHandler)
-            .observe("mouseup", mouseupHandler)
-            .observe("contextmenu", contextmenuHandler);
+    document['observe']("keydown", keydownHandler)
+            ['observe']("keypress", keypressHandler)
+            ['observe']("keyup", keyupHandler)
+            ['observe']("mousemove", mousemoveHandler)
+            ['observe']("mousedown", mousedownHandler)
+            ['observe']("mouseup", mouseupHandler)
+            ['observe']("contextmenu", contextmenuHandler);
     Input.grabbed = true;
 }
 
 Input['release'] = function() {
-    document.stopObserving("keydown", keydownHandler)
-            .stopObserving("keypress", keypressHandler)
-            .stopObserving("keyup", keyupHandler)
-            .stopObserving("mousemove", mousemoveHandler)
-            .stopObserving("mousedown", mousedownHandler)
-            .stopObserving("mouseup", mouseupHandler)
-            .stopObserving("contextmenu", contextmenuHandler);
+    document['stopObserving']("keydown", keydownHandler)
+            ['stopObserving']("keypress", keypressHandler)
+            ['stopObserving']("keyup", keyupHandler)
+            ['stopObserving']("mousemove", mousemoveHandler)
+            ['stopObserving']("mousedown", mousedownHandler)
+            ['stopObserving']("mouseup", mouseupHandler)
+            ['stopObserving']("contextmenu", contextmenuHandler);
     Input.grabbed = false;
 }
 
@@ -691,18 +1498,20 @@ function Game(rootUrl, screen, options) {
      * and considered in the game loop. Returns the [[SGF.Game]] object (this),
      * for chaining.
      **/
+     /*
     self['addComponent'] = function(component) {
         var currentParent = component['parent'];
         if (currentParent !== self) {
             if (currentParent)
                 currentParent['removeComponent'](component);
             components.push(component);
-            self['screen'].element.insert(component);
+            self['screen']['element']['insert'](component);
             component['parent'] = self;
             component['__fixZIndex']();
         }
         return self;
     }
+    */
 
     /**
      * SGF.Game#removeComponent(component) -> SGF.Game
@@ -712,15 +1521,17 @@ function Game(rootUrl, screen, options) {
      * Removes a [[SGF.Component]] that has previously been added to the game
      * loop via [[SGF.Game#addComponent]].
      **/
+     /*
     self['removeComponent'] = function(component) {
         var index = components.indexOf(component);
         if (index > -1) {
             arrayRemove(components, index);
-            component.toElement().remove();
+            component['toElement']()['remove']();
             component['parent'] = null;
         }
         return self;
     }
+    */
 
 
     /**
@@ -764,136 +1575,28 @@ function Game(rootUrl, screen, options) {
     }
     */
 
-    /**
-     * SGF.Game#render(interpolation) -> undefined
-     * - interpolation (Number): The percentage (value between 0.0 and 1.0)
-     *                           between the last call to update and the next
-     *                           call to update this call to render is taking place.
-     *                           This number is used to "predict" locations of
-     *                           Components when the FPS are higher than UPS.
-     *                           
-     * The game render function that gets called automatically during each pass
-     * in the game loop. Calls [[SGF.Component#render]] on all components added
-     * through [[SGF.Game#addComponent]]. Afterwards, increments the
-     * [[SGF.Game#renderCount]] value by 1. Game code should never have to call
-     * this method, however.
-     **/
-    self['render'] = function() {
-        for (var i=0; i<components.length; i++) {
-            if (components[i]['render'])
-                components[i]['render'](self['renderCount']);
-        }
-        self['renderCount']++;
-    }
 
 
-    /*
-     * The main iterator function. Called as fast as the browser can handle
-     * (i.e. setTimeout(this.step, 0)) in order to implement variable FPS.
-     * This method, however, ensures that update() is called at the requested
-     * "gameSpeed", so long as hardware is capable.
-     **/
-    self['step'] = function() {
-        // Stop the loop if the 'running' flag is changed.
-        if (!self.running) return self.stopped();
-
-        currentGame = self;
-
-        // This while loop calls update() as many times as required depending
-        // on the current time and the last time update() was called. This
-        // could happen 0 times if the hardware is calling step() more times
-        // than the requested 'gameSpeed'. This will result in higher FPS than UPS
-        var loops = 0;
-        while (now() > self.nextGamePeriod && loops < self.maxFrameSkips) {
-            self.update();
-            self.nextGamePeriod += self.period;
-            loops++;
-        }
-
-        // Sets the screen background color, screen width and height
-        self.screen['_r']();
-
-        // Renders all game components, taking the interpolation value
-        // to predict where the game objects will be placed.
-        //this.render((this.now() + this.period - this.nextGamePeriod) / this.period);
-        self.render(0);
-
-        // Continue the game loop, as soon as the browser has time for it,
-        // allowing for other JS on the stack to be executed (events, etc.)
-        setTimeout(self['_s'], 0);
-        //setTimeout("SGF.Game.current.step()", 0); <- Appears to be the same speed
-    }
-
-    /*
-     * Stops the game loop if the game is running.
-     **/
-    self['stop'] = function() {
-        self.fireEvent("stopping");
-        self.running = false;
-        return self;
-    }
-
-    self['stopped'] = function() {
-        //if (SGF.Input.grabbed) SGF.Input.release();
-        self['screen']['useNativeCursor'](true);
-        currentGame = null;
-        self['fireEvent']("stopped");
-    }
-
-    /**
-     * SGF.Game#update() -> undefined
-     * The update function for the game loop. Calls [[SGF.Component#update]]
-     * on all components added through [[SGF.Game#addComponent]]. Afterwards,
-     * increments the [[SGF.Game#updateCount]] value by 1. Game code should
-     * never have to call this method, however.
-     **/
-    self['update'] = function() {
-        for (var i=0; i<components.length; i++) {
-            if (components[i]['update'])
-                components[i]['update'](self['updateCount']);
-        }
-        self['updateCount']++;
-    }
-
-    /* HTML/DOM Client specific function
-     * Computes the z-index of a component added through addComponent.
-     **/
-    self['__computeChildZIndex'] = function(zIndex) {
-        return ((parseInt(zIndex)||0)+1) * 1000;
-    }
 
 
 
 
     EventEmitter.call(self);
     
+    Container.call(self, options);
+    
+    
     self['input'] = new Input(self);
+    
     self['screen'] = new Screen(self);
     self['screen']['_bind'](screen);
 
 
 
-
-    //log("new Game: " + rootUrl);
-    
-    var components = [];
-    /*,
-        listeners = {
-            "load":     [],
-            "start":    [],
-            "stopping": [],
-            "stopped":  []
-        };*/
-
     // 'root' is the path to the folder containing the Game's 'main.js' file.
-    if (rootUrl.endsWith("main.js")) rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("main.js"));
-    self['root'] = rootUrl.endsWith('/') ? rootUrl : rootUrl + '/';
+    if (rootUrl['endsWith']("main.js")) rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("main.js"));
+    self['root'] = rootUrl['endsWith']('/') ? rootUrl : rootUrl + '/';
     
-    // Override the default options with the user defined options
-    if (options) {
-        Object.extend(self, options);
-    }
-
     // Set the initial game speed. This can be changed during gameplay.
     self['setGameSpeed'](self['gameSpeed']);
 
@@ -904,6 +1607,7 @@ function Game(rootUrl, screen, options) {
     // Set as currentGame for Game.getInstance
     currentGame = self;
 
+    // A binded 'step' function
     self['_s'] = function() {
         self['step']();
     }
@@ -913,11 +1617,24 @@ function Game(rootUrl, screen, options) {
         self['loaded'] = true;
         // Notify all the game's 'load' listeners
         self['fireEvent']('load');
-        if (self['autostart'] === true) {
-            self['start']();
-        }
+        self['start']();
     });
 }
+
+Game.prototype = new Container(true);
+
+/**
+ * The current target updates per seconds to achieve. This is meant
+ * to be read-only. If you must dynamically change the game speed,
+ * use [[Game#setGameSpeed]] instead.
+ */
+Game.prototype['gameSpeed'] = 30;
+
+/**
+ * The maximum allowed number of updates to call in between render calls
+ * if the game's demand is more than current harware is capable of.
+ */
+Game.prototype['maxFrameSkips'] = 5;
 
 /**
  * Game#setGameSpeed(updatesPerSecond) -> Game
@@ -939,18 +1656,16 @@ Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
 Game.prototype['start'] = function() {
     //log("Starting " + this.root);
 
-    //Input.focus();
-
     // The 'running' flag is used by step() to determine if the loop should
     // continue or end. No not set directly, use stop() to kill game loop.
-    this.running = true;
+    this['running'] = true;
 
     runningGameInstances.push(this);
 
     // Note when the game started, and when the next
     // call to update() should take place.
-    this.startTime = this.nextGamePeriod = now();
-    this.updateCount = this.renderCount = 0;
+    this['startTime'] = this['nextGamePeriod'] = now();
+    this['updateCount'] = this['renderCount'] = 0;
 
     // Start the game loop itself!
     setTimeout(this['_s'], 0);
@@ -976,30 +1691,111 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
 }
 
 /**
- * If true, start the game loop immediately after 'main.js' loads.
- */
-Game.prototype['autostart'] = true;
+ * SGF.Game#render(interpolation) -> undefined
+ * - interpolation (Number): The percentage (value between 0.0 and 1.0)
+ *                           between the last call to update and the next
+ *                           call to update this call to render is taking place.
+ *                           This number is used to "predict" locations of
+ *                           Components when the FPS are higher than UPS.
+ *                           
+ * The game render function that gets called automatically during each pass
+ * in the game loop. Calls [[SGF.Component#render]] on all components added
+ * through [[SGF.Game#addComponent]]. Afterwards, increments the
+ * [[SGF.Game#renderCount]] value by 1. Game code should never have to call
+ * this method, however.
+ **/
+Game.prototype['render'] = function() {
+    for (var i=0, cur=null; i<this['components'].length; i++) {
+        cur = this['components'][i];
+        if (cur['render']) {
+            cur['render'](this['renderCount']);
+        }
+    }
+    this['renderCount']++;
+}
+
+
+/*
+ * The main iterator function. Called as fast as the browser can handle
+ * (i.e. setTimeout(this.step, 0)) in order to implement variable FPS.
+ * This method, however, ensures that update() is called at the requested
+ * "gameSpeed", so long as hardware is capable.
+ **/
+Game.prototype['step'] = function() {
+    // Stop the loop if the 'running' flag is changed.
+    if (!this['running']) return this['stopped']();
+
+    currentGame = this;
+
+    // This while loop calls update() as many times as required depending
+    // on the current time and the last time update() was called. This
+    // could happen 0 times if the hardware is calling step() more times
+    // than the requested 'gameSpeed'. This will result in higher FPS than UPS
+    var loops = 0;
+    while (now() > this['nextGamePeriod'] && loops < this['maxFrameSkips']) {
+        this['update']();
+        this['nextGamePeriod'] += this['period'];
+        loops++;
+    }
+
+    // Sets the screen background color, screen width and height
+    this['screen']['_r']();
+
+    // Renders all game components, taking the interpolation value
+    // to predict where the game objects will be placed.
+    this['render']();
+
+    // Continue the game loop, as soon as the browser has time for it,
+    // allowing for other JS on the stack to be executed (events, etc.)
+    setTimeout(this['_s'], 0);
+}
+
+/*
+ * Stops the game loop if the game is running.
+ **/
+Game.prototype['stop'] = function() {
+    this['fireEvent']("stopping");
+    this['running'] = false;
+    return this;
+}
+
+Game.prototype['stopped'] = function() {
+    //if (SGF.Input.grabbed) SGF.Input.release();
+    this['screen']['useNativeCursor'](true);
+    currentGame = null;
+    this['fireEvent']("stopped");
+}
+
 /**
- * The current target updates per seconds to achieve. This is meant
- * to be read-only. If you must dynamically change the game speed,
- * use [[Game#setGameSpeed]] instead.
- */
-Game.prototype['gameSpeed'] = 30;
-/**
- * The maximum allowed number of updates to call in between render calls
- * if the game's demand is more than current harware is capable of.
- */
-Game.prototype['maxFrameSkips'] = 5;
+ * SGF.Game#update() -> undefined
+ * The update function for the game loop. Calls [[SGF.Component#update]]
+ * on all components added through [[SGF.Game#addComponent]]. Afterwards,
+ * increments the [[SGF.Game#updateCount]] value by 1. Game code should
+ * never have to call this method, however.
+ **/
+Game.prototype['update'] = function() {
+    for (var i=0, cur=null; i<this['components'].length; i++) {
+        cur = this['components'][i];
+        if (cur['update']) {
+            cur['update'](this['updateCount']);
+        }
+    }
+    this['updateCount']++;
+}
+
+/* HTML/DOM Client specific function
+ * Computes the z-index of a component added through addComponent.
+ **/
+Game.prototype['__computeChildZIndex'] = function(zIndex) {
+    return ((parseInt(zIndex)||0)+1) * 1000;
+}
+
 /**
  * Game#toString -> String
  *
  * String representation of the `Game` class.
  **/
-Game.prototype['toString'] = function() {
-    return "[object Game]";
-}
-
-Game['subclasses'] = [];
+Game.prototype['toString'] = functionReturnString("[object Game]");
 
 /**
  * Game.getInstance() -> Game
@@ -1009,6 +1805,8 @@ Game['subclasses'] = [];
 Game['getInstance'] = function() {
     return currentGame;
 }
+
+makePrototypeClassCompatible(Game);
 
 modules['game'] = Game;
 
@@ -1045,10 +1843,10 @@ function Font(game, path, onLoad) {
     if (game instanceof Game) {
         // We're trying to load a font living inside the game folder.
         path = game['root'] + path;
-        this.__fontName = "SGF_font"+(Math.random() * 10000).round();
-        this.__styleNode = embedCss(
+        self['__fontName'] = "SGF_font"+(Math.random() * 10000).round();
+        self['__styleNode'] = embedCss(
             '@font-face {'+
-            '  font-family: "' + this.__fontName + '";'+
+            '  font-family: "' + self['__fontName'] + '";'+
             '  src: url("'+path+'");'+
             '}'
         );
@@ -1056,7 +1854,7 @@ function Font(game, path, onLoad) {
         // Just a font name supplied, ex: "Comic Sans MS"
         // Must be installed on local computer
         path = game;
-        this.__fontName = path;
+        self['__fontName'] = path;
     }
 }
 
@@ -1071,8 +1869,12 @@ function embedCss(cssString) {
     document.getElementsByTagName('head')[0].appendChild(node);
     return node;
 };
-Font['subclasses'] = [];
+
 Font.prototype = new EventEmitter(true);
+
+Font.prototype['toString'] = functionReturnString("[object Font]");
+
+Font['subclasses'] = [];
 
 modules['font'] = Font;
 
@@ -1113,6 +1915,7 @@ function Script(game, scriptUrl, onLoad) {
 Script['subclasses'] = [];
 Script.prototype = new EventEmitter(true);
 Script.prototype['loaded'] = false;
+Script.prototype['toString'] = functionReturnString("[object Script]");
 
 
 // Expects a <script> node reference, and removes it from the DOM, and
@@ -1138,6 +1941,8 @@ var Sound = function(path) {
 Sound['subclasses'] = [];
 // so that (soundInstance instanceof EventEmitter) === true
 Sound.prototype = new EventEmitter(true);
+
+Sound.prototype['toString'] = functionReturnString("[object Sound]");
 
 modules['sound'] = Sound;
 
@@ -1192,7 +1997,9 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
     // Finally begin loading the image itself!
     self['src'] = img['src'] = game['root'] + path;
 }
+
 Spriteset['subclasses'] = [];
+
 // so that (spritesetInstance instanceof EventEmitter) === true
 Spriteset.prototype = new EventEmitter(true);
 
@@ -1246,42 +2053,52 @@ Spriteset.prototype['spriteHeight'] = -1;
 Spriteset.prototype['src'] = null;
 
 Spriteset.prototype['toElement'] = function() {
-    return this.image.cloneNode(true);
+    return this['image'].cloneNode(true);
 }
 
-Spriteset.prototype['toString'] = function() {
-    return "[object Spriteset]";
-}
+Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
 
 modules['spriteset'] = Spriteset;
 
 
+    
+    
+    
+    
     
     // The main SGF namespace.
     var SGF = new EventEmitter();
     SGF['toString'] = function() {
         return "[object SGF]";
     }
+    
+    
+    
+    
 
     // Attempts to retrieve the absolute path of the executing script.
-    // Use this in conjunction with 'getScript' to get a reference to
-    // the currently executing script DOM node.
-    function getScriptName(callback) {
-        try {
-            // Intentionally invoke an exception
-            (0)();
-        } catch(e) {
+    // Pass a function as 'callback' which will be executed once the
+    // URL is known, with the first argument being the string URL.
+    function getScriptName(ex, callback) {
+        if (typeof ex === 'function') {
+            try {
+                (0)();
+            } catch(e) {
+                getScriptName(e, ex);
+            }
+        } else {
             // Getting the URL of the exception is non-standard, and
             // different in EVERY browser unfortunately.
-            var s = e['stack'];
-            if (e['sourceURL']) { // Safari
+            var s = ex['stack'];
+            if (ex['sourceURL']) { // Safari
                 //console.log("safari");
-                callback(e['sourceURL']);
-            } else if (e['arguments']) { // Chrome
+                callback(ex['sourceURL']);
+            } else if (ex['arguments']) { // Chrome
                 //console.log("chrome");
                 s = s.split("\n")[2];
-                s = s.substring(s.indexOf("(")+1);
+                s = s.substring(s.lastIndexOf(" ")+1);
                 s = s.substring(0, s.lastIndexOf(":"));
+                if (s.indexOf('(') === 0) s = s.substring(1);
                 callback(s.substring(0, s.lastIndexOf(":")));
             } else if (s) { // Firefox & Opera 10+
                 //console.log("firefox");
@@ -1296,7 +2113,7 @@ modules['spriteset'] = Spriteset;
                     callback(url);
                     return true;
                 }
-                throw e;
+                throw ex;
             }
         }
     }
@@ -1306,11 +2123,21 @@ modules['spriteset'] = Spriteset;
     // runtime arguments (data-* attributes) on the <script>.
     function getScript(scriptName) {
         var scripts = document.getElementsByTagName("script"),
-            length = scripts.length;
+            length = scripts.length,
+            script = document.getElementById("SGF-script");
+        
+        if (script) return script;
+        
         while (length--) {
-            if (scripts[length]['src'] === scriptName)
-                return scripts[length];
+            script = scripts[length];
+            if (script['src'] === scriptName) {
+                return script;
+            }
         }
+        
+        throw new Error('FATAL: Could not find <script> node with "src" === "'+scriptName+'"\n'
+            + 'Please report this to the SGF issue tracker. You can work around this error by '
+            + 'explicitly setting the "id" of the <script> node to "SGF-script".');
     }
 
     // Looks through the script node and extracts any 'data-*'
@@ -1336,7 +2163,8 @@ modules['spriteset'] = Spriteset;
     function libraryLoaded(e) {
         var ready = isPrototypeLoaded()
                 &&  isSwfObjectLoaded()
-                &&  isSoundJsLoaded();
+                &&  isSoundJsLoaded()
+                &&  hasWebSocket();
         if (ready) {
             allLibrariesLoaded();
         }
@@ -1357,16 +2185,20 @@ modules['spriteset'] = Spriteset;
     
     // Called once Prototype (v1.6.1 or better) is assured loaded
     function prototypeLoaded() {
-        loadElementSetStyleImportant();
-        loadElementSetRotation();
         libraryLoaded();
     }
     
     // Returns true if Sound.js is loaded, false otherwise.
     function isSoundJsLoaded() {
-        return 'Sound' in window;
+        return "Sound" in window && "SoundChannel" in window;
     }
-
+    
+    function soundJsLoaded() {
+        window['Sound']['swfPath'] = makeFullyQualified(params['soundjs-swf']);
+        //log("SoundJS SWF Path: " + window['Sound']['swfPath']);
+        libraryLoaded();
+    }
+    
     // Returns true if SWFObject, at least version 2.2, is loaded, false otherwise.
     function isSwfObjectLoaded() {
         var swfobject = 'swfobject', embedSWF = 'embedSWF';
@@ -1376,86 +2208,28 @@ modules['spriteset'] = Spriteset;
     // Called once SWFObject (v2.2 or better) is assured loaded
     function swfObjectLoaded() {
         // Load Sound.js
-        if (!isSoundJsLoaded()) {
-            new Script(engineRoot + params['soundjs'], function() {
-                window['Sound']['swfPath'] = engineRoot + "lib/Sound.swf";
-                libraryLoaded();
-            });
+        if (isSoundJsLoaded()) {
+            soundJsLoaded();
+        } else {
+            new Script(makeFullyQualified(params['soundjs']), soundJsLoaded);
         }
         
         // Load gimite's Flash WebSocket implementation (only if required)
-        //if (!'WebSocket' in window) {
-            // TODO: Add Flash WebSocket fallback
-        //}
+        if (!hasWebSocket()) {
+            new Script(makeFullyQualified(params['fabridge']), function() {
+                new Script(makeFullyQualified(params['websocket']), flashWebSocketLoaded);
+            });
+        }
     }
-
     
-    /* The DOM nodes that SGF manipulates are always modified through
-     * JavaScript, but just setting style.blah won't overwrite !important
-     * in CSS style sheets. In order to compensate, all style changes must
-     * be ensured that they use !important as well
-     **/
-    function loadElementSetStyleImportant() {
-        Element['addMethods']({
-            'setStyleI': (function(){ 
-                if (document.documentElement.style.setProperty) {
-                    // W3C says use setProperty, with the "important" 3rd param
-                    return function(element, prop, value) {
-                        element.style.setProperty(prop, value, "important");
-                    }                    
-                } else {
-                    // IE doesn't support setProperty, so we must manually set
-                    // the cssText, including the !important statement
-                    return function(element, prop, value) {
-                        element.style.cssText += ";"+prop+":"+value+" !important;";
-                    }
-                }
-            })()
-        });
+    function hasWebSocket() {
+        return 'WebSocket' in window;
     }
-
-    /*
-     * This loads Element#setRotation, which is a variation of Element#transform
-     * from Scripty2, but with the scale hard-coded at 1, and rotation being the
-     * only affected value.
-     **/
-    function loadElementSetRotation() {
-        var transform;
-
-        if(window['CSSMatrix']) transform = function(element, transform){
-            element.style['transform'] = 'rotate('+(transform||0)+'rad)';
-            return element;
-        };
-        else if(window['WebKitCSSMatrix']) transform = function(element, transform){
-            element.style['webkitTransform'] = 'rotate('+(transform||0)+'rad)';
-            return element;
-        };
-        else if(Prototype['Browser']['Gecko']) transform = function(element, transform){
-            element.style['MozTransform'] = 'rotate('+(transform||0)+'rad)';
-            return element;
-        };
-        else if(Prototype['Browser']['IE']) transform = function(element, transform){
-            if(!element._oDims)
-                element._oDims = [element.offsetWidth, element.offsetHeight];
-            var c = Math.cos(transform||0) * 1, s = Math.sin(transform||0) * 1;
-            
-            try {
-                var matrix = element['filters']("DXImageTransform.Microsoft.Matrix");
-                //matrix.sizingMethod = "auto expand";
-                matrix['M11'] = c;
-                matrix['M21'] = -s;
-                matrix['M12'] = s;
-                matrix['M22'] = c;
-            } catch (ex) {
-                element.style['filter'] += " progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
-            }
-            element.style.marginLeft = (element._oDims[0]-element.offsetWidth)/2+'px';
-            element.style.marginTop = (element._oDims[1]-element.offsetHeight)/2+'px';
-            return element;
-        };
-        else transform = function(element){ return element; }
-
-        Element['addMethods']({ 'setRotation': transform });
+    
+    function flashWebSocketLoaded() {
+        window['WebSocket']['__swfLocation'] = makeFullyQualified(params['websocket-swf']);
+        window['WebSocket']['__initialize']();
+        libraryLoaded();
     }
 
 
@@ -1465,7 +2239,14 @@ modules['spriteset'] = Spriteset;
     
     // An empty function.
     function emptyFunction() {}
-        
+    
+    // Borrowed respectfully from Prototype
+    function extend(destination, source) {
+      for (var property in source)
+        destination[property] = source[property];
+      return destination;
+    }
+    
     // Array Remove - By John Resig (MIT Licensed)
     function arrayRemove(array, from, to) {
       var rest = array.slice((to || from) + 1 || array.length);
@@ -1473,6 +2254,39 @@ modules['spriteset'] = Spriteset;
       return array.push.apply(array, rest);
     }
 
+    // Tests if the given path is fully qualified or relative.
+    //    TODO: Replace this with a nice regexp.
+    function isFullyQualified(path) {
+        return path.substring(0,7) == "http://"
+            || path.substring(0,8) == "https://"
+            || path.substring(0,7) == "file://";
+    }
+    
+    function makeFullyQualified(path) {
+        return isFullyQualified(path) ? path : engineRoot + path;
+    }
+    
+    // Performs the necessary operations to make a regular JavaScript
+    // "class" compatible with Prototype's Class implementation.
+    function makePrototypeClassCompatible(classRef) {
+        classRef.prototype['initialize'] = classRef;
+        classRef['subclasses'] = [];
+    }
+
+    // Returns a new Function that returns the value passed into the function
+    // Used for the 'toString' implementations.
+    function functionReturnString(string) {
+        return function() {
+            return string;
+        }
+    }
+    
+    // Returns a function that returns the name of the property specified on 'this'
+    function returnThisProp(prop) {
+        return function() {
+            return this[prop];
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////
     ////////////////////// "EVENT" FUNCTIONS /////////////////////////////
@@ -1482,6 +2296,7 @@ modules['spriteset'] = Spriteset;
     // URL of the executing JavaScript file is known.
     function scriptNameKnown(n) {
         scriptName = n;
+        //log(scriptName);
         engineRoot = scriptName.substring(0, scriptName.lastIndexOf("/")+1);
         scriptNode = getScript(scriptName);
         getParams(scriptNode);
@@ -1490,12 +2305,12 @@ modules['spriteset'] = Spriteset;
         if (isPrototypeLoaded()) {
             prototypeLoaded();
         } else {
-            new Script((params['prototype'].indexOf("lib") === 0 ? engineRoot : "") + params['prototype'], prototypeLoaded);
+            new Script(makeFullyQualified(params['prototype']), prototypeLoaded);
         }
         if (isSwfObjectLoaded()) {
             swfObjectLoaded();
         } else {
-            new Script((params['swfobject'].indexOf("lib") === 0 ? engineRoot : "") + params['swfobject'], swfObjectLoaded);
+            new Script(makeFullyQualified(params['swfobject']), swfObjectLoaded);
         }
         
     }
@@ -1504,7 +2319,7 @@ modules['spriteset'] = Spriteset;
     // files have finished their loading process. Once this happens, we can
     // define all the SGF classes, and afterwards invoke the 'load' listeners.
     function allLibrariesLoaded() {
-        log("all libs loaded!");
+        //log("all libs loaded!");
         
         // These comments below are directives for the 'compile' script.
         // The comments themselves will be replaced by the contents of the
@@ -1570,13 +2385,13 @@ var Client = Class.create({
      * the server, the [[SGF.Client#connect]] method must be called first.
      **/
     initialize: function(url, options) {
-        Object.extend(this, Object.extend(Object.clone(SGF.Client.DEFAULTS), options || {}));
+        Object.extend(this, options || {});
         this.URL = url;
         this.__bindedOnOpen = this.__onOpen.bind(this);
         this.__bindedOnClose = this.__onClose.bind(this);
         this.__bindedOnMessage = this.__onMessage.bind(this);
 
-        if (this.autoconnect === true) this.connect();
+        if (this['autoconnect']) this['connect']();
     },
     /**
      * SGF.Client#onOpen() -> undefined
@@ -1585,7 +2400,7 @@ var Client = Class.create({
      * has been successful, and a proper WebSocket connection has been established.
      * You must implement this function in a subclass to be useful.
      **/
-    onOpen: Prototype.emptyFunction,
+    onOpen: Prototype['emptyFunction'],
     /**
      * SGF.Client#onClose() -> undefined
      *
@@ -1597,7 +2412,7 @@ var Client = Class.create({
      * the connection (either directly through code or otherwise).
      * You must implement this function in a subclass to be useful.
      **/
-    onClose: Prototype.emptyFunction,
+    onClose: Prototype['emptyFunction'],
     /**
      * SGF.Client#onMessage(message) -> undefined
      * - message (String): The String value of the message sent from the server.
@@ -1606,7 +2421,7 @@ var Client = Class.create({
      * instance through the network. You must implement this function in a
      * subclass to be useful with the `message` value in your game.
      **/
-    onMessage: Prototype.emptyFunction,
+    onMessage: Prototype['emptyFunction'],
     /**
      * SGF.Client#connect() -> undefined
      *
@@ -1668,22 +2483,10 @@ var Client = Class.create({
     }
 });
 
+Client.prototype['autoconnect'] = false;
+Client.prototype['toString'] = functionReturnString("[object Client]");
+
 Object.extend(Client, {
-    /**
-     * SGF.Client.DEFAULTS -> Object
-     *
-     * The default values used when creating [[SGF.Client]]s. These values are
-     * copied onto the [[SGF.Client]] instance, if they are not found in the
-     * `options` parameter in the constructor.
-     *
-     * The [[SGF.Client.DEFAULTS]] object contains the default values:
-     *
-     *  - `autoconnect`: Default `false`. Boolean determining whether to call
-     *  [[SGF.Client#connect]] at the end of construction.
-     **/
-    DEFAULTS: {
-        autoconnect: false
-    },
     CONNECTING: 0,
     OPEN:       1,
     CLOSED:     2
@@ -1823,792 +2626,6 @@ Server.canServe = false;
  **/
 
 modules['server'] = Server;
-
-
-        /**
- * == Components API ==
- * "Components" are the Object Oriented classes that are created by your game code,
- * added to your game loop and rendered on the screen.
- **/
-
-/** section: Components API
- * class SGF.Component
- *
- * An abstract base class for game components. It cannot be instantiated
- * directly, but its subclasses are the building blocks for SGF games.
- **/
-var Component = Class.create({
-    initialize: function(options) {
-        if (options) {
-            Object.extend(this, options);
-        }
-        this.element = this.getElement();
-    },
-    /*
-     * SGF.Component#getElement() -> Element
-     * Internal method. Game developers need not be aware.
-     **/
-    getElement: (function() {
-        var e = document.createElement("div");
-        Element['setStyleI'](e, "position", "absolute");
-        Element['setStyleI'](e, "overflow", "hidden");
-        return function() {
-            return e.cloneNode(false);
-        }
-    })(),
-    toElement: function() {
-        return this.element;
-    },
-    /**
-     * SGF.Component#left() -> Number
-     * 
-     * Returns the number of pixels from left side of the screen to the left
-     * side of the [[SGF.Component]].
-     **/
-    left: function() {
-        return this.x;
-    },
-    /**
-     * SGF.Component#top() -> Number
-     *
-     * Returns the number of pixels from the top of the screen to the top
-     * of the [[SGF.Component]].
-     **/
-    top: function() {
-        return this.y;
-    },
-    /**
-     * SGF.Component#right() -> Number
-     *
-     * Returns the number of pixels from left side of the screen to the right
-     * side of the [[SGF.Component]].
-     **/
-    right: function() {
-        return this.x + this.width - 1;
-    },
-    /**
-     * SGF.Component#bottom() -> Number
-     * 
-     * Returns the number of pixels from the top side of the screen to the
-     * bottom of the [[SGF.Component]].
-     **/
-    bottom: function() {
-        return this.y + this.height - 1;
-    },
-    /**
-     * SGF.Component#render(interpolation, renderCount) -> undefined
-     * - interpolation (Number): The percentage (value between 0.0 and 1.0)
-     *                           between the last call to update and the next
-     *                           call to update this call to render is taking place.
-     *                           This number is used to "predict" the location of
-     *                           this [[SGF.Component]] if the FPS are higher than
-     *                           UPS, and the [[SGF.Component#dx]]/[[SGF.Component#dy]]
-     *                           values are being used.
-     * - renderCount (Number): The total number of times that [[SGF.Game#render]]
-     *                         has been called for this game. This value has nothing
-     *                         to do with the number of times this [[SGF.Component]]
-     *                         has been rendered.
-     * 
-     * Renders the individual [[SGF.Component]]. This is called automatically in
-     * the game loop once this component has been added through [[SGF.Game#addComponent]].
-     *
-     * Subclasses of [[SGF.Component]] override this method, and render how it
-     * should be rendered. This default implementation does nothing, since
-     * a [[SGF.Component]] itself cannot be rendered/instantiated.
-     **/
-    render: function(renderCount) {
-        if (this.__rotation != this.rotation) {
-            Element['setRotation'](this.element, this.rotation); // Radians
-            this.__rotation = this.rotation;
-        }
-
-        if (this.__opacity != this.opacity) {
-            Element['setOpacity'](this.element, this.opacity);
-            this.__opacity = this.opacity;
-        }
-
-        if (this.__zIndex != this.zIndex) {
-            this.__fixZIndex();
-            this.__zIndex = this.zIndex;
-        }
-
-        if (this.__width != this.width) {
-            Element['setStyleI'](this.element, "width", (this.width) + "px");
-            this.__width = this.width;
-        }
-        if (this.__height != this.height) {
-            Element['setStyleI'](this.element, "height", (this.height) + "px");
-            this.__height = this.height;
-        }
-
-        if (this.__x != this.x) {
-            this.__x = this.x;
-            Element['setStyleI'](this.element, "left", (this.x) + "px");
-        }
-
-        if (this.__y != this.y) {
-            this.__y = this.y;
-            Element['setStyleI'](this.element, "top", (this.y) + "px");
-        }
-    },
-    /**
-     * SGF.Component#update(updateCount) -> undefined
-     * - updateCount (Number): The total number of times that [[SGF.Game#update]]
-     *                         has been called for this game. This value has nothing
-     *                         to do with the number of times this [[SGF.Component]]
-     *                         has been updated.
-     *
-     * Updates the state of the individual [[SGF.Component]]. This is called in
-     * the game loop once this component has been added through
-     * [[SGF.Game#addComponent]].
-     *
-     * This function should be thought of as the "logic" function for the [[SGF.Component]].
-     **/
-    update: function() {
-    },
-    __fixZIndex: function() {
-        var z = this.parent && this.parent.__computeChildZIndex ?
-            this.parent.__computeChildZIndex(this.zIndex) :
-            this.zIndex;
-        Element['setStyleI'](this.element, "z-index", z);
-    }
-});
-
-/**
- * SGF.Component#width -> Number
- *
- * The width of the [[SGF.Component]]. This is a readable and writable
- * property. That is, if you would like to reize the [[SGF.Component]],
- * you could try something like:
- *
- *     this.width = this.width * 2;
- *
- * To double the current width of the [[SGF.Component]].
- **/
-Component.prototype.width = 10;
-
-/**
- * SGF.Component#height -> Number
- *
- * The height of the [[SGF.Component]]. This is a readable and writable
- * property. That is, if you would like to reize the [[SGF.Component]],
- * you could try something like:
- *
- *     this.height = SGF.Screen.height;
- *
- * To set the height of this [[SGF.Component]] to the current height of the
- * game screen.
- **/
-Component.prototype.height = 10;
-
-/**
- * SGF.Component#x -> Number
- *
- * The X coordinate of the top-left point of the [[SGF.Component]] from the
- * top-left of the game screen.
- *
- *     update: function($super) {
- *         this.x++;
- *         $super();
- *     }
- *
- * This is an example of overwritting the [[SGF.Component#update]] method,
- * and incrementing the X coordinate every step through the game loop.
- * This will smoothly pan the [[SGF.Component]] across the game screen at
- * the [[SGF.Game]]'s set game speed.
- **/
-Component.prototype.x = 0;
-
-/**
- * SGF.Component#y -> Number
- *
- * The Y coordinate of the top-left point of the [[SGF.Component]] from the
- * top-left of the game screen.
- **/
-Component.prototype.y = 0;
-/**
- * SGF.Component#opacity -> Number
- *
- * A percentage value (between 0.0 and 1.0, inclusive) that describes the
- * [[SGF.Component]]'s opacity. Setting this value to 1.0 (default) will
- * make the [[SGF.Component]] fully opaque. Setting to 0.0 will make it
- * fully transparent, or invisible. Setting to 0.5 will make it 50%
- * transparent. You get the idea...
- **/
-Component.prototype.opacity = 1.0;
-/**
- * SGF.Component#rotation -> Number
- *
- * The rotation value of the [[SGF.Component]] in degrees. Note that the
- * [[SGF.Component#x]], [[SGF.Component#y]] properties, and values returned
- * from [[SGF.Component#left]], [[SGF.Component#right]], [[SGF.Component#top]],
- * and [[SGF.Component#bottom]] are not affected by this value. Therefore,
- * any calculations that require the rotation to be a factor, your game code
- * must calculate itself.
- **/
-Component.prototype.rotation = 0;
-
-/**
- * SGF.Component#zIndex -> Number
- *
- * The Z index of this [[SGF.Component]]. Setting this value higher than
- * other [[SGF.Component]]s will render this [[SGF.Component]] above ones
- * with a lower **zIndex**.
- **/
-Component.prototype.zIndex = 0;
-
-/**
- * SGF.Component#parent -> SGF.Container | SGF.Game 
- *  
- * A reference to the current parent component of this component, or `null`
- * if the component is not currently placed inside any containing component.
- *
- * If the component is a top-level component (added through
- * [[SGF.Game#addComponent]]) then [[SGF.Component#parent]] will be
- * [[SGF.Game.current]] (your game instance).
- **/
-Component.prototype.parent = null;
-
-modules['component'] = Component;
-
-/** section: Components API
- * class SGF.Container < SGF.Component
- *
- * A `SGF.Container` is a concrete [[SGF.Component]] subclass, that acts
- * similar to the main [[SGF.Screen]] itself. That is, you can add
- * `SGF.Component`s into a container just like you would in your game.
- * Components placed inside containers are rendered with their attributes
- * relative to the Container's attributes. `SGF.Container` supports
- * all the regular [[SGF.Component]] properties (i.e. `width`, `height`, `x`,
- * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`) Changing the properties
- * on a Container affect the global properties of the Components placed inside.
- **/
-var Container = Class.create(Component, {
-    /**
-     * new SGF.Container(components[, options])
-     * - components (Array): An array of [[SGF.Component]]s that should initally
-     *                       be placed into the container. This is a required
-     *                       argument, however it can be an empty array. Also
-     *                       note that you can add or remove `SGF.Component`s
-     *                       at any time via [[SGF.Container#addComponent]] and
-     *                       [[SGF.Container#removeComponent]].
-     *                       
-     * - options (Object): The optional 'options' object's properties are copied
-     *                     this [[SGF.Container]] in the constructor. It allows all
-     *                     the same default properties as [[SGF.Component]].
-     *
-     * Instantiates a new [[SGF.Container]], adding the [[SGF.Component]]s found
-     * in `components` initially.
-     **/
-    initialize: function($super, components, options) {
-        this.components = [];
-        $super(Object.extend(this, options || {}));
-        if (Object.isArray(components)) {
-            components.each(this.addComponent, this);
-        }
-        this.__shouldUpdateComponents = this.__needsRender = true;
-    },
-    update: function($super, updateCount) {
-        $super(updateCount);
-        if (this.__shouldUpdateComponents) {
-            for (var i=0; i<this.components.length; i++) {
-                if (this.components[i].update)
-                    this.components[i].update(updateCount);
-            }
-        }
-    },
-    render: function($super, renderCount) {
-        $super(renderCount);
-        if (this.__needsRender) {
-            this.__renderComponents(renderCount);
-        }
-    },
-    __renderComponents: function(renderCount) {
-        for (var i=0; i < this.components.length; i++) {
-            if (this.components[i].render)
-                this.components[i].render(renderCount);
-        }
-    },
-
-
-    /**
-     * SGF.Container#addComponent(component) -> SGF.Container
-     * - component (SGF.Component): The `SGF.Component` instance to add to this
-     *                              container.
-     *
-     * Adds an [[SGF.Component]] into the container. `component`'s attributes
-     * will be rendered in relation to the attributes of this `SGF.Container`.
-     **/
-    addComponent: function(component) {
-        if (component.parent !== this) {
-            if (component.parent)
-                component.parent.removeComponent(component);
-            this.components.push(component);
-            this.element.appendChild(component.element);
-            component.parent = this;
-            component.__fixZIndex();
-        }
-        return this;
-    },
-    
-    /**
-     * SGF.Container#removeComponent(component) -> SGF.Container
-     * - component (SGF.Component): The `SGF.Component` instance to add to this
-     *                              container.
-     *
-     * Removes an [[SGF.Component]] from the container that has previously been
-     * added to this container via [[SGF.Container#addComponent]].
-     **/
-    removeComponent: function(component) {
-        var index = this.components.indexOf(component);
-        if (index > -1) {
-            arrayRemove(this.components, index);
-            component.element.remove();
-            component.parent = null;
-        }
-        return this;
-    },
-    __computeChildZIndex: function(zIndex) {
-        return (parseInt(this.element.style.zIndex) || 0) + (parseInt(zIndex) || 0);
-    },
-    __fixZIndex: function($super) {
-        $super();
-        for (var i=0; i < this.components.length; i++) {
-            this.components[i].__fixZIndex();
-        }
-    }
-});
-
-modules['container'] = Container;
-/** section: Components API
- * class SGF.DumbContainer < SGF.Container
- *
- * There are plenty of cases where a large amount of [[SGF.Component]]s are going
- * to be placed inside of a [[SGF.Container]], BUT NEVER CHANGE. This scenario
- * can be brought up by creating a tile based map using [[SGF.Sprite]]. Map's don't
- * change beyond their initialization (usually), so it's a waste of CPU to
- * re-render and check for updates of each individual tile, because we know that
- * they will never need to change. That very scenario is why [[SGF.DumbContainer]]
- * exists. Using a `DumbContainer`, all the tile sprites that were added to the
- * container will only be rendered once, and then re-blitted to the screen for
- * maximum speed.
- *
- * So in short, use [[SGF.DumbContainer]] when the components inside will never
- * need to be changed, and save a lot of processing power.
- **/
-var DumbContainer = Class.create(Container, {
-    initialize: function($super, components, options) {
-        $super(components, options);
-        this.__shouldUpdateComponents = this.__needsRender = false;
-    },
-
-    addComponent: function($super, component) {
-        $super(component);
-        this.__needsRender = true;
-        return this;
-    },
-    removeComponent: function($super, component) {
-        $super(component);
-        this.__needsRender = true;
-        return this;
-    },
-
-    render: function($super, interpolation, renderCount) {
-        if (this.width != this.__width || this.height != this.__height)
-            this.__needsRender = true;
-        $super(interpolation, renderCount);
-    },
-    
-    __renderComponents: function($super, interpolation, renderCount) {
-        $super(interpolation, renderCount);
-        this.__needsRender = false;
-    },
-
-    renderComponents: function() {
-        this.__needsRender = true;
-    }
-});
-
-modules['dumbcontainer'] = DumbContainer;
-
-
-var Label = Class.create(Component, {
-    initialize: function($super, options) {
-        $super(Object.extend(Object.clone(Label.DEFAULTS), options || {}));
-        this.__text = "";
-        this.__textNode = document.createTextNode(this.__text);
-        this.element.appendChild(this.__textNode);
-    },
-    getElement: (function() {
-        var e = document.createElement("pre");
-        $H({
-            "border":"none 0px #000000",
-            "background-color":"transparent",
-            "position":"absolute",
-            "overflow":"hidden",
-            "margin":"0px",
-            "padding":"0px"
-        })['each'](function(prop) {
-            Element['setStyleI'](e, prop['key'], prop['value']);
-        });
-        return function() {
-            var el = e.cloneNode(false);
-            Element['setStyleI'](el, "color", "#"+this.color);
-            this.__color = this.color;
-            Element['setStyleI'](el, "font-family", this.font.__fontName);
-            this.__font = this.font;
-            Element['setStyleI'](el, "font-size", this.size + "px");
-            Element['setStyleI'](el, "line-height", this.size + "px");
-            this.__size = this.size;
-            return el;
-        }
-    })(),
-    render: function($super, renderCount) {
-        $super(renderCount);
-        if (this.__align !== this.align) {
-            Element['setStyleI'](this.element, "text-align", this.align == 0 ? "left" : this.align == 1 ? "center" : "right");
-            this.__align = this.align;
-        }
-        if (this.__font !== this.font) {
-            Element['setStyleI'](this.element, "font-family", this.font.__fontName);
-            this.__font = this.font;
-        }
-        if (this.__size !== this.size) {
-            var val = (this.size) + "px";
-            Element['setStyleI'](this.element, "font-size", val);
-            Element['setStyleI'](this.element, "line-height", val);            
-            this.__size = this.size;
-        }
-        if (this.__color !== this.color) {
-            Element['setStyleI'](this.element, "color", "#"+this.color);
-            this.__color = this.color;
-        }
-        if (this.__textNeedsUpdate === true) {
-            var text = "", l = this.__text.length, i=0, pos=0, cur, numSpaces, j;
-            for (; i<l; i++) {
-                cur = this.__text.charAt(i);
-                if (cur === '\n') {
-                    pos = 0;
-                    text += cur;
-                } else if (cur === '\t') {
-                    numSpaces = Label.TAB_WIDTH - (pos % Label.TAB_WIDTH);
-                    for (j=0; j<numSpaces; j++) {
-                        text += ' ';
-                    }
-                    pos += numSpaces;
-                } else {
-                    text += cur;
-                    pos++;
-                }
-            }
-            if (isIE7orLower) {
-                text = text.replace(/\n/g, '\r');
-            }
-            this.__textNode.nodeValue = text;
-            this.__textNeedsUpdate = false;
-        }
-    },
-    getText: function() {
-        return this.__text;
-    },
-    setText: function(textContent) {
-        this.__text = textContent;
-        this.__textNeedsUpdate = true;
-    }
-});
-
-var isIE7orLower = (function() {
-    /MSIE (\d+\.\d+);/.test(navigator.userAgent);
-    return (new Number(RegExp.$1)) <= 7;
-})();
-
-Object.extend(Label, {
-    'DEFAULTS': {
-        'align': 0,
-        'color': "FFFFFF",
-        'font': new Font("monospace"),
-        'size': 12
-    },
-    'LEFT': 0,
-    'CENTER': 1,
-    'RIGHT': 2,
-    
-    'TAB_WIDTH': 4
-});
-
-modules['label'] = Label;
-
-/** section: Components API
- * class SGF.Sprite < SGF.Component
- *
- * Probably the most used Class in SGF to develop your games. Represents a single
- * sprite state on a spriteset as a [[SGF.Component]]. The state of the sprite
- * can be changed at any time.
- **/
-var Sprite = Class.create(Component, {
-    /**
-     * new SGF.Sprite(spriteset[, options])
-     * - spriteset (SGF.Spriteset): The spriteset for this Sprite to use. This is
-     *                              final once instantiated, and cannot be changed.
-     * - options (Object): The optional 'options' object's properties are copied
-     *                     this [[SGF.Sprite]] in the constructor. It allows all
-     *                     the same default properties as [[SGF.Component]], but
-     *                     also adds [[SGF.Sprite#spriteX]] and [[SGF.Sprite#spriteY]].
-     *
-     * Instantiates a new [[SGF.Sprite]] based on the given [[SGF.Spriteset]].
-     * It's more common, however, to make your own subclass of [[SGF.Sprite]] in
-     * your game code. For example:
-     *
-     *     var AlienClass = Class.create(SGF.Sprite, {
-     *         initialize: function($super, options) {
-     *             $super(AlienClass.sharedSpriteset, options);
-     *         },
-     *         update: function($super) {
-     *             // Some cool game logic here...
-     *             $super();
-     *         }
-     *     });
-     *
-     *     AlienClass.sharedSpriteset = new SGF.Spriteset("alien.png", 25, 25);
-     *
-     * Here we are creating a [[SGF.Sprite]] subclass called **AlienClass** that
-     * reuses the same [[SGF.Spriteset]] object for all instances, and centralizes
-     * logic code by overriding the [[SGF.Component#update]] method.
-     **/
-    initialize: function($super, spriteset, options) {
-        this.spriteset = spriteset;
-        this.spritesetImg = spriteset.toElement();
-        $super(Object.extend(Object.clone(Sprite.DEFAULTS), options || {}));
-    },
-    getElement: function($super) {
-        return $super().insert(this.spritesetImg);
-    },
-    scale: function($super, newScale) {
-        $super(newScale);
-        
-        if (this.spriteset.loaded) {
-            this.resetSpriteset();
-        } else {
-            this.spriteset.observe("load", this.resetSpriteset.bind(this));
-        }
-    },
-    render: function($super, interpolation, renderCount) {
-        if (this.__spriteX != this.spriteX || this.__spriteY != this.spriteY ||
-            this.__width != this.width || this.__height != this.height) {
-            if (this.spriteset.loaded) {
-                this.resetSpriteset();
-            } else if (!this.__resetOnLoad) {
-                this.spriteset.addListener("load", this.resetSpriteset.bind(this));
-                this.__resetOnLoad = true;
-            }
-        }
-        $super(interpolation, renderCount);
-    },
-    resetSpriteset: function() {
-        this.spritesetImg.setStyleI("width", (this.spriteset.width * (this.width/this.spriteset.spriteWidth)) + "px");
-        this.spritesetImg.setStyleI("height", (this.spriteset.height * (this.height/this.spriteset.spriteHeight)) + "px");
-        this.spritesetImg.setStyleI("top", -(this.height * this.spriteY) + "px");
-        this.spritesetImg.setStyleI("left", -(this.width * this.spriteX) + "px");
-        this.__spriteX = this.spriteX;
-        this.__spriteY = this.spriteY;
-    }
-});
-
-/**
- * SGF.Sprite#spriteX -> Number
- *
- * The X coordinate of the sprite to use from the spriteset. The units are
- * whole [[SGF.Sprite]] widths. So to use the 3rd sprite across on the spriteset,
- * set this value to 3.
- **/
-Sprite.prototype['spriteX'] = 0;
-
-/**
- * SGF.Sprite#spriteY -> Number
- *
- * The Y coordinate of the sprite to use from the spriteset. The units are
- * whole [[SGF.Sprite]] heights. So to use the 4th sprite down on the spriteset,
- * set this value to 4.
- **/
-Sprite.prototype['spriteY'] = 0;
-
-modules['sprite'] = Sprite;
-
-/** section: Components API
- * class SGF.Shape < SGF.Component
- *
- * Another abstract class, not meant to be instantiated directly. All "shape"
- * type [[SGF.Component]] classes use this class as a base class. The only
- * functionality that this class itself adds to a regular [[SGF.Component]] is
- * [[SGF.Shape#color]], since all shapes can have a color set for them.
- **/
-var Shape = Class.create(Component, {
-    /**
-     * new SGF.Shape([options])
-     * - options (Object): The optional 'options' object's properties are copied
-     *                     this [[SGF.Shape]] in the constructor. It allows all
-     *                     the same default properties as [[SGF.Component]], but
-     *                     also adds [[SGF.Shape#color]].
-     *
-     * This will never be called directly in your code, use one of the subclasses
-     * to instantiate [[SGF.Shape]]s.
-     **/
-    initialize: function($super, options) {
-        $super(Object.extend(Object.clone(Shape.DEFAULTS), options || {}));
-    },
-    render: function($super, interpolation) {
-        //var scale = SGF.Screen.getScale();
-
-        if (this.__fill != this.fill) {
-            if (!this.fill) {
-                this.element.style.backgroundColor = "transparent";
-                this.element.style.border = "Solid 1px #" + this.color;
-                //this.element.style.width = ((this.width * scale)-5) + "px";
-                //this.element.style.height = ((this.height * scale)-5) + "px";
-            } else {
-                this.element.style.borderColor = "transparent";
-                this.element.style.backgroundColor = "#" + this.color;
-            }
-            this.__fill = this.fill;
-        }
-
-        if (this.__color != this.color) {
-            if (this.fill)
-                this.element.style.backgroundColor = "#" + this.color;
-            else
-                this.element.style.borderColor = "#" + this.color;
-            this.__color = this.color;
-        }
-
-        /*
-        if (this.__width != this.width) {
-            var w = (this.width * scale);
-            this.element.style.width = (this.fill ? w : w-5) + "px";
-            this.__width = this.width;
-        }
-        if (this.__height != this.height) {
-            var h = (this.height * scale);
-            this.element.style.height = (this.fill ? h : h-5) + "px";
-            this.__height = this.height;
-        }
-        */
-
-        $super(interpolation);
-    }
-});
-
-/**
- * SGF.Shape.DEFAULTS -> Object
- *
- * The default values used when creating [[SGF.Shapes]]s. These values, as well
- * as the values from [[SGF.Component.DEFAULTS]] are copied onto the [[SGF.Shape]],
- * if they are not found in the `options` argument.
- *
- * The [[SGF.Shape.DEFAULTS]] object contains the default values:
- *
- *     - color: "000000"
- *     - fill: true
- **/
-Shape.DEFAULTS = {
-    /**
-     * SGF.Shape#color -> String
-     *
-     * The color of the [[SGF.Shape]]. The String value is expected to be like
-     * a CSS color string. So it should be a **six** (not three) character
-     * String formatted in `RRGGBB` form. Each color is a 2-digit hex number
-     * between 0 and 255.
-     **/
-    color: "000000",
-    /**
-     * SGF.Shape#fill -> Boolean
-     *
-     * Boolean determining if the [[SGF.Shape]] should be filled (`true`), or
-     * if just the outline should be rendered (`false`).
-     **/
-    fill: true
-};
-
-modules['shape'] = Shape;
-
-/** section: Components API
- * class SGF.Rectangle < SGF.Shape
- *
- * A [[SGF.Component]] that renders a single rectangle onto the screen.
- **/
-var Rectangle = Class.create(Shape, {
-    initialize: function($super, options) {
-        $super(Object.extend(Object.clone(Rectangle.DEFAULTS), options || {}));
-    },
-    getElement: function() {
-        this.__color = this.color;
-        return new Element("div").setStyle({
-            position: "absolute",
-            backgroundColor: "#" + this.color
-        });
-    }
-});
-
-Rectangle.DEFAULTS = {
-};
-
-modules['rectangle'] = Rectangle;
-
-var Circle = Class.create(Shape, {
-    initialize: function($super, options) {
-        $super(Object.extend(Object.clone(SGF.Circle.DEFAULTS), options || {}));
-        this.radiusChanged();
-    },
-    
-    getElement: function() {
-        this.__color = this.color;
-        return new Element("div").setStyle({
-            position: "absolute",
-            backgroundColor: "#" + this.color
-        });
-    },
-    
-    update: function($super) {
-        if (this.width != this.height || (this.radius*2) != this.width) {
-            this.radiusChanged();
-        }
-        $super();
-    },
-
-    render: (function() {
-        if (Prototype.Browser.WebKit) {
-            return function($super, interpolation) {
-                $super(interpolation);
-                if (this.radius != this.__radius) {
-                    this.element.style.webkitBorderRadius = (this.radius * SGF.Screen.getScale()) + "px";
-                    this.__radius = this.radius;
-                }
-            };
-        } else if (Prototype.Browser.Gecko) {
-            return function($super, interpolation) {
-                $super(interpolation);
-                if (this.radius != this.__radius) {
-                    this.element.style.MozBorderRadius = (this.radius * SGF.Screen.getScale()) + "px";
-                    this.__radius = this.radius;
-                }
-            };
-        } else {
-            SGF.log("A form of Border Radius is not supported by this browser.");
-            return function($super, interpolation) {
-                $super(interpolation);
-            };
-        }
-    })(),
-
-    radiusChanged: function() {
-        this.width = this.height = this.radius*2;
-    }
-});
-
-Circle.DEFAULTS = {
-    radius: 10
-};
-
-modules['circle'] = Circle;
 
 
 

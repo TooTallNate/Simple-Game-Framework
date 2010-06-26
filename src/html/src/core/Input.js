@@ -9,8 +9,7 @@ var currentInput = null;
 function Input(game) {
     
     
-    var downKeys = {},
-    downMouseButtons = {},
+    var downMouseButtons = {},
     self = this;
 
     EventEmitter.call(self);
@@ -127,9 +126,7 @@ Input.prototype['isKeyDown'] = function(keyCode) {
     return this['_k'][keyCode] === true;
 }
 
-Input.prototype['toString'] = function() {
-    return "[object Input]";
-}
+Input.prototype['toString'] = functionReturnString("[object Input]");
 
 // Constants
 /**
@@ -139,7 +136,7 @@ Input.prototype['toString'] = function() {
  * usually the left mouse button for right-handed people, and the right
  * mouse button for left-handed people.
  **/
-Input.MOUSE_PRIMARY = 0;
+Input['MOUSE_PRIMARY'] = 0;
 /**
  * SGF.Input.MOUSE_MIDDLE -> ?
  *
@@ -148,7 +145,7 @@ Input.MOUSE_PRIMARY = 0;
  * using this functionality, it would be a good idea to make to action
  * be performed some other way as well (like a keystroke).
  **/
-Input.MOUSE_MIDDLE = 1;
+Input['MOUSE_MIDDLE'] = 1;
 /**
  * SGF.Input.MOUSE_SECONDARY -> ?
  *
@@ -156,31 +153,31 @@ Input.MOUSE_MIDDLE = 1;
  * usually the right mouse button for right-handed people, and the left
  * mouse button for left-handed people.
  **/
-Input.MOUSE_SECONDARY = 2;
+Input['MOUSE_SECONDARY'] = 2;
 /**
  * SGF.Input.KEY_DOWN -> ?
  *
  * Indicates that the `down` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_DOWN = 40;
+Input['KEY_DOWN'] = 40;
 /**
  * SGF.Input.KEY_UP -> ?
  *
  * Indicates that the `up` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_UP = 38;
+Input['KEY_UP'] = 38;
 /**
  * SGF.Input.KEY_LEFT -> ?
  *
  * Indicates that the `left` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_LEFT = 37;
+Input['KEY_LEFT'] = 37;
 /**
  * SGF.Input.KEY_RIGHT -> ?
  *
  * Indicates that the `right` arrow or button is being pressed on the keypad.
  **/
-Input.KEY_RIGHT = 39;
+Input['KEY_RIGHT'] = 39;
 /**
  * SGF.Input.KEY_1 -> ?
  *
@@ -188,25 +185,25 @@ Input.KEY_RIGHT = 39;
  * button" can be configurable to say a client with a keyboard, but if
  * a controller is being used, this should also be the value returned.
  **/
-Input.KEY_1 = 32;
+Input['KEY_1'] = 32;
 /**
  * SGF.Input.KEY_2 -> ?
  *
  * Indicates that second button on the keypad is being pressed.
  **/
-Input.KEY_2 = 33;
+Input['KEY_2'] = 33;
 /**
  * SGF.Input.KEY_3 -> ?
  *
  * Indicates that third button on the keypad is being pressed.
  **/
-Input.KEY_3 = 34;
+Input['KEY_3'] = 34;
 /**
  * SGF.Input.KEY_4 -> ?
  *
  * Indicates that fourth button on the keypad is being pressed.
  **/
-Input.KEY_4 = 35;
+Input['KEY_4'] = 35;
 
 function blur() {
     currentInput = null;
@@ -217,10 +214,10 @@ function focus(input) {
 }
 
 function getPointerCoords(event) {
-    var offset = currentInput['game']['screen']['element'].cumulativeOffset();
+    var offset = currentInput['game']['screen']['element']['cumulativeOffset']();
     return {
-        'x': (event.pointerX() - offset['left']),
-        'y': (event.pointerY() - offset['top'])
+        'x': (event['pointerX']() - offset['left']),
+        'y': (event['pointerY']() - offset['top'])
     };
 }
 
@@ -301,11 +298,11 @@ function mousedownHandler(event) {
         var i = runningGameInstances.length
         ,   offset = null
         ,   element = null
-        ,   pointerX = event.pointerX()
-        ,   pointerY = event.pointerY();
+        ,   pointerX = event['pointerX']()
+        ,   pointerY = event['pointerY']();
         while (i--) {
             element = runningGameInstances[i]['screen']['element'];
-            offset = element.cumulativeOffset();
+            offset = element['cumulativeOffset']();
             
             if (pointerX >= (offset['left'])
              && pointerX <= (offset['left'] + element['clientWidth'])
@@ -357,27 +354,25 @@ function mousemoveHandler(event) {
     }
 }
 
-Input['subclasses'] = [];
-
 Input['grab'] = function() {
-    document.observe("keydown", keydownHandler)
-            .observe("keypress", keypressHandler)
-            .observe("keyup", keyupHandler)
-            .observe("mousemove", mousemoveHandler)
-            .observe("mousedown", mousedownHandler)
-            .observe("mouseup", mouseupHandler)
-            .observe("contextmenu", contextmenuHandler);
+    document['observe']("keydown", keydownHandler)
+            ['observe']("keypress", keypressHandler)
+            ['observe']("keyup", keyupHandler)
+            ['observe']("mousemove", mousemoveHandler)
+            ['observe']("mousedown", mousedownHandler)
+            ['observe']("mouseup", mouseupHandler)
+            ['observe']("contextmenu", contextmenuHandler);
     Input.grabbed = true;
 }
 
 Input['release'] = function() {
-    document.stopObserving("keydown", keydownHandler)
-            .stopObserving("keypress", keypressHandler)
-            .stopObserving("keyup", keyupHandler)
-            .stopObserving("mousemove", mousemoveHandler)
-            .stopObserving("mousedown", mousedownHandler)
-            .stopObserving("mouseup", mouseupHandler)
-            .stopObserving("contextmenu", contextmenuHandler);
+    document['stopObserving']("keydown", keydownHandler)
+            ['stopObserving']("keypress", keypressHandler)
+            ['stopObserving']("keyup", keyupHandler)
+            ['stopObserving']("mousemove", mousemoveHandler)
+            ['stopObserving']("mousedown", mousedownHandler)
+            ['stopObserving']("mouseup", mouseupHandler)
+            ['stopObserving']("contextmenu", contextmenuHandler);
     Input.grabbed = false;
 }
 

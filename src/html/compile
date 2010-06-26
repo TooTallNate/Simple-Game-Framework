@@ -12,11 +12,12 @@ var FILE_TO_COMPILE = "src/Main.js";
 var code = injectScripts(FILE_TO_COMPILE);
 
 var outputFilename = path.join(__dirname, "dist/SGF.debug.js");
+
 sys.puts('Saving debug code to "'+outputFilename+'"');
 fs.writeFileSync(outputFilename, code);
-process.exit();
+//process.exit();
 
-/*
+
 var request = http.createClient(80, 'closure-compiler.appspot.com').request('POST', '/compile', {
     'Host': 'closure-compiler.appspot.com',
     'Content-Type': 'application/x-www-form-urlencoded'
@@ -29,7 +30,7 @@ request.write(querystring.stringify({
     'compilation_level': 'ADVANCED_OPTIMIZATIONS',
     'output_format': 'json',
     'output_info': ['compiled_code', 'warnings', 'errors', 'statistics'],
-    //'formatting': 'pretty_print',
+    'formatting': 'pretty_print',
     'js_externs': 'swfobject.embedSWF=function(){};',
     'js_code': code
 }, '&', '=', false));
@@ -59,7 +60,7 @@ request.addListener('response', function (response) {
 });
 
 request.end();
-*/
+
 
 function PrintDots(interval) {
     var num = setInterval(function() {

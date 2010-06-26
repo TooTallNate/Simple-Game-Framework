@@ -35,6 +35,7 @@ function Script(game, scriptUrl, onLoad) {
 Script['subclasses'] = [];
 Script.prototype = new EventEmitter(true);
 Script.prototype['loaded'] = false;
+Script.prototype['toString'] = functionReturnString("[object Script]");
 
 
 // Expects a <script> node reference, and removes it from the DOM, and

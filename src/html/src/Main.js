@@ -47,36 +47,127 @@
     },
     loadStartTime = new Date(),
     // "Modules" are the classes retrieved from calling SGF.require().
-    modules = {};
+    modules = {},
+    
+    
+    
+    
+    
+    // browser sniffs
+    userAgent = navigator.userAgent,
+    isOpera = Object.prototype.toString.call(window['opera']) == '[object Opera]',
+    isIE = !!window['attachEvent'] && !isOpera,
+    isIE7orLower =  isIE && parseFloat(navigator.userAgent.split("MSIE")[1]) <= 7,
+    isWebKit = userAgent.indexOf('AppleWebKit/') > -1,
+    isGecko = userAgent.indexOf('Gecko') > -1 && userAgent.indexOf('KHTML') === -1,
+    isMobileSafari = /Apple.*Mobile/.test(userAgent);
 
+
+
+
+    /* The DOM nodes that SGF manipulates are always modified through
+     * JavaScript, but just setting style.blah won't overwrite !important
+     * in CSS style sheets. In order to compensate, all style changes must
+     * be ensured that they use !important as well
+     **/
+    var setStyleImportant = (function(){ 
+        if (document['documentElement']['style']['setProperty']) {
+            // W3C says use setProperty, with the "important" 3rd param
+            return function(element, prop, value) {
+                element['style']['setProperty'](prop, value, "important");
+            }                    
+        } else {
+            // IE doesn't support setProperty, so we must manually set
+            // the cssText, including the !important statement
+            return function(element, prop, value) {
+                element['style']['cssText'] += ";"+prop+":"+value+" !important;";
+            }
+        }
+    })();
+
+
+
+
+
+
+
+    var setRotation;
+    if(window['CSSMatrix']) setRotation = function(element, rotation){
+        element.style['transform'] = 'rotate('+(rotation||0)+'rad)';
+        return element;
+    };
+    else if(window['WebKitCSSMatrix']) setRotation = function(element, rotation){
+        element.style['webkitTransform'] = 'rotate('+(rotation||0)+'rad)';
+        return element;
+    };
+    else if(isGecko) setRotation = function(element, rotation){
+        element.style['MozTransform'] = 'rotate('+(rotation||0)+'rad)';
+        return element;
+    };
+    else if(isIE) setRotation = function(element, rotation){
+        if(!element._oDims)
+            element._oDims = [element.offsetWidth, element.offsetHeight];
+        var c = Math.cos(rotation||0) * 1, s = Math.sin(rotation||0) * 1;
+        
+        try {
+            var matrix = element['filters']("DXImageTransform.Microsoft.Matrix");
+            //matrix.sizingMethod = "auto expand";
+            matrix['M11'] = c;
+            matrix['M21'] = -s;
+            matrix['M12'] = s;
+            matrix['M22'] = c;
+        } catch (ex) {
+            element.style['filter'] += " progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
+        }
+        element.style.marginLeft = (element._oDims[0]-element.offsetWidth)/2+'px';
+        element.style.marginTop = (element._oDims[1]-element.offsetHeight)/2+'px';
+        return element;
+    };
+    else setRotation = function(element){ return element; }
+
+
+
+    //{components.js}
     //{core.js}
     //{resources.js}
+    
+    
+    
+    
     
     // The main SGF namespace.
     var SGF = new EventEmitter();
     SGF['toString'] = function() {
         return "[object SGF]";
     }
+    
+    
+    
+    
 
     // Attempts to retrieve the absolute path of the executing script.
-    // Use this in conjunction with 'getScript' to get a reference to
-    // the currently executing script DOM node.
-    function getScriptName(callback) {
-        try {
-            // Intentionally invoke an exception
-            (0)();
-        } catch(e) {
+    // Pass a function as 'callback' which will be executed once the
+    // URL is known, with the first argument being the string URL.
+    function getScriptName(ex, callback) {
+        if (typeof ex === 'function') {
+            try {
+                (0)();
+            } catch(e) {
+                getScriptName(e, ex);
+            }
+        } else {
             // Getting the URL of the exception is non-standard, and
             // different in EVERY browser unfortunately.
-            var s = e['stack'];
-            if (e['sourceURL']) { // Safari
+            var s = ex['stack'];
+            if (ex['sourceURL']) { // Safari
                 //console.log("safari");
-                callback(e['sourceURL']);
-            } else if (e['arguments']) { // Chrome
+                callback(ex['sourceURL']);
+            } else if (ex['arguments']) { // Chrome
                 //console.log("chrome");
                 s = s.split("\n")[2];
-                s = s.substring(s.indexOf("(")+1);
+                s = s.substring(s.lastIndexOf(" ")+1);
                 s = s.substring(0, s.lastIndexOf(":"));
+                if (s.indexOf('(') === 0) s = s.substring(1);
                 callback(s.substring(0, s.lastIndexOf(":")));
             } else if (s) { // Firefox & Opera 10+
                 //console.log("firefox");
@@ -91,7 +182,7 @@
                     callback(url);
                     return true;
                 }
-                throw e;
+                throw ex;
             }
         }
     }
@@ -101,11 +192,21 @@
     // runtime arguments (data-* attributes) on the <script>.
     function getScript(scriptName) {
         var scripts = document.getElementsByTagName("script"),
-            length = scripts.length;
+            length = scripts.length,
+            script = document.getElementById("SGF-script");
+        
+        if (script) return script;
+        
         while (length--) {
-            if (scripts[length]['src'] === scriptName)
-                return scripts[length];
+            script = scripts[length];
+            if (script['src'] === scriptName) {
+                return script;
+            }
         }
+        
+        throw new Error('FATAL: Could not find <script> node with "src" === "'+scriptName+'"\n'
+            + 'Please report this to the SGF issue tracker. You can work around this error by '
+            + 'explicitly setting the "id" of the <script> node to "SGF-script".');
     }
 
     // Looks through the script node and extracts any 'data-*'
@@ -131,7 +232,8 @@
     function libraryLoaded(e) {
         var ready = isPrototypeLoaded()
                 &&  isSwfObjectLoaded()
-                &&  isSoundJsLoaded();
+                &&  isSoundJsLoaded()
+                &&  hasWebSocket();
         if (ready) {
             allLibrariesLoaded();
         }
@@ -152,16 +254,20 @@
     
     // Called once Prototype (v1.6.1 or better) is assured loaded
     function prototypeLoaded() {
-        loadElementSetStyleImportant();
-        loadElementSetRotation();
         libraryLoaded();
     }
     
     // Returns true if Sound.js is loaded, false otherwise.
     function isSoundJsLoaded() {
-        return 'Sound' in window;
+        return "Sound" in window && "SoundChannel" in window;
     }
-
+    
+    function soundJsLoaded() {
+        window['Sound']['swfPath'] = makeFullyQualified(params['soundjs-swf']);
+        //log("SoundJS SWF Path: " + window['Sound']['swfPath']);
+        libraryLoaded();
+    }
+    
     // Returns true if SWFObject, at least version 2.2, is loaded, false otherwise.
     function isSwfObjectLoaded() {
         var swfobject = 'swfobject', embedSWF = 'embedSWF';
@@ -171,86 +277,28 @@
     // Called once SWFObject (v2.2 or better) is assured loaded
     function swfObjectLoaded() {
         // Load Sound.js
-        if (!isSoundJsLoaded()) {
-            new Script(engineRoot + params['soundjs'], function() {
-                window['Sound']['swfPath'] = engineRoot + "lib/Sound.swf";
-                libraryLoaded();
-            });
+        if (isSoundJsLoaded()) {
+            soundJsLoaded();
+        } else {
+            new Script(makeFullyQualified(params['soundjs']), soundJsLoaded);
         }
         
         // Load gimite's Flash WebSocket implementation (only if required)
-        //if (!'WebSocket' in window) {
-            // TODO: Add Flash WebSocket fallback
-        //}
+        if (!hasWebSocket()) {
+            new Script(makeFullyQualified(params['fabridge']), function() {
+                new Script(makeFullyQualified(params['websocket']), flashWebSocketLoaded);
+            });
+        }
     }
-
     
-    /* The DOM nodes that SGF manipulates are always modified through
-     * JavaScript, but just setting style.blah won't overwrite !important
-     * in CSS style sheets. In order to compensate, all style changes must
-     * be ensured that they use !important as well
-     **/
-    function loadElementSetStyleImportant() {
-        Element['addMethods']({
-            'setStyleI': (function(){ 
-                if (document.documentElement.style.setProperty) {
-                    // W3C says use setProperty, with the "important" 3rd param
-                    return function(element, prop, value) {
-                        element.style.setProperty(prop, value, "important");
-                    }                    
-                } else {
-                    // IE doesn't support setProperty, so we must manually set
-                    // the cssText, including the !important statement
-                    return function(element, prop, value) {
-                        element.style.cssText += ";"+prop+":"+value+" !important;";
-                    }
-                }
-            })()
-        });
+    function hasWebSocket() {
+        return 'WebSocket' in window;
     }
-
-    /*
-     * This loads Element#setRotation, which is a variation of Element#transform
-     * from Scripty2, but with the scale hard-coded at 1, and rotation being the
-     * only affected value.
-     **/
-    function loadElementSetRotation() {
-        var transform;
-
-        if(window['CSSMatrix']) transform = function(element, transform){
-            element.style['transform'] = 'rotate('+(transform||0)+'rad)';
-            return element;
-        };
-        else if(window['WebKitCSSMatrix']) transform = function(element, transform){
-            element.style['webkitTransform'] = 'rotate('+(transform||0)+'rad)';
-            return element;
-        };
-        else if(Prototype['Browser']['Gecko']) transform = function(element, transform){
-            element.style['MozTransform'] = 'rotate('+(transform||0)+'rad)';
-            return element;
-        };
-        else if(Prototype['Browser']['IE']) transform = function(element, transform){
-            if(!element._oDims)
-                element._oDims = [element.offsetWidth, element.offsetHeight];
-            var c = Math.cos(transform||0) * 1, s = Math.sin(transform||0) * 1;
-            
-            try {
-                var matrix = element['filters']("DXImageTransform.Microsoft.Matrix");
-                //matrix.sizingMethod = "auto expand";
-                matrix['M11'] = c;
-                matrix['M21'] = -s;
-                matrix['M12'] = s;
-                matrix['M22'] = c;
-            } catch (ex) {
-                element.style['filter'] += " progid:DXImageTransform.Microsoft.Matrix(sizingMethod='auto expand',M11="+c+",M12="+(-s)+",M21="+s+",M22="+c+")";
-            }
-            element.style.marginLeft = (element._oDims[0]-element.offsetWidth)/2+'px';
-            element.style.marginTop = (element._oDims[1]-element.offsetHeight)/2+'px';
-            return element;
-        };
-        else transform = function(element){ return element; }
-
-        Element['addMethods']({ 'setRotation': transform });
+    
+    function flashWebSocketLoaded() {
+        window['WebSocket']['__swfLocation'] = makeFullyQualified(params['websocket-swf']);
+        window['WebSocket']['__initialize']();
+        libraryLoaded();
     }
 
 
@@ -260,7 +308,14 @@
     
     // An empty function.
     function emptyFunction() {}
-        
+    
+    // Borrowed respectfully from Prototype
+    function extend(destination, source) {
+      for (var property in source)
+        destination[property] = source[property];
+      return destination;
+    }
+    
     // Array Remove - By John Resig (MIT Licensed)
     function arrayRemove(array, from, to) {
       var rest = array.slice((to || from) + 1 || array.length);
@@ -268,6 +323,39 @@
       return array.push.apply(array, rest);
     }
 
+    // Tests if the given path is fully qualified or relative.
+    //    TODO: Replace this with a nice regexp.
+    function isFullyQualified(path) {
+        return path.substring(0,7) == "http://"
+            || path.substring(0,8) == "https://"
+            || path.substring(0,7) == "file://";
+    }
+    
+    function makeFullyQualified(path) {
+        return isFullyQualified(path) ? path : engineRoot + path;
+    }
+    
+    // Performs the necessary operations to make a regular JavaScript
+    // "class" compatible with Prototype's Class implementation.
+    function makePrototypeClassCompatible(classRef) {
+        classRef.prototype['initialize'] = classRef;
+        classRef['subclasses'] = [];
+    }
+
+    // Returns a new Function that returns the value passed into the function
+    // Used for the 'toString' implementations.
+    function functionReturnString(string) {
+        return function() {
+            return string;
+        }
+    }
+    
+    // Returns a function that returns the name of the property specified on 'this'
+    function returnThisProp(prop) {
+        return function() {
+            return this[prop];
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////
     ////////////////////// "EVENT" FUNCTIONS /////////////////////////////
@@ -277,6 +365,7 @@
     // URL of the executing JavaScript file is known.
     function scriptNameKnown(n) {
         scriptName = n;
+        //log(scriptName);
         engineRoot = scriptName.substring(0, scriptName.lastIndexOf("/")+1);
         scriptNode = getScript(scriptName);
         getParams(scriptNode);
@@ -285,12 +374,12 @@
         if (isPrototypeLoaded()) {
             prototypeLoaded();
         } else {
-            new Script((params['prototype'].indexOf("lib") === 0 ? engineRoot : "") + params['prototype'], prototypeLoaded);
+            new Script(makeFullyQualified(params['prototype']), prototypeLoaded);
         }
         if (isSwfObjectLoaded()) {
             swfObjectLoaded();
         } else {
-            new Script((params['swfobject'].indexOf("lib") === 0 ? engineRoot : "") + params['swfobject'], swfObjectLoaded);
+            new Script(makeFullyQualified(params['swfobject']), swfObjectLoaded);
         }
         
     }
@@ -299,14 +388,13 @@
     // files have finished their loading process. Once this happens, we can
     // define all the SGF classes, and afterwards invoke the 'load' listeners.
     function allLibrariesLoaded() {
-        log("all libs loaded!");
+        //log("all libs loaded!");
         
         // These comments below are directives for the 'compile' script.
         // The comments themselves will be replaced by the contents of the
         // script file from the name in the comment.
         
         //{networking.js}
-        //{components.js}
 
         window['SGF'] = SGF;
         

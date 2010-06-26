@@ -1,22 +1,26 @@
 /** section: Components API
- * class SGF.Rectangle < SGF.Shape
+ * class Rectangle < Shape
  *
- * A [[SGF.Component]] that renders a single rectangle onto the screen.
+ * A [[Component]] that renders a single rectangle onto the screen
+ * as a solid color.
  **/
-var Rectangle = Class.create(Shape, {
-    initialize: function($super, options) {
-        $super(Object.extend(Object.clone(Rectangle.DEFAULTS), options || {}));
-    },
-    getElement: function() {
-        this.__color = this.color;
-        return new Element("div").setStyle({
-            position: "absolute",
-            backgroundColor: "#" + this.color
-        });
-    }
-});
+function Rectangle(options) {
+    Shape.call(this, options);
+}
 
-Rectangle.DEFAULTS = {
-};
+Rectangle.prototype = new Shape(true);
+
+Rectangle.prototype['getElement'] = function() {
+    this['__color'] = this['color'];
+    var element = new Element("div");
+    setStyleImportant(element, 'position', "absolute");
+    setStyleImportant(element, 'background-color', "#" + this['color']);
+    return element;
+}
+
+
+Rectangle.prototype['toString'] = functionReturnString("[object Rectangle]");
+
+makePrototypeClassCompatible(Rectangle);
 
 modules['rectangle'] = Rectangle;

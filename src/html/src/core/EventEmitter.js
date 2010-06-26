@@ -54,6 +54,9 @@ EventEmitter.prototype['fireEvent'] = function(eventName, args) {
     return this;
 }
 
+//EventEmitter.prototype['toString'] = functionReturnString("[object EventEmitter]");
+
+
 // Deprecated
 var observeMessage = false;
 EventEmitter.prototype['observe'] = function() {

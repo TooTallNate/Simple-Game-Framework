@@ -5,7 +5,7 @@ var REQUIRED_OVERFLOW = "hidden";
  *
  * Contains information about the screen the game is being rendered to.
  **/
-Screen = function(game) {
+var Screen = function(game) {
     var self = this;
     
     EventEmitter.call(self);
@@ -21,18 +21,19 @@ Screen = function(game) {
         } else if (style['webkitUserSelect'] !== undefined) {
             style['webkitUserSelect'] = "none";
         }
-        Element.makePositioned(element);
-        Element.immediateDescendants(element).without($("webSocketContainer")).invoke("remove");
+        Element['makePositioned'](element);
+        Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
 
         // If SGF.Screen#bind has been called prevously, then this call has to
         // essentially move all game elements to the new Screen element
-        if (this['element'] !== null && Object.isElement(this['element'])) {
-            Element.immediateDescendants(this['element']).invoke("remove").each(element['insert'], element);
+        if (self['element'] !== null && Object['isElement'](self['element'])) {
+            Element['immediateDescendants'](self['element'])['invoke']("remove")['each'](element['insert'], element);
         }
         
-        this['element'] = element;
+        self['element'] = element;
+        game['element'] = element;
 
-        this['isFullScreen'] = (element === document.body);
+        self['isFullScreen'] = (element === document.body);
     }
 
     self['useNativeCursor'] = function(cursor) {
@@ -40,7 +41,7 @@ Screen = function(game) {
         if (Boolean(cursor) == false) {
             cursor = "none";
         }
-        if (Object.isString(cursor)) {
+        if (Object['isString'](cursor)) {
             cursor = cursor.toLowerCase();
             if ("default" == cursor) {
                 val = "default";
@@ -55,11 +56,11 @@ Screen = function(game) {
             } else if ("wait" == cursor) {
                 val = "wait";
             } else if ("none" == cursor) {
-                val = "url(" + engineRoot + "blank." + (Prototype.Browser.IE ? "cur" : "gif") + "), none";
+                val = "url(" + engineRoot + "blank." + (isIE ? "cur" : "gif") + "), none";
             }
         }
 
-        this['element'].style.cursor = val;
+        self['element'].style.cursor = val;
     }
 
     // SGF API parts
@@ -101,8 +102,6 @@ Screen = function(game) {
      **/
 }
 
-Screen['subclasses'] = [];
-
 // so that (screenInstance instanceof EventEmitter) === true
 Screen.prototype = new EventEmitter(true);
 
@@ -111,7 +110,7 @@ Screen.prototype['_r'] = function() {
     self['width'] = self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth;
     self['height'] = self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight;
     if (color != self['_c']) {
-        element.style.backgroundColor = "#" + color;
+        element['style']['backgroundColor'] = "#" + color;
         self['_c'] = color;
     }
 }
@@ -120,8 +119,6 @@ Screen.prototype['color'] = "000000";
 
 Screen.prototype['isFullScreen'] = false;
 
-Screen.prototype['toString'] = function() {
-    return "[object Screen]";
-}
+Screen.prototype['toString'] = functionReturnString("[object Screen]");
 
 modules['screen'] = Screen;

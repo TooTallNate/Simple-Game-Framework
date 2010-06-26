@@ -1,10 +1,10 @@
 var Circle = Class.create(Shape, {
-    initialize: function($super, options) {
-        $super(Object.extend(Object.clone(SGF.Circle.DEFAULTS), options || {}));
+    'initialize': function($super, options) {
+        $super(options || {});
         this.radiusChanged();
     },
     
-    getElement: function() {
+    'getElement': function() {
         this.__color = this.color;
         return new Element("div").setStyle({
             position: "absolute",
@@ -12,23 +12,23 @@ var Circle = Class.create(Shape, {
         });
     },
     
-    update: function($super) {
+    'update': function($super) {
         if (this.width != this.height || (this.radius*2) != this.width) {
             this.radiusChanged();
         }
         $super();
     },
 
-    render: (function() {
-        if (Prototype.Browser.WebKit) {
+    'render': (function() {
+        if (Prototype['Browser']['WebKit']) {
             return function($super, interpolation) {
                 $super(interpolation);
                 if (this.radius != this.__radius) {
-                    this.element.style.webkitBorderRadius = (this.radius * SGF.Screen.getScale()) + "px";
+                    this.element['style']['webkitBorderRadius'] = (this.radius * SGF.Screen.getScale()) + "px";
                     this.__radius = this.radius;
                 }
             };
-        } else if (Prototype.Browser.Gecko) {
+        } else if (Prototype['Browser']['Gecko']) {
             return function($super, interpolation) {
                 $super(interpolation);
                 if (this.radius != this.__radius) {
@@ -37,20 +37,20 @@ var Circle = Class.create(Shape, {
                 }
             };
         } else {
-            SGF.log("A form of Border Radius is not supported by this browser.");
+            log("A form of Border Radius is not supported by this browser.");
             return function($super, interpolation) {
                 $super(interpolation);
             };
         }
     })(),
 
-    radiusChanged: function() {
-        this.width = this.height = this.radius*2;
+    'radiusChanged': function() {
+        this['width'] = this['height'] = this['radius']*2;
     }
 });
 
-Circle.DEFAULTS = {
-    radius: 10
-};
+Circle.prototype['radius'] = 10;
+
+Circle.prototype['toString'] = functionReturnString("[object Circle]");
 
 modules['circle'] = Circle;

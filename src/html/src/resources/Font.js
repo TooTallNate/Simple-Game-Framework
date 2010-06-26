@@ -30,10 +30,10 @@ function Font(game, path, onLoad) {
     if (game instanceof Game) {
         // We're trying to load a font living inside the game folder.
         path = game['root'] + path;
-        this.__fontName = "SGF_font"+(Math.random() * 10000).round();
-        this.__styleNode = embedCss(
+        self['__fontName'] = "SGF_font"+(Math.random() * 10000).round();
+        self['__styleNode'] = embedCss(
             '@font-face {'+
-            '  font-family: "' + this.__fontName + '";'+
+            '  font-family: "' + self['__fontName'] + '";'+
             '  src: url("'+path+'");'+
             '}'
         );
@@ -41,7 +41,7 @@ function Font(game, path, onLoad) {
         // Just a font name supplied, ex: "Comic Sans MS"
         // Must be installed on local computer
         path = game;
-        this.__fontName = path;
+        self['__fontName'] = path;
     }
 }
 
@@ -56,7 +56,11 @@ function embedCss(cssString) {
     document.getElementsByTagName('head')[0].appendChild(node);
     return node;
 };
-Font['subclasses'] = [];
+
 Font.prototype = new EventEmitter(true);
+
+Font.prototype['toString'] = functionReturnString("[object Font]");
+
+Font['subclasses'] = [];
 
 modules['font'] = Font;

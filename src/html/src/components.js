@@ -11,4 +11,5 @@
 //{components/Sprite.js}
 //{components/Shape.js}
 //{components/Rectangle.js}
-//{components/Circle.js}
+
+//components/Circle.js remove for now

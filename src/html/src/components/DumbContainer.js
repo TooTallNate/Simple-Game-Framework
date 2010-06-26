@@ -14,37 +14,44 @@
  * So in short, use [[SGF.DumbContainer]] when the components inside will never
  * need to be changed, and save a lot of processing power.
  **/
-var DumbContainer = Class.create(Container, {
-    initialize: function($super, components, options) {
-        $super(components, options);
-        this.__shouldUpdateComponents = this.__needsRender = false;
-    },
+function DumbContainer(components, options) {
+    var self = this;
+    Container.call(self, components, options);
+    self['__shouldUpdateComponents'] = self['__needsRender'] = false;
+}
 
-    addComponent: function($super, component) {
-        $super(component);
-        this.__needsRender = true;
-        return this;
-    },
-    removeComponent: function($super, component) {
-        $super(component);
-        this.__needsRender = true;
-        return this;
-    },
+DumbContainer.prototype = new Container(true);
 
-    render: function($super, interpolation, renderCount) {
-        if (this.width != this.__width || this.height != this.__height)
-            this.__needsRender = true;
-        $super(interpolation, renderCount);
-    },
-    
-    __renderComponents: function($super, interpolation, renderCount) {
-        $super(interpolation, renderCount);
-        this.__needsRender = false;
-    },
+DumbContainer.prototype['addComponent'] = function(component) {
+    Container.prototype['addComponent'].call(this, component);
+    this['__needsRender'] = true;
+    return this;
+}
 
-    renderComponents: function() {
-        this.__needsRender = true;
-    }
-});
+DumbContainer.prototype['removeComponent'] = function(component) {
+    Container.prototype['removeComponent'].call(this, component);
+    this['__needsRender'] = true;
+    return this;
+}
+
+DumbContainer.prototype['render'] = function(renderCount) {
+    if (this['width'] != this['__width'] || this['height'] != this['__height'])
+        this['__needsRender'] = true;
+    Container.prototype['render'].call(this, renderCount);
+}
+
+DumbContainer.prototype['__renderComponents'] = function(renderCount) {
+    Container.prototype['__renderComponents'].call(this, renderCount);
+    this['__needsRender'] = false;
+}
+
+DumbContainer.prototype['renderComponents'] = function() {
+    this['__needsRender'] = true;
+}
+
+
+DumbContainer.prototype['toString'] = functionReturnString("[object DumbContainer]");
+
+makePrototypeClassCompatible(DumbContainer);
 
 modules['dumbcontainer'] = DumbContainer;
