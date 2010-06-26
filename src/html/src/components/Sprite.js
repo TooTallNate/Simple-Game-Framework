@@ -57,7 +57,9 @@ Sprite.prototype['render'] = function(renderCount) {
         if (self['spriteset']['loaded']) {
             self['resetSpriteset']();
         } else if (!self['__resetOnLoad']) {
-            self['spriteset']['addListener']("load", self['resetSpriteset'].bind(self));
+            self['spriteset']['addListener']("load", function() {
+                self['resetSpriteset']();
+            });
             self['__resetOnLoad'] = true;
         }
     }

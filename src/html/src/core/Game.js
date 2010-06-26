@@ -21,20 +21,6 @@ var now = (function() {
  * [[SGF.Game#removeComponent]], and [[SGF.Game#loadScript]]. But there are some
  * more advances features for the adventurous.
  **/
- 
-/**
- * SGF.Game#updateCount -> Number
- *
- * The total number of times that [[SGF.Game#update]] has been called
- * throughout the lifetime of the game.
- **/
- 
-/**
- * SGF.Game#renderCount -> Number
- *
- * The total number of times that [[SGF.Game#render]] has been called
- * throughout the lifetime of the game.
- **/
 function Game(rootUrl, screen, options) {
 
     var self = this;
@@ -174,17 +160,44 @@ function Game(rootUrl, screen, options) {
 Game.prototype = new Container(true);
 
 /**
- * The current target updates per seconds to achieve. This is meant
- * to be read-only. If you must dynamically change the game speed,
- * use [[Game#setGameSpeed]] instead.
+ * Game#gameSpeed -> Number
+ *  
+ * The current target updates per seconds the game is attepting to achieve.
+ * This is meant to be read-only. If you must dynamically change the game
+ * speed, use [[Game#setGameSpeed]] instead.
+ *  
+ * The default game speed attempted is 30 (thirty) updates per second.
  */
 Game.prototype['gameSpeed'] = 30;
 
 /**
+ * Game#maxFrameSkips -> Number
+ *  
  * The maximum allowed number of updates to call in between render calls
  * if the game's demand is more than current harware is capable of.
+ * 
+ * The default value is 5 (five).
  */
 Game.prototype['maxFrameSkips'] = 5;
+
+/**
+ * Game#renderCount -> Number
+ *
+ * The total number of times that [[Game#render]] has been called
+ * throughout the lifetime of the game.
+ **/
+Game.prototype['renderCount'] = 0;
+ 
+ /**
+  * Game#updateCount -> Number
+  *
+  * The total number of times that [[Game#update]] has been called
+  * throughout the lifetime of the game.
+  **/
+Game.prototype['updateCount'] = 0;
+
+
+
 
 /**
  * Game#setGameSpeed(updatesPerSecond) -> Game
@@ -255,13 +268,12 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
  * this method, however.
  **/
 Game.prototype['render'] = function() {
-    for (var i=0, cur=null; i<this['components'].length; i++) {
-        cur = this['components'][i];
-        if (cur['render']) {
-            cur['render'](this['renderCount']);
+    for (var i=0, component=null, renderCount = this['renderCount']++; i<this['components'].length; i++) {
+        component = this['components'][i];
+        if (component['render']) {
+            component['render'](renderCount);
         }
     }
-    this['renderCount']++;
 }
 
 
@@ -310,7 +322,6 @@ Game.prototype['stop'] = function() {
 }
 
 Game.prototype['stopped'] = function() {
-    //if (SGF.Input.grabbed) SGF.Input.release();
     this['screen']['useNativeCursor'](true);
     currentGame = null;
     this['fireEvent']("stopped");
@@ -324,13 +335,12 @@ Game.prototype['stopped'] = function() {
  * never have to call this method, however.
  **/
 Game.prototype['update'] = function() {
-    for (var i=0, cur=null; i<this['components'].length; i++) {
-        cur = this['components'][i];
-        if (cur['update']) {
-            cur['update'](this['updateCount']);
+    for (var i=0, component=null, updateCount=this['updateCount']++; i < this['components'].length; i++) {
+        component = this['components'][i];
+        if (component['update']) {
+            component['update'](updateCount);
         }
     }
-    this['updateCount']++;
 }
 
 /* HTML/DOM Client specific function

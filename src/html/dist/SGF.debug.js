@@ -378,9 +378,9 @@ makePrototypeClassCompatible(Component);
 modules['component'] = Component;
 
 /** section: Components API
- * class SGF.Container < SGF.Component
+ * class Container < Component
  *
- * A `SGF.Container` is a concrete [[SGF.Component]] subclass, that acts
+ * A `Container` is a concrete [[Component]] subclass, that acts
  * similar to the main [[SGF.Screen]] itself. That is, you can add
  * `SGF.Component`s into a container just like you would in your game.
  * Components placed inside containers are rendered with their attributes
@@ -428,27 +428,28 @@ Container.prototype['update'] = function(updateCount) {
     //Component.prototype.update.call(self, updateCount);
     
     if (self['__shouldUpdateComponents']) {
-        for (var i=0; i<self['components'].length; i++) {
-            if (self['components'][i]['update'])
-                self['components'][i]['update'](updateCount);
+        for (var i=0, component=null; i < self['components'].length; i++) {
+            component = self['components'][i];
+            if (component['update']) {
+                component['update'](updateCount);
+            }
         }
     }
 }
 
 Container.prototype['render'] = function(renderCount) {
-    var self = this;
-    
-    Component.prototype['render'].call(self, renderCount);
-    
-    if (self['__needsRender']) {
-        self['__renderComponents'](renderCount);
+    Component.prototype['render'].call(this, renderCount);    
+    if (this['__needsRender']) {
+        this['__renderComponents'](renderCount);
     }
 }
 
 Container.prototype['__renderComponents'] = function(renderCount) {
-    for (var i=0; i < this['components'].length; i++) {
-        if (this['components'][i]['render'])
-            this['components'][i]['render'](renderCount);
+    for (var i=0, component = null; i < this['components'].length; i++) {
+        component = this['components'][i];
+        if (component['render']) {
+            component['render'](renderCount);
+        }
     }
 }
 
@@ -462,8 +463,9 @@ Container.prototype['__renderComponents'] = function(renderCount) {
  **/
 Container.prototype['addComponent'] = function(component) {
     if (component.parent !== this) {
-        if (component.parent)
+        if (component.parent) {
             component.parent['removeComponent'](component);
+        }
         this['components'].push(component);
         this['element'].appendChild(component['element']);
         component.parent = this;
@@ -473,12 +475,12 @@ Container.prototype['addComponent'] = function(component) {
 }
 
 /**
- * SGF.Container#removeComponent(component) -> SGF.Container
- * - component (SGF.Component): The `SGF.Component` instance to add to this
- *                              container.
+ * Container#removeComponent(component) -> Container
+ * - component (Component): The `Component` instance to remove frmo this
+ *                          container.
  *
- * Removes an [[SGF.Component]] from the container that has previously been
- * added to this container via [[SGF.Container#addComponent]].
+ * Removes a [[Component]] from the container that has previously been
+ * added to this container via [[Container#addComponent]].
  **/
 Container.prototype['removeComponent'] = function(component) {
     var index = this['components'].indexOf(component);
@@ -506,6 +508,7 @@ Container.prototype['toString'] = functionReturnString("[object Container]");
 makePrototypeClassCompatible(Container);
 
 modules['container'] = Container;
+
 /** section: Components API
  * class SGF.DumbContainer < SGF.Container
  *
@@ -739,7 +742,9 @@ Sprite.prototype['render'] = function(renderCount) {
         if (self['spriteset']['loaded']) {
             self['resetSpriteset']();
         } else if (!self['__resetOnLoad']) {
-            self['spriteset']['addListener']("load", self['resetSpriteset'].bind(self));
+            self['spriteset']['addListener']("load", function() {
+                self['resetSpriteset']();
+            });
             self['__resetOnLoad'] = true;
         }
     }
@@ -1471,20 +1476,6 @@ var now = (function() {
  * [[SGF.Game#removeComponent]], and [[SGF.Game#loadScript]]. But there are some
  * more advances features for the adventurous.
  **/
- 
-/**
- * SGF.Game#updateCount -> Number
- *
- * The total number of times that [[SGF.Game#update]] has been called
- * throughout the lifetime of the game.
- **/
- 
-/**
- * SGF.Game#renderCount -> Number
- *
- * The total number of times that [[SGF.Game#render]] has been called
- * throughout the lifetime of the game.
- **/
 function Game(rootUrl, screen, options) {
 
     var self = this;
@@ -1624,17 +1615,44 @@ function Game(rootUrl, screen, options) {
 Game.prototype = new Container(true);
 
 /**
- * The current target updates per seconds to achieve. This is meant
- * to be read-only. If you must dynamically change the game speed,
- * use [[Game#setGameSpeed]] instead.
+ * Game#gameSpeed -> Number
+ *  
+ * The current target updates per seconds the game is attepting to achieve.
+ * This is meant to be read-only. If you must dynamically change the game
+ * speed, use [[Game#setGameSpeed]] instead.
+ *  
+ * The default game speed attempted is 30 (thirty) updates per second.
  */
 Game.prototype['gameSpeed'] = 30;
 
 /**
+ * Game#maxFrameSkips -> Number
+ *  
  * The maximum allowed number of updates to call in between render calls
  * if the game's demand is more than current harware is capable of.
+ * 
+ * The default value is 5 (five).
  */
 Game.prototype['maxFrameSkips'] = 5;
+
+/**
+ * Game#renderCount -> Number
+ *
+ * The total number of times that [[Game#render]] has been called
+ * throughout the lifetime of the game.
+ **/
+Game.prototype['renderCount'] = 0;
+ 
+ /**
+  * Game#updateCount -> Number
+  *
+  * The total number of times that [[Game#update]] has been called
+  * throughout the lifetime of the game.
+  **/
+Game.prototype['updateCount'] = 0;
+
+
+
 
 /**
  * Game#setGameSpeed(updatesPerSecond) -> Game
@@ -1705,13 +1723,12 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
  * this method, however.
  **/
 Game.prototype['render'] = function() {
-    for (var i=0, cur=null; i<this['components'].length; i++) {
-        cur = this['components'][i];
-        if (cur['render']) {
-            cur['render'](this['renderCount']);
+    for (var i=0, component=null, renderCount = this['renderCount']++; i<this['components'].length; i++) {
+        component = this['components'][i];
+        if (component['render']) {
+            component['render'](renderCount);
         }
     }
-    this['renderCount']++;
 }
 
 
@@ -1760,7 +1777,6 @@ Game.prototype['stop'] = function() {
 }
 
 Game.prototype['stopped'] = function() {
-    //if (SGF.Input.grabbed) SGF.Input.release();
     this['screen']['useNativeCursor'](true);
     currentGame = null;
     this['fireEvent']("stopped");
@@ -1774,13 +1790,12 @@ Game.prototype['stopped'] = function() {
  * never have to call this method, however.
  **/
 Game.prototype['update'] = function() {
-    for (var i=0, cur=null; i<this['components'].length; i++) {
-        cur = this['components'][i];
-        if (cur['update']) {
-            cur['update'](this['updateCount']);
+    for (var i=0, component=null, updateCount=this['updateCount']++; i < this['components'].length; i++) {
+        component = this['components'][i];
+        if (component['update']) {
+            component['update'](updateCount);
         }
     }
-    this['updateCount']++;
 }
 
 /* HTML/DOM Client specific function
@@ -1895,14 +1910,16 @@ function Script(game, scriptUrl, onLoad) {
     
     EventEmitter.call(self);
     
+    if (onLoad) {
+        self['addListener']("load", onLoad);
+    }
+    
     script['type'] = "text/javascript";
     script['setAttribute']("async", "true");
 
     script['onload'] = script['onreadystatechange'] = function() {
         if (!script['readyState'] || script['readyState'] == "loaded" || script['readyState'] == "complete") {
-            if (typeof onLoad == "function") {
-                onLoad.apply(self, arguments);
-            }
+            self['fireEvent']("load");
         }
     }
 
@@ -2061,6 +2078,318 @@ Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
 modules['spriteset'] = Spriteset;
 
 
+    /**
+ * == Networking API ==
+ * SGF offers a low-level socket connection through the WebSocket protocol.
+ * This allows for real time networking inside your game.
+ * All game clients **MUST** implement [[Client]], but only capable game
+ * clients should implement [[Server]].
+ **/
+
+/** section: Networking API
+ * class Client
+ *
+ * Connects to remote instances of [[Server]], or any other compliant
+ * WebSocket server.
+ *
+ * An [[Client]] instance by itself does nothing except connect to the
+ * specified server. You must implement an `onOpen`, `onClose`, and `onMessage`
+ * function in either a subclass:
+ *
+ *     Class.create(Client, {
+ *         onOpen: function() {
+ *             // Connection to WebSocket has been established.
+ *         },
+ *         onClose: function() {
+ *             // WebSocket connection has been closed.
+ *         },
+ *         onMessage: function(message) {
+ *             // A message has been recieved from the server.
+ *             SGF.log(message);
+ *         }
+ *     });
+ *
+ * or by directly setting the functions on a standard [[Client]] instance:
+ *
+ *     var conn = new Client("ws://somegameserver");
+ *     conn.onOpen = function() {
+ *         // Connection to WebSocket has been established.
+ *     };
+ *     conn.onClose = function() {
+ *         // WebSocket connection has been closed.
+ *     };
+ *     conn.onMessage = function(message) {
+ *         // A message has been recieved from the server.
+ *         SGF.log(message);
+ *     };
+ **/
+
+
+/**
+ * new Client(url[, options])
+ * - url (String): The WebSocket URL to the server to connect to. This should
+ *                 use the `ws` protocol, port 80 by default. Ex: `ws://mygame.com:8080`
+ * - options (Object): The optional `options` object's properties are copied
+ *                     to the [[SGF.Client]] instance. Allows all the same
+ *                     values as found in [[SGF.Client.DEFAULTS]].
+ *
+ * Instantiates a new [[SGF.Client]], using the options found in the
+ * `options` parameter to configure. Clients do not make a socket connection
+ * during construction (unlike the WebSocket API in HTML 5). To connect to
+ * the server, the [[SGF.Client#connect]] method must be called first.
+ **/
+function Client(url, options) {
+    var self = this;
+    
+    EventEmitter.call(self);
+
+    extend(self, options || {});
+
+    self['URL'] = url;
+    
+    self['_O'] = functionBind(onClientOpen, self);
+    self['_C'] = functionBind(onClientClose, self);
+    self['_M'] = functionBind(onClientMessage, self);
+
+    if (self['autoconnect']) self['connect']();
+}
+
+Client.prototype = new EventEmitter(true);
+
+/**
+ * SGF.Client#onOpen() -> undefined
+ *
+ * Event handler that is called after an invokation to [[SGF.Client#connect]]
+ * has been successful, and a proper WebSocket connection has been established.
+ * You must implement this function in a subclass to be useful.
+ **/
+//onOpen: Prototype['emptyFunction'],
+
+/**
+ * SGF.Client#onClose() -> undefined
+ *
+ * Event handler that is called after an invokation to [[SGF.Client#close]]
+ * has been called, resulting in a socket being closed. That is, if you call
+ * [[SGF.Client#close]] on an instance that is already closed, then this
+ * event will not be called.
+ * Perhaps more importantly, this event will be called if the server closes
+ * the connection (either directly through code or otherwise).
+ * You must implement this function in a subclass to be useful.
+ **/
+//onClose: Prototype['emptyFunction'],
+
+/**
+ * SGF.Client#onMessage(message) -> undefined
+ * - message (String): The String value of the message sent from the server.
+ *
+ * Event handler that is called after the server sends a message to this
+ * instance through the network. You must implement this function in a
+ * subclass to be useful with the `message` value in your game.
+ **/
+//onMessage: Prototype['emptyFunction'],
+
+/**
+ * SGF.Client#connect() -> undefined
+ *
+ * Makes this [[SGF.Client]] instance attempt to connect to the currently
+ * set WebSocket server. This function will connect the underlying socket
+ * connection on a network level, and call the [[SGF.Client#onOpen]] event
+ * when the connection is properly established, and the WebSocket handshake
+ * is successful.
+ **/
+Client.prototype['connect'] = function() {
+    var webSocket = new WebSocket(this['URL']);
+    webSocket['onopen'] = this['_O'];
+    webSocket['onclose'] = this['_C'];
+    webSocket['onmessage'] = this['_M'];
+    this['_w'] = webSocket;
+}
+
+/**
+ * SGF.Client#close() -> undefined
+ *
+ * Closes the underlying socket connection from the server, if there is a
+ * connection, and calls the [[SGF.Client#onClose]] event when complete.
+ * If the connection is already closed, then this function does nothing, and
+ * the `onClose` event is not fired.
+ **/
+Client.prototype['close'] = function() {
+    if (this['_w']) {
+        this['_w']['close']();
+    }
+}
+
+/**
+ * SGF.Client#send(message) -> undefined
+ * - message (String): The String that you will be sending to the server.
+ *
+ * Sends `message` to the currently connected server if it is connected.
+ * If this [[SGF.Client]] instance is not connected when this is called,
+ * then an exception is thrown. As such, it's a good idea to place calls
+ * to [[SGF.Client#send]] inside of a try catch block:
+ *
+ *     try {
+ *         client.send("hello server!");
+ *     } catch(ex) {
+ *         SGF.log(ex);
+ *     }
+ *
+ * A use case when an exception is thrown would be to add `message` to some
+ * sort of queue that gets sent during the [[SGF.Client#onOpen]] event.
+ **/
+Client.prototype['send'] = function(message) {
+    this['_w']['send'](message);
+}
+
+function onClientOpen() {
+    this['fireEvent']("open");
+}
+
+function onClientClose() {
+    this['fireEvent']("close");
+    this['_w'] = null;
+}
+
+function onClientMessage(event) {
+    this['fireEvent']("message", event['data']);
+}
+
+
+Client.prototype['autoconnect'] = false;
+Client.prototype['toString'] = functionReturnString("[object Client]");
+
+extend(Client, {
+    'CONNECTING': 0,
+    'OPEN':       1,
+    'CLOSED':     2
+});
+
+modules['client'] = Client;
+/** section: Networking API
+ * class Server
+ *
+ * Acts as a server to maintain connections between multiple instances of your
+ * game (and possibly even different game engines!).
+ *
+ * Underneath the hood, the [[Server]] class is intended to implement a WebSocket
+ * server that rejects anything but valid WebSocket connection requests.
+ *
+ * Using this class is useful for game client to game client (peer-to-peer)
+ * communication. It is entirely possible, however, to write a more dedicated
+ * server for your game by
+ * <a href="http://github.com/TooTallNate/Java-WebSocket#readme">Writing
+ * Your Own WebSocket Server</a>. You would be more likely able to hard-code
+ * the server address at that point in your game, making it more seamless for
+ * your users.
+ **/
+
+/**
+ * new Server([options])
+ * - options (Object): The optional `options` object's properties are copied
+ *                     to the [[SGF.Server]] instance. Allows all the same
+ *                     values as found in [[SGF.Server.DEFAULTS]].
+ *
+ * Instantiates a new [[Server]], using the options found in the
+ * `options` parameter to configure.
+ **/
+function Server() {
+    throw new Error("The HTML game engine is not capable of starting a `Server`.");
+}
+
+/**
+ * SGF.Server#start() -> undefined
+ *
+ * Starts the underlying WebSocket server listening on the currently
+ * configured port number.
+ **/
+// start:null,
+
+/**
+ * SGF.Server#stop() -> undefined
+ *
+ * Stops the server from listening on the specified port. If the server is
+ * currently running, then [[SGF.Server#onClientClose]] will be called for
+ * all current connections.
+ **/
+// stop:null,
+
+/**
+ * SGF.Server#connections() -> Array
+ *
+ * Gets an [[SGF.Client]] array of the currerntly connected clients. These
+ * instances can be used to individually send messages or close a client.
+ **/
+ 
+/**
+ * SGF.Server#sendToAll(message) -> undefined
+ * - message (String): The message to send to all current connections.
+ *
+ * Sends `message` to all currently connected game clients.
+ **/
+// sendToAll:null,
+
+/**
+ * SGF.Server#onClientOpen(client) -> undefined
+ * - client (SGF.Client): The connection instance, in case you would like to
+ *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
+ *                        connection specifically.
+ *
+ * Event handler that is called every time a WebSocket client makes a
+ * connection to this server. This function should be overridden in a
+ * subclass to actually be any useful.
+ **/
+// onClientOpen:null,
+
+/**
+ * SGF.Server#onClientClose(client) -> undefined
+ * - client (SGF.Client): The connection instance. Note that the connection
+ *                        to the client has been closed at this point, and
+ *                        calling [[SGF.Client#send]] or [[SGF.Client#close]]
+ *                        will throw an exception.
+ *
+ * Event handler that is called every time a WebSocket client disconnects
+ * from this server. This function should be overridden in a  subclass to
+ * actually be any useful. Be careful not to call [[SGF.Client#send]] or
+ * [[SGF.Client#close]] on the `client` instance, since it's socket
+ * connection has been closed.
+ **/
+// onClientClose:null,
+
+/**
+ * SGF.Server#onClientMessage(client, message) -> undefined
+ * - client (SGF.Client): The connection instance, in case you would like to
+ *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
+ *                        connection specifically.
+ * - message (String): The String value of the message sent from `client`.
+ *
+ * Event handler that is called every time a WebSocket client sends a
+ * message to this server. This function should be overridden in a subclass
+ * to actually be any useful.
+ **/
+// onClientMessage:null
+
+
+/**
+ * Server.canServe -> Boolean
+ *
+ * Use this property as a feature-check to determine whether or not the
+ * current game engine has the capability to host a [[Server]]. This value,
+ * for instance, is set to `false` on the HTML engine, as a web browser is not
+ * capable of starting it's own WebSocket server. On the Java game engine,
+ * this value is `true`, as Java has a WebSocket server written for it that
+ * can be used by your game.
+ *
+ *     var Server = SGF.require("Server");
+ *     if (Server.canServe) {
+ *         var server = new Server();
+ *         server.start();
+ *     }
+ **/
+Server['canServe'] = false;
+
+modules['server'] = Server;
+
+
     
     
     
@@ -2071,7 +2400,7 @@ modules['spriteset'] = Spriteset;
     SGF['toString'] = function() {
         return "[object SGF]";
     }
-    
+    window['SGF'] = SGF;
     
     
     
@@ -2272,6 +2601,13 @@ modules['spriteset'] = Spriteset;
         classRef.prototype['initialize'] = classRef;
         classRef['subclasses'] = [];
     }
+    
+    
+    function functionBind(funcRef, context) {
+        return function() {
+            return funcRef.apply(context, arguments);
+        }
+    }
 
     // Returns a new Function that returns the value passed into the function
     // Used for the 'toString' implementations.
@@ -2320,317 +2656,7 @@ modules['spriteset'] = Spriteset;
     // define all the SGF classes, and afterwards invoke the 'load' listeners.
     function allLibrariesLoaded() {
         //log("all libs loaded!");
-        
-        // These comments below are directives for the 'compile' script.
-        // The comments themselves will be replaced by the contents of the
-        // script file from the name in the comment.
-        
-        /**
- * == Networking API ==
- * SGF offers a low-level socket connection through the WebSocket protocol.
- * This allows for real time networking inside your game.
- * All game clients **MUST** implement [[Client]], but only capable game
- * clients should implement [[Server]].
- **/
-
-/** section: Networking API
- * class Client
- *
- * Connects to remote instances of [[Server]], or any other compliant
- * WebSocket server.
- *
- * An [[Client]] instance by itself does nothing except connect to the
- * specified server. You must implement an `onOpen`, `onClose`, and `onMessage`
- * function in either a subclass:
- *
- *     Class.create(Client, {
- *         onOpen: function() {
- *             // Connection to WebSocket has been established.
- *         },
- *         onClose: function() {
- *             // WebSocket connection has been closed.
- *         },
- *         onMessage: function(message) {
- *             // A message has been recieved from the server.
- *             SGF.log(message);
- *         }
- *     });
- *
- * or by directly setting the functions on a standard [[SGF.Client]] instance:
- *
- *     var conn = new Client("ws://somegameserver");
- *     conn.onOpen = function() {
- *         // Connection to WebSocket has been established.
- *     };
- *     conn.onClose = function() {
- *         // WebSocket connection has been closed.
- *     };
- *     conn.onMessage = function(message) {
- *         // A message has been recieved from the server.
- *         SGF.log(message);
- *     };
- **/
-var Client = Class.create({
-    /**
-     * new SGF.Client(url[, options])
-     * - url (String): The WebSocket URL to the server to connect to. This should
-     *                 use the `ws` protocol, port 80 by default. Ex: `ws://mygame.com:8080`
-     * - options (Object): The optional `options` object's properties are copied
-     *                     to the [[SGF.Client]] instance. Allows all the same
-     *                     values as found in [[SGF.Client.DEFAULTS]].
-     *
-     * Instantiates a new [[SGF.Client]], using the options found in the
-     * `options` parameter to configure. Clients do not make a socket connection
-     * during construction (unlike the WebSocket API in HTML 5). To connect to
-     * the server, the [[SGF.Client#connect]] method must be called first.
-     **/
-    initialize: function(url, options) {
-        Object.extend(this, options || {});
-        this.URL = url;
-        this.__bindedOnOpen = this.__onOpen.bind(this);
-        this.__bindedOnClose = this.__onClose.bind(this);
-        this.__bindedOnMessage = this.__onMessage.bind(this);
-
-        if (this['autoconnect']) this['connect']();
-    },
-    /**
-     * SGF.Client#onOpen() -> undefined
-     *
-     * Event handler that is called after an invokation to [[SGF.Client#connect]]
-     * has been successful, and a proper WebSocket connection has been established.
-     * You must implement this function in a subclass to be useful.
-     **/
-    onOpen: Prototype['emptyFunction'],
-    /**
-     * SGF.Client#onClose() -> undefined
-     *
-     * Event handler that is called after an invokation to [[SGF.Client#close]]
-     * has been called, resulting in a socket being closed. That is, if you call
-     * [[SGF.Client#close]] on an instance that is already closed, then this
-     * event will not be called.
-     * Perhaps more importantly, this event will be called if the server closes
-     * the connection (either directly through code or otherwise).
-     * You must implement this function in a subclass to be useful.
-     **/
-    onClose: Prototype['emptyFunction'],
-    /**
-     * SGF.Client#onMessage(message) -> undefined
-     * - message (String): The String value of the message sent from the server.
-     *
-     * Event handler that is called after the server sends a message to this
-     * instance through the network. You must implement this function in a
-     * subclass to be useful with the `message` value in your game.
-     **/
-    onMessage: Prototype['emptyFunction'],
-    /**
-     * SGF.Client#connect() -> undefined
-     *
-     * Makes this [[SGF.Client]] instance attempt to connect to the currently
-     * set WebSocket server. This function will connect the underlying socket
-     * connection on a network level, and call the [[SGF.Client#onOpen]] event
-     * when the connection is properly established, and the WebSocket handshake
-     * is successful.
-     **/
-    connect: function() {
-        this.__ws = new WebSocket(this.URL);
-        this.__ws.onopen = this.__bindedOnOpen;
-        this.__ws.onclose = this.__bindedOnClose;
-        this.__ws.onmessage = this.__bindedOnMessage;
-    },
-    /**
-     * SGF.Client#close() -> undefined
-     *
-     * Closes the underlying socket connection from the server, if there is a
-     * connection, and calls the [[SGF.Client#onClose]] event when complete.
-     * If the connection is already closed, then this function does nothing, and
-     * the `onClose` event is not fired.
-     **/
-    close: function() {
-        if (this.__ws) {
-            this.__ws.close();
-        }
-    },
-    /**
-     * SGF.Client#send(message) -> undefined
-     * - message (String): The String that you will be sending to the server.
-     *
-     * Sends `message` to the currently connected server if it is connected.
-     * If this [[SGF.Client]] instance is not connected when this is called,
-     * then an exception is thrown. As such, it's a good idea to place calls
-     * to [[SGF.Client#send]] inside of a try catch block:
-     *
-     *     try {
-     *         client.send("hello server!");
-     *     } catch(ex) {
-     *         SGF.log(ex);
-     *     }
-     *
-     * A use case when an exception is thrown would be to add `message` to some
-     * sort of queue that gets sent during the [[SGF.Client#onOpen]] event.
-     **/
-    send: function(message) {
-        this.__ws.send(message);
-    },
-    __onOpen: function() {
-        this.onOpen();
-    },
-    __onClose: function() {
-        this.onClose();
-        this.__ws = null;
-    },
-    __onMessage: function(event) {
-        this.onMessage(event.data);
-    }
-});
-
-Client.prototype['autoconnect'] = false;
-Client.prototype['toString'] = functionReturnString("[object Client]");
-
-Object.extend(Client, {
-    CONNECTING: 0,
-    OPEN:       1,
-    CLOSED:     2
-});
-
-modules['client'] = Client;
-/** section: Networking API
- * class SGF.Server
- *
- * Acts as a server to maintain connections between multiple instances of your
- * game (and possibly even different game clients!).
- *
- * Underneath the hood, [[SGF.Server]] is intended to implement a WebSocket
- * server that rejects anything but valid WebSocket connection requests.
- *
- * Using this class is useful for game client to game client (peer-to-peer)
- * communication. It is entirely possible, however, to write a more dedicated
- * server for your game by
- * <a href="http://github.com/TooTallNate/Java-WebSocket#readme">Writing
- * Your Own WebSocket Server</a>. You would be more likely able to hard-code
- * the server address at that point in your game, making it more seamless for
- * your users.
- **/
-var Server = Class.create({
-    /**
-     * new SGF.Server([options])
-     * - options (Object): The optional `options` object's properties are copied
-     *                     to the [[SGF.Server]] instance. Allows all the same
-     *                     values as found in [[SGF.Server.DEFAULTS]].
-     *
-     * Instantiates a new [[SGF.Server]], using the options found in the
-     * `options` parameter to configure.
-     **/
-    initialize: function() {
-        throw "The HTML/DOM client is not capable of starting a Server.";
-    },
-    /**
-     * SGF.Server#start() -> undefined
-     *
-     * Starts the underlying WebSocket server listening on the currently
-     * configured port number.
-     **/
-     start:null,
-    /**
-     * SGF.Server#stop() -> undefined
-     *
-     * Stops the server from listening on the specified port. If the server is
-     * currently running, then [[SGF.Server#onClientClose]] will be called for
-     * all current connections.
-     **/
-     stop:null,
-    /**
-     * SGF.Server#connections() -> Array
-     *
-     * Gets an [[SGF.Client]] array of the currerntly connected clients. These
-     * instances can be used to individually send messages or close a client.
-     **/
-     
-    /**
-     * SGF.Server#sendToAll(message) -> undefined
-     * - message (String): The message to send to all current connections.
-     *
-     * Sends `message` to all currently connected game clients.
-     **/
-     sendToAll:null,
-    /**
-     * SGF.Server#onClientOpen(client) -> undefined
-     * - client (SGF.Client): The connection instance, in case you would like to
-     *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
-     *                        connection specifically.
-     *
-     * Event handler that is called every time a WebSocket client makes a
-     * connection to this server. This function should be overridden in a
-     * subclass to actually be any useful.
-     **/
-     onClientOpen:null,
-    /**
-     * SGF.Server#onClientClose(client) -> undefined
-     * - client (SGF.Client): The connection instance. Note that the connection
-     *                        to the client has been closed at this point, and
-     *                        calling [[SGF.Client#send]] or [[SGF.Client#close]]
-     *                        will throw an exception.
-     *
-     * Event handler that is called every time a WebSocket client disconnects
-     * from this server. This function should be overridden in a  subclass to
-     * actually be any useful. Be careful not to call [[SGF.Client#send]] or
-     * [[SGF.Client#close]] on the `client` instance, since it's socket
-     * connection has been closed.
-     **/
-     onClientClose:null,
-    /**
-     * SGF.Server#onClientMessage(client, message) -> undefined
-     * - client (SGF.Client): The connection instance, in case you would like to
-     *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
-     *                        connection specifically.
-     * - message (String): The String value of the message sent from `client`.
-     *
-     * Event handler that is called every time a WebSocket client sends a
-     * message to this server. This function should be overridden in a subclass
-     * to actually be any useful.
-     **/
-     onClientMessage:null
-});
-
-/**
- * SGF.Server.canServe -> Boolean
- *
- * Use this property to determine whether or not the current game client engine
- * has implemented [[SGF.Server]]. This value, for instance, is `false` on web
- * browser based game engines, as a web browser is not capable of starting it's
- * own WebSocket server. On the Java game engine, this value is `true`, as Java
- * has a WebSocket server written for it that can be used by your game.
- *
- *     if (SGF.Server.canServe) {
- *         var server = new SGF.Server();
- *         server.start();
- *     }
- **/
-Server.canServe = false;
-
-/**
- * SGF.Server.DEFAULTS -> Object
- *
- * The default values used when creating [[SGF.Server]]s. These values are
- * copied onto the [[SGF.Server]], if they are not found in the `options`
- * argument in the constructor.
- *
- * The [[SGF.Server.DEFAULTS]] object contains the default values:
- *
- *  - `port`: Default `8080`. The socket port number that this WebSocket server
- *  will bind to. Note that ports less than `1024` require administrator
- *  permissions to bind to by most operating systems, so if you would like to
- *  bind to one of those ports, you must always launch the implementing game
- *  client with administrator permissions.
- *  - `autostart`: Default `false`. Boolean determining whether to call
- *  [[SGF.Server#start]] at the end of construction.
- **/
-
-modules['server'] = Server;
-
-
-
-        window['SGF'] = SGF;
-        
+                
         Input['grab']();
         
         sgfLoaded();
@@ -2643,7 +2669,7 @@ modules['server'] = Server;
     function sgfLoaded() {
 
         var loadEndTime = new Date();
-        log("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
+        //log("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
 
         if (params['game']) {
             if (params['screen']) {

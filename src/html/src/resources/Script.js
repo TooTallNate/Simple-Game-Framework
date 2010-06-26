@@ -15,14 +15,16 @@ function Script(game, scriptUrl, onLoad) {
     
     EventEmitter.call(self);
     
+    if (onLoad) {
+        self['addListener']("load", onLoad);
+    }
+    
     script['type'] = "text/javascript";
     script['setAttribute']("async", "true");
 
     script['onload'] = script['onreadystatechange'] = function() {
         if (!script['readyState'] || script['readyState'] == "loaded" || script['readyState'] == "complete") {
-            if (typeof onLoad == "function") {
-                onLoad.apply(self, arguments);
-            }
+            self['fireEvent']("load");
         }
     }
 

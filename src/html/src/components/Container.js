@@ -1,7 +1,7 @@
 /** section: Components API
- * class SGF.Container < SGF.Component
+ * class Container < Component
  *
- * A `SGF.Container` is a concrete [[SGF.Component]] subclass, that acts
+ * A `Container` is a concrete [[Component]] subclass, that acts
  * similar to the main [[SGF.Screen]] itself. That is, you can add
  * `SGF.Component`s into a container just like you would in your game.
  * Components placed inside containers are rendered with their attributes
@@ -49,27 +49,28 @@ Container.prototype['update'] = function(updateCount) {
     //Component.prototype.update.call(self, updateCount);
     
     if (self['__shouldUpdateComponents']) {
-        for (var i=0; i<self['components'].length; i++) {
-            if (self['components'][i]['update'])
-                self['components'][i]['update'](updateCount);
+        for (var i=0, component=null; i < self['components'].length; i++) {
+            component = self['components'][i];
+            if (component['update']) {
+                component['update'](updateCount);
+            }
         }
     }
 }
 
 Container.prototype['render'] = function(renderCount) {
-    var self = this;
-    
-    Component.prototype['render'].call(self, renderCount);
-    
-    if (self['__needsRender']) {
-        self['__renderComponents'](renderCount);
+    Component.prototype['render'].call(this, renderCount);    
+    if (this['__needsRender']) {
+        this['__renderComponents'](renderCount);
     }
 }
 
 Container.prototype['__renderComponents'] = function(renderCount) {
-    for (var i=0; i < this['components'].length; i++) {
-        if (this['components'][i]['render'])
-            this['components'][i]['render'](renderCount);
+    for (var i=0, component = null; i < this['components'].length; i++) {
+        component = this['components'][i];
+        if (component['render']) {
+            component['render'](renderCount);
+        }
     }
 }
 
@@ -83,8 +84,9 @@ Container.prototype['__renderComponents'] = function(renderCount) {
  **/
 Container.prototype['addComponent'] = function(component) {
     if (component.parent !== this) {
-        if (component.parent)
+        if (component.parent) {
             component.parent['removeComponent'](component);
+        }
         this['components'].push(component);
         this['element'].appendChild(component['element']);
         component.parent = this;
@@ -94,12 +96,12 @@ Container.prototype['addComponent'] = function(component) {
 }
 
 /**
- * SGF.Container#removeComponent(component) -> SGF.Container
- * - component (SGF.Component): The `SGF.Component` instance to add to this
- *                              container.
+ * Container#removeComponent(component) -> Container
+ * - component (Component): The `Component` instance to remove frmo this
+ *                          container.
  *
- * Removes an [[SGF.Component]] from the container that has previously been
- * added to this container via [[SGF.Container#addComponent]].
+ * Removes a [[Component]] from the container that has previously been
+ * added to this container via [[Container#addComponent]].
  **/
 Container.prototype['removeComponent'] = function(component) {
     var index = this['components'].indexOf(component);

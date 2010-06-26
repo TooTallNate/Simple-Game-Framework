@@ -130,6 +130,7 @@
     //{components.js}
     //{core.js}
     //{resources.js}
+    //{networking.js}
     
     
     
@@ -140,7 +141,7 @@
     SGF['toString'] = function() {
         return "[object SGF]";
     }
-    
+    window['SGF'] = SGF;
     
     
     
@@ -341,6 +342,13 @@
         classRef.prototype['initialize'] = classRef;
         classRef['subclasses'] = [];
     }
+    
+    
+    function functionBind(funcRef, context) {
+        return function() {
+            return funcRef.apply(context, arguments);
+        }
+    }
 
     // Returns a new Function that returns the value passed into the function
     // Used for the 'toString' implementations.
@@ -389,15 +397,7 @@
     // define all the SGF classes, and afterwards invoke the 'load' listeners.
     function allLibrariesLoaded() {
         //log("all libs loaded!");
-        
-        // These comments below are directives for the 'compile' script.
-        // The comments themselves will be replaced by the contents of the
-        // script file from the name in the comment.
-        
-        //{networking.js}
-
-        window['SGF'] = SGF;
-        
+                
         Input['grab']();
         
         sgfLoaded();
@@ -410,7 +410,7 @@
     function sgfLoaded() {
 
         var loadEndTime = new Date();
-        log("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
+        //log("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
 
         if (params['game']) {
             if (params['screen']) {
