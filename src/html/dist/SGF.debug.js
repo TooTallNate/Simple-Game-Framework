@@ -70,20 +70,19 @@
      * in CSS style sheets. In order to compensate, all style changes must
      * be ensured that they use !important as well
      **/
-    var setStyleImportant = (function(){ 
-        if (document['documentElement']['style']['setProperty']) {
-            // W3C says use setProperty, with the "important" 3rd param
-            return function(element, prop, value) {
-                element['style']['setProperty'](prop, value, "important");
-            }                    
-        } else {
-            // IE doesn't support setProperty, so we must manually set
-            // the cssText, including the !important statement
-            return function(element, prop, value) {
-                element['style']['cssText'] += ";"+prop+":"+value+" !important;";
-            }
+    var setStyleImportant;
+    if (document['documentElement']['style']['setProperty']) {
+        // W3C says use setProperty, with the "important" 3rd param
+        setStyleImportant = function(element, prop, value) {
+            element['style']['setProperty'](prop, value, "important");
+        }                    
+    } else {
+        // IE doesn't support setProperty, so we must manually set
+        // the cssText, including the !important statement
+        setStyleImportant = function(element, prop, value) {
+            element['style']['cssText'] += ";"+prop+":"+value+" !important;";
         }
-    })();
+    }
 
 
 
@@ -964,7 +963,7 @@ var Screen = function(game) {
     self['_bind'] = function(element) {
         // First, we need to "normalize" the Screen element by first removing
         // all previous elements, and then setting some standard styles
-        var style = element['style'], input = game['input'];
+        var style = element['style'];
         style['padding'] = 0;
         style['overflow'] = REQUIRED_OVERFLOW;
         if (style['MozUserSelect'] !== undefined) {
@@ -1889,7 +1888,7 @@ Font.prototype = new EventEmitter(true);
 
 Font.prototype['toString'] = functionReturnString("[object Font]");
 
-Font['subclasses'] = [];
+makePrototypeClassCompatible(Font);
 
 modules['font'] = Font;
 
@@ -1929,12 +1928,14 @@ function Script(game, scriptUrl, onLoad) {
     document.getElementsByTagName("head")[0].appendChild(script);
 
 }
-Script['subclasses'] = [];
+
 Script.prototype = new EventEmitter(true);
 Script.prototype['loaded'] = false;
 Script.prototype['toString'] = functionReturnString("[object Script]");
 
+makePrototypeClassCompatible(Script);
 
+// TODO: Remove?
 // Expects a <script> node reference, and removes it from the DOM, and
 // destroys the object in a memory leak free manner.
 function destroyScript(script) {
@@ -1955,11 +1956,13 @@ var Sound = function(path) {
 
     EventEmitter.call(self);
 }
-Sound['subclasses'] = [];
+
 // so that (soundInstance instanceof EventEmitter) === true
 Sound.prototype = new EventEmitter(true);
 
 Sound.prototype['toString'] = functionReturnString("[object Sound]");
+
+makePrototypeClassCompatible(Sound);
 
 modules['sound'] = Sound;
 
@@ -2074,6 +2077,8 @@ Spriteset.prototype['toElement'] = function() {
 }
 
 Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
+
+makePrototypeClassCompatible(Spriteset);
 
 modules['spriteset'] = Spriteset;
 
@@ -2689,8 +2694,10 @@ modules['server'] = Server;
     //////////////////////////////////////////////////////////////////////
     function log() {
         var args = arguments;
-        if (window['console'] && console['log']) {
-            console['log'].apply(console, args);
+        if (console && console['log']) {
+            // Function.prototype.apply.call is necessary for IE, which
+            // doesn't support console.log.apply. 
+            Function.prototype.apply.call(console['log'], console, args);
         }
         SGF['fireEvent']("log", args);
     }

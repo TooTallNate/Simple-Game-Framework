@@ -34,12 +34,14 @@ function Script(game, scriptUrl, onLoad) {
     document.getElementsByTagName("head")[0].appendChild(script);
 
 }
-Script['subclasses'] = [];
+
 Script.prototype = new EventEmitter(true);
 Script.prototype['loaded'] = false;
 Script.prototype['toString'] = functionReturnString("[object Script]");
 
+makePrototypeClassCompatible(Script);
 
+// TODO: Remove?
 // Expects a <script> node reference, and removes it from the DOM, and
 // destroys the object in a memory leak free manner.
 function destroyScript(script) {

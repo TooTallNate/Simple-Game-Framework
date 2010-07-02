@@ -13,7 +13,7 @@ var Screen = function(game) {
     self['_bind'] = function(element) {
         // First, we need to "normalize" the Screen element by first removing
         // all previous elements, and then setting some standard styles
-        var style = element['style'], input = game['input'];
+        var style = element['style'];
         style['padding'] = 0;
         style['overflow'] = REQUIRED_OVERFLOW;
         if (style['MozUserSelect'] !== undefined) {

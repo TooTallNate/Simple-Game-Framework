@@ -70,20 +70,19 @@
      * in CSS style sheets. In order to compensate, all style changes must
      * be ensured that they use !important as well
      **/
-    var setStyleImportant = (function(){ 
-        if (document['documentElement']['style']['setProperty']) {
-            // W3C says use setProperty, with the "important" 3rd param
-            return function(element, prop, value) {
-                element['style']['setProperty'](prop, value, "important");
-            }                    
-        } else {
-            // IE doesn't support setProperty, so we must manually set
-            // the cssText, including the !important statement
-            return function(element, prop, value) {
-                element['style']['cssText'] += ";"+prop+":"+value+" !important;";
-            }
+    var setStyleImportant;
+    if (document['documentElement']['style']['setProperty']) {
+        // W3C says use setProperty, with the "important" 3rd param
+        setStyleImportant = function(element, prop, value) {
+            element['style']['setProperty'](prop, value, "important");
+        }                    
+    } else {
+        // IE doesn't support setProperty, so we must manually set
+        // the cssText, including the !important statement
+        setStyleImportant = function(element, prop, value) {
+            element['style']['cssText'] += ";"+prop+":"+value+" !important;";
         }
-    })();
+    }
 
 
 
@@ -430,8 +429,10 @@
     //////////////////////////////////////////////////////////////////////
     function log() {
         var args = arguments;
-        if (window['console'] && console['log']) {
-            console['log'].apply(console, args);
+        if (console && console['log']) {
+            // Function.prototype.apply.call is necessary for IE, which
+            // doesn't support console.log.apply. 
+            Function.prototype.apply.call(console['log'], console, args);
         }
         SGF['fireEvent']("log", args);
     }

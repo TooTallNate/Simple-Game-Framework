@@ -110,4 +110,6 @@ Spriteset.prototype['toElement'] = function() {
 
 Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
 
+makePrototypeClassCompatible(Spriteset);
+
 modules['spriteset'] = Spriteset;

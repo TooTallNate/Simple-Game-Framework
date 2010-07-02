@@ -61,6 +61,6 @@ Font.prototype = new EventEmitter(true);
 
 Font.prototype['toString'] = functionReturnString("[object Font]");
 
-Font['subclasses'] = [];
+makePrototypeClassCompatible(Font);
 
 modules['font'] = Font;
