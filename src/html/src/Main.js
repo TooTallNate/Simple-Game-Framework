@@ -434,9 +434,16 @@
             // doesn't support console.log.apply. 
             Function.prototype.apply.call(console['log'], console, args);
         }
-        SGF['fireEvent']("log", args);
+        SGF['emit']("log", args);
     }
     SGF['log'] = log;
+    
+    var CLASS = function() {}
+    function inherits(ctor, superCtor) {
+        CLASS.prototype = superCtor.prototype;
+        ctor.prototype = new CLASS;
+    }
+    SGF['inherits'] = inherits;
     
     function require(moduleName) {
         if (typeof moduleName == "string") {

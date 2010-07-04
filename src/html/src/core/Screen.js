@@ -102,8 +102,7 @@ var Screen = function(game) {
      **/
 }
 
-// so that (screenInstance instanceof EventEmitter) === true
-Screen.prototype = new EventEmitter(true);
+inherits(Screen, EventEmitter);
 
 Screen.prototype['_r'] = function() {
     var self = this; color = self['color'], element = self['element'];

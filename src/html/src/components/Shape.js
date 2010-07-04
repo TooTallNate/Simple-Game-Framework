@@ -21,7 +21,8 @@ function Shape(options) {
     Component.call(this, options);
 }
 
-Shape.prototype = new Component(true);
+inherits(Shape, Component);
+makePrototypeClassCompatible(Shape);
 
 Shape.prototype['render'] = function(renderCount) {
 
@@ -44,7 +45,5 @@ Shape.prototype['render'] = function(renderCount) {
 Shape.prototype['color'] = "000000";
 
 Shape.prototype['toString'] = functionReturnString("[object Shape]");
-
-makePrototypeClassCompatible(Shape);
 
 modules['shape'] = Shape;

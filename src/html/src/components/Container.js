@@ -29,25 +29,23 @@
  * in `components` initially.
  **/
 function Container(components, options) {
-    if (components !== true) {
-        var self = this;
-        self['components'] = [];
-        Component.call(self, options || {});
-        if (Object['isArray'](components)) {
-            components['each'](self['addComponent'], self);
-        }
-        this['__shouldUpdateComponents'] = this['__needsRender'] = true;
+    var self = this;
+    self['components'] = [];
+    Component.call(self, options || {});
+    if (Object['isArray'](components)) {
+        components['each'](self['addComponent'], self);
     }
+    this['__shouldUpdateComponents'] = this['__needsRender'] = true;
 }
 
-Container.prototype = new Component(true);
+inherits(Container, Component);
+makePrototypeClassCompatible(Container);
 
 Container.prototype['update'] = function(updateCount) {
     var self = this;
     
     // Not needed, since Component#update is empty
     //Component.prototype.update.call(self, updateCount);
-    
     if (self['__shouldUpdateComponents']) {
         for (var i=0, component=null; i < self['components'].length; i++) {
             component = self['components'][i];
@@ -125,7 +123,5 @@ Container.prototype['__fixZIndex'] = function() {
 }
 
 Container.prototype['toString'] = functionReturnString("[object Container]");
-
-makePrototypeClassCompatible(Container);
 
 modules['container'] = Container;

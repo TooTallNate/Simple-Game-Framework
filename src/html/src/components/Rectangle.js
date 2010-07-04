@@ -8,7 +8,8 @@ function Rectangle(options) {
     Shape.call(this, options);
 }
 
-Rectangle.prototype = new Shape(true);
+inherits(Rectangle, Shape);
+makePrototypeClassCompatible(Rectangle);
 
 Rectangle.prototype['getElement'] = function() {
     this['__color'] = this['color'];
@@ -18,9 +19,6 @@ Rectangle.prototype['getElement'] = function() {
     return element;
 }
 
-
 Rectangle.prototype['toString'] = functionReturnString("[object Rectangle]");
-
-makePrototypeClassCompatible(Rectangle);
 
 modules['rectangle'] = Rectangle;

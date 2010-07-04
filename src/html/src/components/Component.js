@@ -5,11 +5,8 @@
  * directly, but its subclasses are the building blocks for SGF games.
  **/
 function Component(options) {
-    // Passing 'true' to the constructor is for extending classes (Container)
-    if (options !== true) {
-        extend(this, options || {});
-        this['element'] = this['getElement']();
-    }
+    extend(this, options || {});
+    this['element'] = this['getElement']();
 }
 
 /*

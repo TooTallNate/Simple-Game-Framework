@@ -66,7 +66,8 @@ function Client(url, options) {
     if (self['autoconnect']) self['connect']();
 }
 
-Client.prototype = new EventEmitter(true);
+inherits(Client, EventEmitter);
+makePrototypeClassCompatible(Client);
 
 /**
  * SGF.Client#onOpen() -> undefined
@@ -154,16 +155,16 @@ Client.prototype['send'] = function(message) {
 }
 
 function onClientOpen() {
-    this['fireEvent']("open");
+    this['emit']("open");
 }
 
 function onClientClose() {
-    this['fireEvent']("close");
+    this['emit']("close");
     this['_w'] = null;
 }
 
 function onClientMessage(event) {
-    this['fireEvent']("message", event['data']);
+    this['emit']("message", event['data']);
 }
 
 

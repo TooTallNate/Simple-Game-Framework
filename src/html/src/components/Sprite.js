@@ -42,7 +42,8 @@ function Sprite(spriteset, options) {
     Component.call(this, options);
 }
 
-Sprite.prototype = new Component(true);
+inherits(Sprite, Component);
+makePrototypeClassCompatible(Sprite);
 
 Sprite.prototype['getElement'] = function() {
     var element = Component.prototype['getElement'].call(this);
@@ -95,7 +96,5 @@ Sprite.prototype['spriteX'] = 0;
 Sprite.prototype['spriteY'] = 0;
 
 Sprite.prototype['toString'] = functionReturnString("[object Sprite]");
-
-makePrototypeClassCompatible(Sprite);
 
 modules['sprite'] = Sprite;

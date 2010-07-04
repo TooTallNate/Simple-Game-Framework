@@ -139,11 +139,8 @@
  * directly, but its subclasses are the building blocks for SGF games.
  **/
 function Component(options) {
-    // Passing 'true' to the constructor is for extending classes (Container)
-    if (options !== true) {
-        extend(this, options || {});
-        this['element'] = this['getElement']();
-    }
+    extend(this, options || {});
+    this['element'] = this['getElement']();
 }
 
 /*
@@ -407,25 +404,23 @@ modules['component'] = Component;
  * in `components` initially.
  **/
 function Container(components, options) {
-    if (components !== true) {
-        var self = this;
-        self['components'] = [];
-        Component.call(self, options || {});
-        if (Object['isArray'](components)) {
-            components['each'](self['addComponent'], self);
-        }
-        this['__shouldUpdateComponents'] = this['__needsRender'] = true;
+    var self = this;
+    self['components'] = [];
+    Component.call(self, options || {});
+    if (Object['isArray'](components)) {
+        components['each'](self['addComponent'], self);
     }
+    this['__shouldUpdateComponents'] = this['__needsRender'] = true;
 }
 
-Container.prototype = new Component(true);
+inherits(Container, Component);
+makePrototypeClassCompatible(Container);
 
 Container.prototype['update'] = function(updateCount) {
     var self = this;
     
     // Not needed, since Component#update is empty
     //Component.prototype.update.call(self, updateCount);
-    
     if (self['__shouldUpdateComponents']) {
         for (var i=0, component=null; i < self['components'].length; i++) {
             component = self['components'][i];
@@ -504,8 +499,6 @@ Container.prototype['__fixZIndex'] = function() {
 
 Container.prototype['toString'] = functionReturnString("[object Container]");
 
-makePrototypeClassCompatible(Container);
-
 modules['container'] = Container;
 
 /** section: Components API
@@ -530,7 +523,8 @@ function DumbContainer(components, options) {
     self['__shouldUpdateComponents'] = self['__needsRender'] = false;
 }
 
-DumbContainer.prototype = new Container(true);
+inherits(DumbContainer, Container);
+makePrototypeClassCompatible(DumbContainer);
 
 DumbContainer.prototype['addComponent'] = function(component) {
     Container.prototype['addComponent'].call(this, component);
@@ -562,8 +556,6 @@ DumbContainer.prototype['renderComponents'] = function() {
 
 DumbContainer.prototype['toString'] = functionReturnString("[object DumbContainer]");
 
-makePrototypeClassCompatible(DumbContainer);
-
 modules['dumbcontainer'] = DumbContainer;
 
 
@@ -577,7 +569,8 @@ function Label(options) {
     self['element'].appendChild(self['_n']);
 }
 
-Label.prototype = new Component(true);
+inherits(Label, Component);
+makePrototypeClassCompatible(Label);
 
 Label.prototype['getElement'] = (function() {
     var e = document.createElement("pre"), props = {
@@ -678,8 +671,6 @@ extend(Label, {
     'TAB_WIDTH': 4
 });
 
-makePrototypeClassCompatible(Label);
-
 modules['label'] = Label;
 
 /** section: Components API
@@ -726,7 +717,8 @@ function Sprite(spriteset, options) {
     Component.call(this, options);
 }
 
-Sprite.prototype = new Component(true);
+inherits(Sprite, Component);
+makePrototypeClassCompatible(Sprite);
 
 Sprite.prototype['getElement'] = function() {
     var element = Component.prototype['getElement'].call(this);
@@ -780,8 +772,6 @@ Sprite.prototype['spriteY'] = 0;
 
 Sprite.prototype['toString'] = functionReturnString("[object Sprite]");
 
-makePrototypeClassCompatible(Sprite);
-
 modules['sprite'] = Sprite;
 
 /** section: Components API
@@ -807,7 +797,8 @@ function Shape(options) {
     Component.call(this, options);
 }
 
-Shape.prototype = new Component(true);
+inherits(Shape, Component);
+makePrototypeClassCompatible(Shape);
 
 Shape.prototype['render'] = function(renderCount) {
 
@@ -831,8 +822,6 @@ Shape.prototype['color'] = "000000";
 
 Shape.prototype['toString'] = functionReturnString("[object Shape]");
 
-makePrototypeClassCompatible(Shape);
-
 modules['shape'] = Shape;
 
 /** section: Components API
@@ -845,7 +834,8 @@ function Rectangle(options) {
     Shape.call(this, options);
 }
 
-Rectangle.prototype = new Shape(true);
+inherits(Rectangle, Shape);
+makePrototypeClassCompatible(Rectangle);
 
 Rectangle.prototype['getElement'] = function() {
     this['__color'] = this['color'];
@@ -855,10 +845,7 @@ Rectangle.prototype['getElement'] = function() {
     return element;
 }
 
-
 Rectangle.prototype['toString'] = functionReturnString("[object Rectangle]");
-
-makePrototypeClassCompatible(Rectangle);
 
 modules['rectangle'] = Rectangle;
 
@@ -868,30 +855,29 @@ modules['rectangle'] = Rectangle;
     /* EventEmitter is an internal class that a lot of main SGF classes inherit 
  * from. The class implements the common listener pattern used throughout SGF.
  */
-function EventEmitter(inheriting) {
-    if (!inheriting) { // Needed for: 'class.prototype = new EventEmitter(true)'
-        var self = this;
-        self['_l'] = {};
-    
-        // In order to get EventEmitter functionality on a Class that already
-        // extends another Class, invoke `EventEmitter.call(this)` in the
-        // constructor without the call to `Class.prototype = new EventEmitter(true)`.
-        // This is needed for Game, which directly extends Container, but also
-        // needs EventEmitter functionality.
-        if (!(self instanceof EventEmitter)) {
-            for (var i in EventEmitter.prototype) {
-                self[i] = EventEmitter.prototype[i];
-            }
+function EventEmitter() {
+    var self = this;
+    self['_l'] = {};
+
+    // In order to get EventEmitter functionality on a Class that already
+    // extends another Class, invoke `EventEmitter.call(this)` in the
+    // constructor without the call to `Class.prototype = new EventEmitter(true)`.
+    // This is needed for Game, which directly extends Container, but also
+    // needs EventEmitter functionality.
+    if (!(self instanceof EventEmitter)) {
+        for (var i in EventEmitter.prototype) {
+            self[i] = EventEmitter.prototype[i];
         }
     }
 }
 
 EventEmitter.prototype['addListener'] = function(eventName, func) {
     var listeners = this['_l'];
-    if (!(eventName in listeners)) {
-        listeners[eventName] = [];
+    if (eventName in listeners) {
+        listeners[eventName]['push'](func);
+    } else {
+        listeners[eventName] = [ func ];
     }
-    listeners[eventName]['push'](func);
     return this;
 }
 
@@ -911,7 +897,7 @@ EventEmitter.prototype['removeAllListeners'] = function(eventName) {
     return this;
 }
 
-EventEmitter.prototype['fireEvent'] = function(eventName, args) {
+EventEmitter.prototype['emit'] = function(eventName, args) {
     var listeners = this['_l'][eventName], i=0;
     if (listeners) {
         for (var l=listeners.length; i<l; i++) {
@@ -921,15 +907,23 @@ EventEmitter.prototype['fireEvent'] = function(eventName, args) {
     return this;
 }
 
-//EventEmitter.prototype['toString'] = functionReturnString("[object EventEmitter]");
-
 
 // Deprecated
+var fireEventMessage = false;
+EventEmitter.prototype['fireEvent'] = function() {
+    if (!fireEventMessage) {
+        log("DEPRECATED: 'EventEmitter#fireEvent' is deprecated, "+
+            "please use 'EventEmitter#emit' instead.");
+        fireEventMessage = true;
+    }
+    return this['emit']['apply'](this, arguments);
+};
+
 var observeMessage = false;
 EventEmitter.prototype['observe'] = function() {
     if (!observeMessage) {
         log("DEPRECATED: 'EventEmitter#observe' is deprecated, "+
-            "please use 'EventEmitter#addListener' instead.")
+            "please use 'EventEmitter#addListener' instead.");
         observeMessage = true;
     }
     return this['addListener']['apply'](this, arguments);
@@ -939,12 +933,11 @@ var stopObservingMessage = false;
 EventEmitter.prototype['stopObserving'] = function() {
     if (!stopObservingMessage) {
         log("DEPRECATED: 'EventEmitter#stopObserving' is deprecated, "+
-            "please use 'EventEmitter#removeListener' instead.")
+            "please use 'EventEmitter#removeListener' instead.");
         stopObservingMessage = true;
     }
-    return this['removeListener']['apply'](this, arguments);
-    
-}
+    return this['removeListener']['apply'](this, arguments);    
+};
 
 modules['eventemitter'] = EventEmitter;
 
@@ -1052,8 +1045,7 @@ var Screen = function(game) {
      **/
 }
 
-// so that (screenInstance instanceof EventEmitter) === true
-Screen.prototype = new EventEmitter(true);
+inherits(Screen, EventEmitter);
 
 Screen.prototype['_r'] = function() {
     var self = this; color = self['color'], element = self['element'];
@@ -1183,8 +1175,7 @@ function Input(game) {
          **/
 }
 
-// so that (inputInstance instanceof EventEmitter) === true
-Input.prototype = new EventEmitter(true);
+inherits(Input, EventEmitter);
 
 Input.prototype['pointerX'] = 0;
 Input.prototype['pointerY'] = 0;
@@ -1327,7 +1318,7 @@ function keydownHandler(event) {
 
         currentInput['_k'][event.keyCode] = true;
 
-        currentInput['fireEvent']("keydown", [eventObj]);
+        currentInput['emit']("keydown", [eventObj]);
     }
 }
 
@@ -1343,7 +1334,7 @@ function keyupHandler(event) {
 
         currentInput['_k'][event.keyCode] = false;
 
-        currentInput['fireEvent']("keydown", [eventObj]);
+        currentInput['emit']("keydown", [eventObj]);
     }
 }
 
@@ -1364,7 +1355,7 @@ function mousedownHandler(event) {
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
 
-            currentInput['fireEvent']("mousedown", [eventObj]);
+            currentInput['emit']("mousedown", [eventObj]);
         } else {
             blur();
             mousedownHandler(event);
@@ -1406,7 +1397,7 @@ function mouseupHandler(event) {
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
             
-            currentInput['fireEvent']("mouseup", [eventObj]);
+            currentInput['emit']("mouseup", [eventObj]);
         }
     }
 }
@@ -1424,7 +1415,7 @@ function mousemoveHandler(event) {
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
             
-            currentInput['fireEvent']("mousemove", [eventObj]);
+            currentInput['emit']("mousemove", [eventObj]);
         }
     }
 }
@@ -1606,12 +1597,13 @@ function Game(rootUrl, screen, options) {
     new Script(self, "main.js", function() {
         self['loaded'] = true;
         // Notify all the game's 'load' listeners
-        self['fireEvent']('load');
+        self['emit']('load');
         self['start']();
     });
 }
 
-Game.prototype = new Container(true);
+inherits(Game, Container);
+makePrototypeClassCompatible(Game);
 
 /**
  * Game#gameSpeed -> Number
@@ -1688,7 +1680,7 @@ Game.prototype['start'] = function() {
     setTimeout(this['_s'], 0);
 
     // Notify game's 'start' listeners
-    this['fireEvent']("start");
+    this['emit']("start");
 }
 
 Game.prototype['getFont'] = function(relativeUrl, onLoad) {
@@ -1770,7 +1762,7 @@ Game.prototype['step'] = function() {
  * Stops the game loop if the game is running.
  **/
 Game.prototype['stop'] = function() {
-    this['fireEvent']("stopping");
+    this['emit']("stopping");
     this['running'] = false;
     return this;
 }
@@ -1778,7 +1770,7 @@ Game.prototype['stop'] = function() {
 Game.prototype['stopped'] = function() {
     this['screen']['useNativeCursor'](true);
     currentGame = null;
-    this['fireEvent']("stopped");
+    this['emit']("stopped");
 }
 
 /**
@@ -1819,8 +1811,6 @@ Game.prototype['toString'] = functionReturnString("[object Game]");
 Game['getInstance'] = function() {
     return currentGame;
 }
-
-makePrototypeClassCompatible(Game);
 
 modules['game'] = Game;
 
@@ -1884,11 +1874,10 @@ function embedCss(cssString) {
     return node;
 };
 
-Font.prototype = new EventEmitter(true);
+inherits(Font, EventEmitter);
+makePrototypeClassCompatible(Font);
 
 Font.prototype['toString'] = functionReturnString("[object Font]");
-
-makePrototypeClassCompatible(Font);
 
 modules['font'] = Font;
 
@@ -1918,7 +1907,7 @@ function Script(game, scriptUrl, onLoad) {
 
     script['onload'] = script['onreadystatechange'] = function() {
         if (!script['readyState'] || script['readyState'] == "loaded" || script['readyState'] == "complete") {
-            self['fireEvent']("load");
+            self['emit']("load");
         }
     }
 
@@ -1929,11 +1918,12 @@ function Script(game, scriptUrl, onLoad) {
 
 }
 
-Script.prototype = new EventEmitter(true);
+inherits(Script, EventEmitter);
+makePrototypeClassCompatible(Script);
+
 Script.prototype['loaded'] = false;
 Script.prototype['toString'] = functionReturnString("[object Script]");
 
-makePrototypeClassCompatible(Script);
 
 // TODO: Remove?
 // Expects a <script> node reference, and removes it from the DOM, and
@@ -1957,12 +1947,11 @@ var Sound = function(path) {
     EventEmitter.call(self);
 }
 
-// so that (soundInstance instanceof EventEmitter) === true
-Sound.prototype = new EventEmitter(true);
+inherits(Sound, EventEmitter);
+makePrototypeClassCompatible(Sound);
 
 Sound.prototype['toString'] = functionReturnString("[object Sound]");
 
-makePrototypeClassCompatible(Sound);
 
 modules['sound'] = Sound;
 
@@ -2009,7 +1998,7 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
         self['width'] = img['width'];
         self['height'] = img['height'];
         self['loaded'] = true;
-        self['fireEvent']("load");
+        self['emit']("load");
     };
 
     self['image'] = img;
@@ -2018,10 +2007,9 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
     self['src'] = img['src'] = game['root'] + path;
 }
 
-Spriteset['subclasses'] = [];
+inherits(Spriteset, EventEmitter);
+makePrototypeClassCompatible(Spriteset);
 
-// so that (spritesetInstance instanceof EventEmitter) === true
-Spriteset.prototype = new EventEmitter(true);
 
 /**
  * Spriteset#loaded -> Boolean
@@ -2077,8 +2065,6 @@ Spriteset.prototype['toElement'] = function() {
 }
 
 Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
-
-makePrototypeClassCompatible(Spriteset);
 
 modules['spriteset'] = Spriteset;
 
@@ -2159,7 +2145,8 @@ function Client(url, options) {
     if (self['autoconnect']) self['connect']();
 }
 
-Client.prototype = new EventEmitter(true);
+inherits(Client, EventEmitter);
+makePrototypeClassCompatible(Client);
 
 /**
  * SGF.Client#onOpen() -> undefined
@@ -2247,16 +2234,16 @@ Client.prototype['send'] = function(message) {
 }
 
 function onClientOpen() {
-    this['fireEvent']("open");
+    this['emit']("open");
 }
 
 function onClientClose() {
-    this['fireEvent']("close");
+    this['emit']("close");
     this['_w'] = null;
 }
 
 function onClientMessage(event) {
-    this['fireEvent']("message", event['data']);
+    this['emit']("message", event['data']);
 }
 
 
@@ -2699,9 +2686,16 @@ modules['server'] = Server;
             // doesn't support console.log.apply. 
             Function.prototype.apply.call(console['log'], console, args);
         }
-        SGF['fireEvent']("log", args);
+        SGF['emit']("log", args);
     }
     SGF['log'] = log;
+    
+    var CLASS = function() {}
+    function inherits(ctor, superCtor) {
+        CLASS.prototype = superCtor.prototype;
+        ctor.prototype = new CLASS;
+    }
+    SGF['inherits'] = inherits;
     
     function require(moduleName) {
         if (typeof moduleName == "string") {

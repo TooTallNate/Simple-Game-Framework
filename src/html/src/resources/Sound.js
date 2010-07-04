@@ -4,11 +4,10 @@ var Sound = function(path) {
     EventEmitter.call(self);
 }
 
-// so that (soundInstance instanceof EventEmitter) === true
-Sound.prototype = new EventEmitter(true);
+inherits(Sound, EventEmitter);
+makePrototypeClassCompatible(Sound);
 
 Sound.prototype['toString'] = functionReturnString("[object Sound]");
 
-makePrototypeClassCompatible(Sound);
 
 modules['sound'] = Sound;

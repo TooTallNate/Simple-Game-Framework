@@ -20,7 +20,8 @@ function DumbContainer(components, options) {
     self['__shouldUpdateComponents'] = self['__needsRender'] = false;
 }
 
-DumbContainer.prototype = new Container(true);
+inherits(DumbContainer, Container);
+makePrototypeClassCompatible(DumbContainer);
 
 DumbContainer.prototype['addComponent'] = function(component) {
     Container.prototype['addComponent'].call(this, component);
@@ -51,7 +52,5 @@ DumbContainer.prototype['renderComponents'] = function() {
 
 
 DumbContainer.prototype['toString'] = functionReturnString("[object DumbContainer]");
-
-makePrototypeClassCompatible(DumbContainer);
 
 modules['dumbcontainer'] = DumbContainer;

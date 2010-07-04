@@ -41,7 +41,7 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
         self['width'] = img['width'];
         self['height'] = img['height'];
         self['loaded'] = true;
-        self['fireEvent']("load");
+        self['emit']("load");
     };
 
     self['image'] = img;
@@ -50,10 +50,9 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
     self['src'] = img['src'] = game['root'] + path;
 }
 
-Spriteset['subclasses'] = [];
+inherits(Spriteset, EventEmitter);
+makePrototypeClassCompatible(Spriteset);
 
-// so that (spritesetInstance instanceof EventEmitter) === true
-Spriteset.prototype = new EventEmitter(true);
 
 /**
  * Spriteset#loaded -> Boolean
@@ -109,7 +108,5 @@ Spriteset.prototype['toElement'] = function() {
 }
 
 Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
-
-makePrototypeClassCompatible(Spriteset);
 
 modules['spriteset'] = Spriteset;

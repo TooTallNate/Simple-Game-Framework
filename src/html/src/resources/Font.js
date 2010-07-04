@@ -57,10 +57,9 @@ function embedCss(cssString) {
     return node;
 };
 
-Font.prototype = new EventEmitter(true);
+inherits(Font, EventEmitter);
+makePrototypeClassCompatible(Font);
 
 Font.prototype['toString'] = functionReturnString("[object Font]");
-
-makePrototypeClassCompatible(Font);
 
 modules['font'] = Font;

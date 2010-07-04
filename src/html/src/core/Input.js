@@ -108,8 +108,7 @@ function Input(game) {
          **/
 }
 
-// so that (inputInstance instanceof EventEmitter) === true
-Input.prototype = new EventEmitter(true);
+inherits(Input, EventEmitter);
 
 Input.prototype['pointerX'] = 0;
 Input.prototype['pointerY'] = 0;
@@ -252,7 +251,7 @@ function keydownHandler(event) {
 
         currentInput['_k'][event.keyCode] = true;
 
-        currentInput['fireEvent']("keydown", [eventObj]);
+        currentInput['emit']("keydown", [eventObj]);
     }
 }
 
@@ -268,7 +267,7 @@ function keyupHandler(event) {
 
         currentInput['_k'][event.keyCode] = false;
 
-        currentInput['fireEvent']("keydown", [eventObj]);
+        currentInput['emit']("keydown", [eventObj]);
     }
 }
 
@@ -289,7 +288,7 @@ function mousedownHandler(event) {
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
 
-            currentInput['fireEvent']("mousedown", [eventObj]);
+            currentInput['emit']("mousedown", [eventObj]);
         } else {
             blur();
             mousedownHandler(event);
@@ -331,7 +330,7 @@ function mouseupHandler(event) {
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
             
-            currentInput['fireEvent']("mouseup", [eventObj]);
+            currentInput['emit']("mouseup", [eventObj]);
         }
     }
 }
@@ -349,7 +348,7 @@ function mousemoveHandler(event) {
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
             
-            currentInput['fireEvent']("mousemove", [eventObj]);
+            currentInput['emit']("mousemove", [eventObj]);
         }
     }
 }

@@ -152,12 +152,13 @@ function Game(rootUrl, screen, options) {
     new Script(self, "main.js", function() {
         self['loaded'] = true;
         // Notify all the game's 'load' listeners
-        self['fireEvent']('load');
+        self['emit']('load');
         self['start']();
     });
 }
 
-Game.prototype = new Container(true);
+inherits(Game, Container);
+makePrototypeClassCompatible(Game);
 
 /**
  * Game#gameSpeed -> Number
@@ -234,7 +235,7 @@ Game.prototype['start'] = function() {
     setTimeout(this['_s'], 0);
 
     // Notify game's 'start' listeners
-    this['fireEvent']("start");
+    this['emit']("start");
 }
 
 Game.prototype['getFont'] = function(relativeUrl, onLoad) {
@@ -316,7 +317,7 @@ Game.prototype['step'] = function() {
  * Stops the game loop if the game is running.
  **/
 Game.prototype['stop'] = function() {
-    this['fireEvent']("stopping");
+    this['emit']("stopping");
     this['running'] = false;
     return this;
 }
@@ -324,7 +325,7 @@ Game.prototype['stop'] = function() {
 Game.prototype['stopped'] = function() {
     this['screen']['useNativeCursor'](true);
     currentGame = null;
-    this['fireEvent']("stopped");
+    this['emit']("stopped");
 }
 
 /**
@@ -365,7 +366,5 @@ Game.prototype['toString'] = functionReturnString("[object Game]");
 Game['getInstance'] = function() {
     return currentGame;
 }
-
-makePrototypeClassCompatible(Game);
 
 modules['game'] = Game;

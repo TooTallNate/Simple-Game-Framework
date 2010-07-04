@@ -9,7 +9,8 @@ function Label(options) {
     self['element'].appendChild(self['_n']);
 }
 
-Label.prototype = new Component(true);
+inherits(Label, Component);
+makePrototypeClassCompatible(Label);
 
 Label.prototype['getElement'] = (function() {
     var e = document.createElement("pre"), props = {
@@ -109,7 +110,5 @@ extend(Label, {
     
     'TAB_WIDTH': 4
 });
-
-makePrototypeClassCompatible(Label);
 
 modules['label'] = Label;

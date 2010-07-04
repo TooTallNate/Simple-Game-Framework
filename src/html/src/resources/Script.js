@@ -24,7 +24,7 @@ function Script(game, scriptUrl, onLoad) {
 
     script['onload'] = script['onreadystatechange'] = function() {
         if (!script['readyState'] || script['readyState'] == "loaded" || script['readyState'] == "complete") {
-            self['fireEvent']("load");
+            self['emit']("load");
         }
     }
 
@@ -35,11 +35,12 @@ function Script(game, scriptUrl, onLoad) {
 
 }
 
-Script.prototype = new EventEmitter(true);
+inherits(Script, EventEmitter);
+makePrototypeClassCompatible(Script);
+
 Script.prototype['loaded'] = false;
 Script.prototype['toString'] = functionReturnString("[object Script]");
 
-makePrototypeClassCompatible(Script);
 
 // TODO: Remove?
 // Expects a <script> node reference, and removes it from the DOM, and
