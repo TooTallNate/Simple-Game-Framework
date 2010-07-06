@@ -19,6 +19,9 @@ function EventEmitter() {
 
 EventEmitter.prototype['addListener'] = function(eventName, func) {
     var listeners = this['_l'];
+    if (typeof func != "function") {
+        throw new Error("EventEmitter#addListener expects a Function as a second argument");
+    }
     if (eventName in listeners) {
         listeners[eventName]['push'](func);
     } else {
@@ -45,8 +48,9 @@ EventEmitter.prototype['removeAllListeners'] = function(eventName) {
 
 EventEmitter.prototype['emit'] = function(eventName, args) {
     var listeners = this['_l'][eventName], i=0;
+    args = args || [];
     if (listeners) {
-        for (var l=listeners.length; i<l; i++) {
+        for (; i<listeners.length; i++) {
             listeners[i].apply(this, args);
         }
     }

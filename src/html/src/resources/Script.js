@@ -23,12 +23,14 @@ function Script(game, scriptUrl, onLoad) {
     script['setAttribute']("async", "true");
 
     script['onload'] = script['onreadystatechange'] = function() {
-        if (!script['readyState'] || script['readyState'] == "loaded" || script['readyState'] == "complete") {
-            self['emit']("load");
+        if ((!script['readyState'] || script['readyState'] == "loaded" || script['readyState'] == "complete")) {
+			//log("readyState: " + script['readyState']);
+            self['loaded'] = true;
+        	self['emit']("load");
         }
     }
 
-    script['src'] = scriptUrl;
+    self['self'] = script['src'] = scriptUrl;
 
     // Add the script element to the document head
     document.getElementsByTagName("head")[0].appendChild(script);

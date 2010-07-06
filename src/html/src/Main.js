@@ -4,12 +4,22 @@
     // to get the <script> reference for parameter parsing, and to
     // get the relative path of library files.
     var scriptName = null
+    
     // The <script> node reference of this script. It can have parameters
     // in order to override some default initialization options.
     ,   scriptNode = null
+    
     // The absolute path to the folder where this script file lives.
     // Needed to determine the relative locations of library files.
     ,   engineRoot = null
+    
+    // 'hasCanvas' and 'hasCanvasText' need to be true in order for the canvas
+    // renderer to kick in, otherwise SGF will fall back to a DOM based
+    // renderer. To force the DOM renderer on modern browsers, pass a
+    // "data-force-dom" param to the SGF script.
+    ,   hasCanvas = !!document.createElement( "canvas" ).getContext
+    ,   hasCanvasText =  !!(hasCanvas && typeof document.createElement("canvas" ).getContext('2d').fillText == 'function')
+    
     // The parsed user options retrieved from the <script> node. These
     // can include. Defining any of these on the node is optional:
     //
@@ -45,13 +55,13 @@
         'websocket':    'lib/web_socket.js',
         'websocket-swf':'lib/WebSocketMain.swf'
     },
+
+    // The current Date, so that we can measure how long it took to load SGF
+    // and the dependant libraries.
     loadStartTime = new Date(),
+
     // "Modules" are the classes retrieved from calling SGF.require().
     modules = {},
-    
-    
-    
-    
     
     // browser sniffs
     userAgent = navigator.userAgent,
@@ -71,13 +81,13 @@
      * be ensured that they use !important as well
      **/
     var setStyleImportant;
-    if (document['documentElement']['style']['setProperty']) {
+    if ((!isIE) && !!document['documentElement']['style']['setProperty']) {
         // W3C says use setProperty, with the "important" 3rd param
         setStyleImportant = function(element, prop, value) {
             element['style']['setProperty'](prop, value, "important");
         }                    
     } else {
-        // IE doesn't support setProperty, so we must manually set
+        // IE <= 8 doesn't support setProperty, so we must manually set
         // the cssText, including the !important statement
         setStyleImportant = function(element, prop, value) {
             element['style']['cssText'] += ";"+prop+":"+value+" !important;";
@@ -137,45 +147,89 @@
     
     // The main SGF namespace.
     var SGF = new EventEmitter();
-    SGF['toString'] = function() {
-        return "[object SGF]";
-    }
+    SGF['toString'] = functionReturnString("[object SGF]");
     window['SGF'] = SGF;
     
+    //////////////////////////////////////////////////////////////////////
+    //////////////////// "SGF" PUBLIC FUNCTIONS //////////////////////////
+    //////////////////////////////////////////////////////////////////////
+    function log() {
+        var args = arguments;
+        if (window['console'] && console['log']) {
+            // Function.prototype.apply.call is necessary for IE, which
+            // doesn't support console.log.apply. 
+            Function.prototype.apply.call(console['log'], console, args);
+        }
+        // Optionally listen for 'log' events from the SGF object, which you
+        // could then write to a <textarea> or something for a custom debug
+        // panel.
+        SGF['emit']("log", args);
+    }
+    SGF['log'] = log;
     
+    function inherits(ctor, superCtor) {
+        var klass = function() {};
+        klass.prototype = superCtor.prototype;
+        ctor.prototype = new klass;
+        ctor.prototype['constructor'] = ctor;
+    }
+    SGF['inherits'] = inherits;
+    
+    function require(moduleName) {
+        if (typeof moduleName == "string") {
+            moduleName = String(moduleName).toLowerCase();
+            if (moduleName in modules) {
+                return modules[moduleName];                
+            }
+            throw new Error("SGF.require: module name '" + moduleName + "' does not exist");
+        }
+        throw new Error("SGF.require: expected argument typeof 'string', got '" + (typeof moduleName) + "'");
+    }
+    SGF['require'] = require;
+    
+    function startWithDiv(gameSrc, screen) {
+        return new modules['game'](gameSrc, $(screen));
+    }
+    SGF['startWithDiv'] = startWithDiv;
+
+    function startFullScreen(gameSrc) {
+        return startWithDiv(gameSrc, document['body']);
+    }
+    SGF['startFullScreen'] = startFullScreen;
+
+
+
     
 
     // Attempts to retrieve the absolute path of the executing script.
     // Pass a function as 'callback' which will be executed once the
     // URL is known, with the first argument being the string URL.
-    function getScriptName(ex, callback) {
-        if (typeof ex === 'function') {
-            try {
-                (0)();
-            } catch(e) {
-                getScriptName(e, ex);
-            }
-        } else {
+    function getScriptName(callback) {
+        try {
+            (0)();
+        } catch (ex) {
             // Getting the URL of the exception is non-standard, and
             // different in EVERY browser unfortunately.
-            var s = ex['stack'];
-            if (ex['sourceURL']) { // Safari
-                //console.log("safari");
+            if (ex['fileName']) { // Firefox
+                callback(ex['fileName']);
+            } else if (ex['sourceURL']) { // Safari
                 callback(ex['sourceURL']);
-            } else if (ex['arguments']) { // Chrome
-                //console.log("chrome");
-                s = s.split("\n")[2];
-                s = s.substring(s.lastIndexOf(" ")+1);
-                s = s.substring(0, s.lastIndexOf(":"));
-                if (s.indexOf('(') === 0) s = s.substring(1);
-                callback(s.substring(0, s.lastIndexOf(":")));
-            } else if (s) { // Firefox & Opera 10+
-                //console.log("firefox");
+            } else if (ex['arguments']) { // V8 (Chrome)
+                var originalPrepareStackTrace = Error['prepareStackTrace'];
+                Error['prepareStackTrace'] = function(error, structuredStackTrace) {
+                    return structuredStackTrace[1]['getFileName']();
+                }
+                var stack = ex['stack'];
+                Error['prepareStackTrace'] = originalPrepareStackTrace;
+                callback(stack);
+
+            } else if (ex['stack']) { // Opera 10
+                var s = ex['stack'];
                 s = s.split("\n")[0];
                 s = s.substring(s.indexOf("@")+1);
                 callback(s.substring(0, s.lastIndexOf(":")));
-            } else { // Internet Explorer
-                //console.log("internet explorer");
+
+            } else { // Internet Explorer 8+
                 var origOnError = window['onerror'];
                 window['onerror'] = function(msg, url){
                     window['onerror'] = origOnError;
@@ -305,11 +359,9 @@
     //////////////////////////////////////////////////////////////////////
     ///////////////////// "UTILITY" FUNCTIONS ////////////////////////////
     //////////////////////////////////////////////////////////////////////
-    
-    // An empty function.
-    function emptyFunction() {}
-    
+
     // Borrowed respectfully from Prototype
+    // TODO: Make public? "SGF.extend"?
     function extend(destination, source) {
       for (var property in source)
         destination[property] = source[property];
@@ -336,7 +388,7 @@
     }
     
     // Performs the necessary operations to make a regular JavaScript
-    // "class" compatible with Prototype's Class implementation.
+    // constructor Function compatible with Prototype's Class implementation.
     function makePrototypeClassCompatible(classRef) {
         classRef.prototype['initialize'] = classRef;
         classRef['subclasses'] = [];
@@ -372,7 +424,6 @@
     // URL of the executing JavaScript file is known.
     function scriptNameKnown(n) {
         scriptName = n;
-        //log(scriptName);
         engineRoot = scriptName.substring(0, scriptName.lastIndexOf("/")+1);
         scriptNode = getScript(scriptName);
         getParams(scriptNode);
@@ -422,50 +473,6 @@
     }
 
     
-
-
-    //////////////////////////////////////////////////////////////////////
-    //////////////////// "SGF" PUBLIC FUNCTIONS //////////////////////////
-    //////////////////////////////////////////////////////////////////////
-    function log() {
-        var args = arguments;
-        if (console && console['log']) {
-            // Function.prototype.apply.call is necessary for IE, which
-            // doesn't support console.log.apply. 
-            Function.prototype.apply.call(console['log'], console, args);
-        }
-        SGF['emit']("log", args);
-    }
-    SGF['log'] = log;
-    
-    var CLASS = function() {}
-    function inherits(ctor, superCtor) {
-        CLASS.prototype = superCtor.prototype;
-        ctor.prototype = new CLASS;
-    }
-    SGF['inherits'] = inherits;
-    
-    function require(moduleName) {
-        if (typeof moduleName == "string") {
-            moduleName = String(moduleName).toLowerCase();
-            if (moduleName in modules) {
-                return modules[moduleName];                
-            }
-            throw new Error("SGF.require: module name '" + moduleName + "' does not exist");
-        }
-        throw new Error("SGF.require: expected argument typeof 'string', got '" + (typeof moduleName) + "'");
-    }
-    SGF['require'] = require;
-    
-    function startWithDiv(gameSrc, screen) {
-        return new modules['game'](gameSrc, $(screen));
-    }
-    SGF['startWithDiv'] = startWithDiv;
-
-    function startFullScreen(gameSrc) {
-        return startWithDiv(gameSrc, document['body']);
-    }
-    SGF['startFullScreen'] = startFullScreen;
 
 
     //// Start things off... /////////////////////////////////////////////

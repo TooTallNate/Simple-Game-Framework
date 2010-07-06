@@ -35,7 +35,7 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
         self['addListener']("load", onLoad);
     }
 
-    var img = new Image();
+    var img = new Image;
     img['style']['position'] = "absolute";
     img['onload'] = function() {
         self['width'] = img['width'];
