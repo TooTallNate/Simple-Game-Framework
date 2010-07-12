@@ -96,7 +96,8 @@
 
             $super([bg, this.label], {
                 width: 7 * xLen,
-                height: 7 * yLen
+                height: 7 * yLen,
+                zIndex: 50
             });
         }
     });

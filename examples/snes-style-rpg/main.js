@@ -3,6 +3,7 @@
         Script = SGF.require("Script"),
         Sprite = SGF.require("Sprite"),
         Font = SGF.require("Font"),
+        Input = SGF.require("Input"),
         Spriteset = SGF.require("Spriteset");
 
     // We'll use the 'K' object for our namespace, and to store a reference to
@@ -43,8 +44,9 @@
     K.numResources = 7;
     function resourceLoaded() {
         K.resourcesLoaded++;
-        SGF.log(K.resourcesLoaded + " / " + K.numResources + " resources loaded!");
-        K.loadingLabel.setText(K.resourcesLoaded + " / " + K.numResources + " resources loaded!");
+        var str = K.resourcesLoaded + " / " + K.numResources + " resource"+(K.resourcesLoaded == 1 ? "" : "s")+" loaded!"
+        SGF.log(str);
+        K.loadingLabel.setText(str);
         if (K.resourcesLoaded === K.numResources) {
             K.removeComponent(K.loadingLabel);
             allResourcesLoaded();
@@ -108,15 +110,23 @@
         });
         K.npc.teleport(5, 8);
         K.npc.actionEvent = function() {
-            this.parent.addComponent(new K.Dialog('Hello "Simple Game Framework"!\nThis is a TEST...'));
+            //SGF.log("action");
+            var dialog = new K.Dialog('Hello "Simple Game Framework"!\nThis is a TEST...')
+            K.addComponent(dialog);
+            var keydown = (function(e) {
+                if (e.keyCode === Input.KEY_1) {
+                    this.parent.resume();
+                    K.removeComponent(dialog);
+                    K.input.removeListener("keydown", keydown);
+                }
+            }).bind(this);
+            K.input.addListener("keydown", keydown);
+            this.parent.pause();
         }
         map.addComponent(K.npc);
 
 
-
-        K.currentMap = map;
-        K.addComponent(map);
-    
+        K.addComponent(map);    
     }
 
 
@@ -223,7 +233,6 @@
 
             K.kefka.hasInput(false);
 
-            K.currentMap = K.cave;
 
             K.cave.opacity = 0;
             K.cave.addComponent(K.kefka);
@@ -262,7 +271,6 @@
     function caveExited(character) {
         K.kefka.hasInput(false);
 
-        K.currentMap = K.map;
 
         K.map.opacity = 0;
         K.map.addComponent(K.kefka);
