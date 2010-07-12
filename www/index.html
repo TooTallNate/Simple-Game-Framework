@@ -2,11 +2,69 @@
 <html>
     <head>
         <title>Simple Game Framework</title>
-
+        
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+
+        <!-- Fonts from Google -->
+        <link href='http://fonts.googleapis.com/css?family=IM+Fell+Great+Primer+SC' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css'>
+
+        <!-- Plain and simple page styles -->
+        <link href='styles.css' rel='stylesheet' type='text/css'>
+
+        <script type="text/javascript">
+            window.onload = function() {
+                var script = document.createElement("script");
+                script.setAttribute("type", "text/javascript");
+                script.setAttribute("src", "http://engine.simplegameframework.com/SGF.js");
+                var demos = ['snes-style-rpg', 'sprite-follow-mouse'];
+                var randomGame = demos[Math.floor(Math.random() * demos.length)];
+                var params = {
+                    game: "demos/" + randomGame,
+                    screen: "demoGameScreen",
+                    prototype: "http://ajax.googleapis.com/ajax/libs/prototype/1.6.1.0/prototype.js",
+                    swfobject: "http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"
+                };
+                for (var i in params) {
+                    script.setAttribute("data-" + i, params[i]);
+                }
+                document.getElementsByTagName("head")[0].appendChild(script);
+                
+                var demoGameName = document.getElementById("demoGameName");
+                demoGameName.setAttribute("href", "http://github.com/TooTallNate/Simple-Game-Framework/tree/master/examples/" + randomGame);
+                demoGameName.innerHTML = randomGame;
+            }
+        </script>
+
     </head>
     <body>
-        Simple Game Framework
+        <div id="content">
+            <h1>Simple Game Framework</h1>
+            <h2>An object-oriented JavaScript framework to<br />develop simple, shape and sprite based games.</h2>
+            
+            <p>If you love JavaScript and are interested in creating a 2D game deployable to multiple targets, then you've found the answer! The <code>Simple Game Framework</code>, or <code>SGF</code> for short, is an abstract JavaScript-based API that is intended to be implemented on top of multiple different JavaScript engines on multiple different platforms. <b>Write Once, Run Anywhere...</b></p>
+            
+            <p>Here's the <code>HTML Engine</code> running the demo game: <span title='Click to "View Source"'><a id="demoGameName" ></a></span>:
+                <div id="demoGameScreen"></div>
+            </p>
+            
+            <p>The <code>HTML Engine</code> is the most easily accessible for the homepage, but that same example can be run through Java, and all other SGF engines, without any change to the game's code.</p>
+            
+            <p>So if that kind of thing tickles your fancy, than what are you waiting for?<br />
+                Start writing that SGF game of your dreams!</p>
+                
+            <p><i>Where to go from here:</i>
+                <ul>
+                    <li><a href="javascript:location.reload(true)">Reload for a different "demo" game</a></li>
+                    <li><a href="http://api.simplegameframework.com">The Full API Reference</a></li>
+                    <li><a href="http://wiki.github.com/TooTallNate/Simple-Game-Framework/sgf-games-101">"SGF Games 101" Tutorial</a></li>
+                    <li><a href="http://wiki.github.com/TooTallNate/Simple-Game-Framework">The SGF Wiki; more tutorials</a></li>
+                    <li><a href="http://groups.google.com/group/simple-game-framework">The SGF Google Group; community discussion</a></li>
+                    <li><a href="http://github.com/TooTallNate/Simple-Game-Framework">The Source on GitHub</a></li>
+                </ul>
+            </p>
+        </div>
     </body>
 </html>
