@@ -13,12 +13,12 @@ var now = (function() {
 /** section: Core API
  * class Game
  *
- * Represents your game itself. That is, there's one instance of [[SGF.Game]] at
+ * Represents your game itself. That is, there's one instance of [[Game]] at
  * a time, but every game is it's own instance, and creation of this object is
  * automatic and behind the scenes. Most importantly, this class is in
  * charge of the "game loop". The methods you (as a game developer) will
- * probably be interested in are [[SGF.Game#addComponent]],
- * [[SGF.Game#removeComponent]], and [[SGF.Game#loadScript]]. But there are some
+ * probably be interested in are [[Game#addComponent]],
+ * [[Game#removeComponent]], and [[Game#loadScript]]. But there are some
  * more advances features for the adventurous.
  **/
 function Game(rootUrl, screen, options) {
@@ -26,12 +26,12 @@ function Game(rootUrl, screen, options) {
     var self = this;
     
     /**
-     * SGF.Game#addComponent(component) -> SGF.Game
-     * - component (SGF.Component): The top-level component to add to the game
+     * Game#addComponent(component) -> Game
+     * - component (Component): The top-level component to add to the game
      *                              loop and begin rendering.
      *                              
-     * Adds a [[SGF.Component]] to the game. It will be rendered onto the screen,
-     * and considered in the game loop. Returns the [[SGF.Game]] object (this),
+     * Adds a [[Component]] to the game. It will be rendered onto the screen,
+     * and considered in the game loop. Returns the [[Game]] object (this),
      * for chaining.
      **/
      /*
@@ -50,12 +50,12 @@ function Game(rootUrl, screen, options) {
     */
 
     /**
-     * SGF.Game#removeComponent(component) -> SGF.Game
-     * - component (SGF.Component): The top-level component to remove from the
+     * Game#removeComponent(component) -> Game
+     * - component (Component): The top-level component to remove from the
      *                              game loop and stop rendering.
      *                              
-     * Removes a [[SGF.Component]] that has previously been added to the game
-     * loop via [[SGF.Game#addComponent]].
+     * Removes a [[Component]] that has previously been added to the game
+     * loop via [[Game#addComponent]].
      **/
      /*
     self['removeComponent'] = function(component) {
@@ -71,7 +71,7 @@ function Game(rootUrl, screen, options) {
 
 
     /**
-     * SGF.Game#loadScript(filePath[, onLoad = null]) -> SGF.Game
+     * Game#loadScript(filePath[, onLoad = null]) -> Game
      * - filePath (String): The relative path, including filename of the game
      *                      script file to load.
      * - onLoad (Function): Optional. The `Function` to invoke when the script
@@ -90,7 +90,7 @@ function Game(rootUrl, screen, options) {
     */
 
     /**
-     * SGF.Game#observe(eventName, handler) -> SGF.Game
+     * Game#observe(eventName, handler) -> Game
      * - eventName (String): The name of the game event to attach a handler to.
      * - handler (Function): A reference to the `Function` that should be
      *                       executed when `eventName` occurs.
@@ -104,7 +104,7 @@ function Game(rootUrl, screen, options) {
      /*
     self['observe'] = function(eventName, handler) {
         if (!(eventName in listeners))
-            throw "SGF.Game#observe: '" + eventName + "' is not a recognized event name.";
+            throw "Game#observe: '" + eventName + "' is not a recognized event name.";
         if (typeof(handler) !== 'function') throw "'handler' must be a Function."
         listeners[eventName].push(handler);
         return self;
@@ -205,7 +205,7 @@ Game.prototype['updateCount'] = 0;
  * - updatesPerSecond (Number): The number of updates per second to set this
  *                              game.
  *                              
- * Sets the "Game Speed", or attempted times [[SGF.Game#update]] gets called
+ * Sets the "Game Speed", or attempted times [[Game#update]] gets called
  * per second. This can be changed at any point during gameplay. Note that
  * playing sounds and music speed do not get affected by changing this value.
  **/
@@ -255,7 +255,7 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
 }
 
 /**
- * SGF.Game#render(interpolation) -> undefined
+ * Game#render(interpolation) -> undefined
  * - interpolation (Number): The percentage (value between 0.0 and 1.0)
  *                           between the last call to update and the next
  *                           call to update this call to render is taking place.
@@ -263,14 +263,19 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
  *                           Components when the FPS are higher than UPS.
  *                           
  * The game render function that gets called automatically during each pass
- * in the game loop. Calls [[SGF.Component#render]] on all components added
- * through [[SGF.Game#addComponent]]. Afterwards, increments the
- * [[SGF.Game#renderCount]] value by 1. Game code should never have to call
+ * in the game loop. Calls [[Component#render]] on all components added
+ * through [[Game#addComponent]]. Afterwards, increments the
+ * [[Game#renderCount]] value by 1. Game code should never have to call
  * this method, however.
  **/
 Game.prototype['render'] = function() {
-    for (var i=0, component=null, renderCount = this['renderCount']++; i<this['components'].length; i++) {
-        component = this['components'][i];
+    for (var components = arrayClone(this['components']),
+            i=0,
+            component=null,
+            renderCount = this['renderCount']++,
+            length = components.length; i<length; i++) {
+        
+        component = components[i];
         if (component['render']) {
             component['render'](renderCount);
         }
@@ -304,8 +309,7 @@ Game.prototype['step'] = function() {
     // Sets the screen background color, screen width and height
     this['screen']['_r']();
 
-    // Renders all game components, taking the interpolation value
-    // to predict where the game objects will be placed.
+    // Renders all game components.
     this['render']();
 
     // Continue the game loop, as soon as the browser has time for it,
@@ -329,15 +333,20 @@ Game.prototype['stopped'] = function() {
 }
 
 /**
- * SGF.Game#update() -> undefined
- * The update function for the game loop. Calls [[SGF.Component#update]]
- * on all components added through [[SGF.Game#addComponent]]. Afterwards,
- * increments the [[SGF.Game#updateCount]] value by 1. Game code should
+ * Game#update() -> undefined
+ * The update function for the game loop. Calls [[Component#update]]
+ * on all components added through [[Game#addComponent]]. Afterwards,
+ * increments the [[Game#updateCount]] value by 1. Game code should
  * never have to call this method, however.
  **/
 Game.prototype['update'] = function() {
-    for (var i=0, component=null, updateCount=this['updateCount']++; i < this['components'].length; i++) {
-        component = this['components'][i];
+    for (var components = arrayClone(this['components']),
+            i=0,
+            component=null,
+            updateCount=this['updateCount']++,
+            length = components.length; i < length; i++) {
+        
+        component = components[i];
         if (component['update']) {
             component['update'](updateCount);
         }

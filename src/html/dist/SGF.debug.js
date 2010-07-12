@@ -70,7 +70,11 @@
     isIE7orLower =  isIE && parseFloat(navigator.userAgent.split("MSIE")[1]) <= 7,
     isWebKit = userAgent.indexOf('AppleWebKit/') > -1,
     isGecko = userAgent.indexOf('Gecko') > -1 && userAgent.indexOf('KHTML') === -1,
-    isMobileSafari = /Apple.*Mobile/.test(userAgent);
+    isMobileSafari = /Apple.*Mobile/.test(userAgent),
+    
+    // used in "arrayClone"
+    slice = Array.prototype['slice'];
+    
 
 
 
@@ -387,30 +391,29 @@ modules['component'] = Component;
  * class Container < Component
  *
  * A `Container` is a concrete [[Component]] subclass, that acts
- * similar to the main [[SGF.Screen]] itself. That is, you can add
- * `SGF.Component`s into a container just like you would in your game.
+ * similar to the main [[Screen]] itself. That is, you can add
+ * `Component`s into a container just like you would in your game.
  * Components placed inside containers are rendered with their attributes
- * relative to the Container's attributes. `SGF.Container` supports
- * all the regular [[SGF.Component]] properties (i.e. `width`, `height`, `x`,
- * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`) Changing the properties
+ * relative to the Container's attributes. `Container` supports
+ * all the regular [[Component]] properties (i.e. `width`, `height`, `x`,
+ * `y`, `opacity`, `rotation`, and `zIndex`). Changing the properties
  * on a Container affect the global properties of the Components placed inside.
  **/
 
-
 /**
- * new SGF.Container(components[, options])
- * - components (Array): An array of [[SGF.Component]]s that should initally
+ * new Container(components[, options])
+ * - components (Array): An array of [[Component]]s that should initally
  *                       be placed into the container. This is a required
  *                       argument, however it can be an empty array. Also
- *                       note that you can add or remove `SGF.Component`s
- *                       at any time via [[SGF.Container#addComponent]] and
- *                       [[SGF.Container#removeComponent]].
+ *                       note that you can add or remove `Component`s
+ *                       at any time via [[Container#addComponent]] and
+ *                       [[Container#removeComponent]].
  *                       
  * - options (Object): The optional 'options' object's properties are copied
- *                     this [[SGF.Container]] in the constructor. It allows all
- *                     the same default properties as [[SGF.Component]].
+ *                     this [[Container]] in the constructor. It allows all
+ *                     the same default properties as [[Component]].
  *
- * Instantiates a new [[SGF.Container]], adding the [[SGF.Component]]s found
+ * Instantiates a new [[Container]], adding the [[Component]]s found
  * in `components` initially.
  **/
 function Container(components, options) {
@@ -427,13 +430,13 @@ inherits(Container, Component);
 makePrototypeClassCompatible(Container);
 
 Container.prototype['update'] = function(updateCount) {
-    var self = this;
-    
-    // Not needed, since Component#update is empty
-    //Component.prototype.update.call(self, updateCount);
-    if (self['__shouldUpdateComponents']) {
-        for (var i=0, component=null; i < self['components'].length; i++) {
-            component = self['components'][i];
+    if (this['__shouldUpdateComponents']) {
+        for (var components = arrayClone(this['components']),
+                i=0,
+                component=null,
+                length = components['length']; i < length; i++) {
+
+            component = components[i];
             if (component['update']) {
                 component['update'](updateCount);
             }
@@ -442,15 +445,19 @@ Container.prototype['update'] = function(updateCount) {
 }
 
 Container.prototype['render'] = function(renderCount) {
-    Component.prototype['render'].call(this, renderCount);    
+    Component.prototype['render'].call(this, renderCount);
     if (this['__needsRender']) {
         this['__renderComponents'](renderCount);
     }
 }
 
 Container.prototype['__renderComponents'] = function(renderCount) {
-    for (var i=0, component = null; i < this['components'].length; i++) {
-        component = this['components'][i];
+    for (var components = arrayClone(this['components']),
+            i=0,
+            component = null,
+            length = components['length']; i < length; i++) {
+
+        component = components[i];
         if (component['render']) {
             component['render'](renderCount);
         }
@@ -871,7 +878,7 @@ function EventEmitter() {
 
     // In order to get EventEmitter functionality on a Class that already
     // extends another Class, invoke `EventEmitter.call(this)` in the
-    // constructor without the call to `Class.prototype = new EventEmitter(true)`.
+    // constructor without the call to `SGF.inherits(Class, EventEmitter)`.
     // This is needed for Game, which directly extends Container, but also
     // needs EventEmitter functionality.
     if (!(self instanceof EventEmitter)) {
@@ -911,10 +918,11 @@ EventEmitter.prototype['removeAllListeners'] = function(eventName) {
 }
 
 EventEmitter.prototype['emit'] = function(eventName, args) {
-    var listeners = this['_l'][eventName], i=0;
-    args = args || [];
+    var listeners = this['_l'][eventName];
     if (listeners) {
-        for (; i<listeners.length; i++) {
+        listeners = arrayClone(listeners);
+        args = args || [];
+        for (var i=0, length = listeners.length; i<length; i++) {
             listeners[i].apply(this, args);
         }
     }
@@ -1100,7 +1108,7 @@ function Input(game) {
     
 
     /**
-     * Input.observe(eventName, handler) -> SGF.Input
+     * Input.observe(eventName, handler) -> Input
      * - eventName (String): The name of the input event to observe. See below.
      * - handler (Function): The function to execute when `eventName` occurs.
      *
@@ -1111,7 +1119,7 @@ function Input(game) {
      *               to be used loosley, as in, a game client that contains a
      *               keyboard should call this for each key pressed. If the client
      *               contains is a portable gaming device, this should be called
-     *               for each button pressed on the controller. The `SGF.Input.KEY_*`
+     *               for each button pressed on the controller. The `Input.KEY_*`
      *               values should be used as the "basic" keyCode values.
      *               Optionally, the `keyCode` property in the argument object
      *               can be used to determine more precisely which key was pressed.
@@ -1136,69 +1144,37 @@ function Input(game) {
      *               pressed released.
      *                 
      **/
-     /*
-    function observe(eventName, handler) {
-        if (!(eventName in listeners))
-            throw "SGF.Input.observe: '" + eventName + "' is not a recognized event name."
-        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
-        listeners[eventName].push(handler);
-        return this;
-    }
-    */
-
     /**
-     * SGF.Input.stopObserving(eventName, handler) -> SGF.Input
+     * Input.stopObserving(eventName, handler) -> Input
      * - eventName (String): The name of the input event to stop observing.
      * - handler (Function): The function to remove from execution.
      *
      * Detaches Function `handler` from event `eventName`. See the description
-     * and list of events in [[SGF.Input.observe]] for more information on the
+     * and list of events in [[Input.observe]] for more information on the
      * allowed `eventName` values.
      **/
-    /*
-    function stopObserving(eventName, handler) {
-        if (!(eventName in listeners))
-            throw "SGF.Input.stopObserving: '" + eventName + "' is not a recognized event name."
-        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
-        var index = listeners[eventName].indexOf(handler);
-        if (index > -1)
-            arrayRemove(listeners[eventName], index);
-        return this;
-    }
-    */
-
-
-
-
-        
-        // Public "Game" Methods
-        //observe: observe,
-        //stopObserving: stopObserving,
-        //isKeyDown: isKeyDown,
-
-        // Public "Game" Properties
-        /**
-         * SGF.Input.pointerX -> Number
-         *
-         * The current X coordinate of the mouse pointer.
-         **/
-        /**
-         * SGF.Input.pointerX -> Number
-         *
-         * The current Y coordinate of the mouse pointer.
-         **/
 }
 
 inherits(Input, EventEmitter);
 
+/**
+ * Input#pointerX -> Number
+ *
+ * The current X coordinate of the mouse pointer.
+ **/
 Input.prototype['pointerX'] = 0;
+/**
+ * Input#pointerY -> Number
+ *
+ * The current Y coordinate of the mouse pointer.
+ **/
 Input.prototype['pointerY'] = 0;
 /**
  * Input#isKeyDown(keyCode) -> Boolean
  * - keyCode (Number): The keyCode to check if it is being pressed.
  *
  * Returns `true` if the key `keyCode` is currently being pressed down, or
- * `false` otherwise. `keyCode` can be any of the `SGF.Input.KEY_*` values,
+ * `false` otherwise. `keyCode` can be any of the `Input.KEY_*` values,
  * or any other key code value for a input device with more keys (like a
  * full keyboard).
  **/
@@ -1210,7 +1186,7 @@ Input.prototype['toString'] = functionReturnString("[object Input]");
 
 // Constants
 /**
- * SGF.Input.MOUSE_PRIMARY -> ?
+ * Input.MOUSE_PRIMARY -> ?
  *
  * Indicates that the primary mouse button has been clicked. This is
  * usually the left mouse button for right-handed people, and the right
@@ -1218,7 +1194,7 @@ Input.prototype['toString'] = functionReturnString("[object Input]");
  **/
 Input['MOUSE_PRIMARY'] = 0;
 /**
- * SGF.Input.MOUSE_MIDDLE -> ?
+ * Input.MOUSE_MIDDLE -> ?
  *
  * Indicates that the middle button on the mouse has been clicked. Note
  * that not all mice have a middle button, so if you are planning on
@@ -1227,7 +1203,7 @@ Input['MOUSE_PRIMARY'] = 0;
  **/
 Input['MOUSE_MIDDLE'] = 1;
 /**
- * SGF.Input.MOUSE_SECONDARY -> ?
+ * Input.MOUSE_SECONDARY -> ?
  *
  * Indicates that the secondary mouse button has been clicked. This is
  * usually the right mouse button for right-handed people, and the left
@@ -1235,31 +1211,31 @@ Input['MOUSE_MIDDLE'] = 1;
  **/
 Input['MOUSE_SECONDARY'] = 2;
 /**
- * SGF.Input.KEY_DOWN -> ?
+ * Input.KEY_DOWN -> ?
  *
  * Indicates that the `down` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_DOWN'] = 40;
 /**
- * SGF.Input.KEY_UP -> ?
+ * Input.KEY_UP -> ?
  *
  * Indicates that the `up` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_UP'] = 38;
 /**
- * SGF.Input.KEY_LEFT -> ?
+ * Input.KEY_LEFT -> ?
  *
  * Indicates that the `left` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_LEFT'] = 37;
 /**
- * SGF.Input.KEY_RIGHT -> ?
+ * Input.KEY_RIGHT -> ?
  *
  * Indicates that the `right` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_RIGHT'] = 39;
 /**
- * SGF.Input.KEY_1 -> ?
+ * Input.KEY_1 -> ?
  *
  * Indicates that first button on the keypad is being pressed. The "first
  * button" can be configurable to say a client with a keyboard, but if
@@ -1267,19 +1243,19 @@ Input['KEY_RIGHT'] = 39;
  **/
 Input['KEY_1'] = 32;
 /**
- * SGF.Input.KEY_2 -> ?
+ * Input.KEY_2 -> ?
  *
  * Indicates that second button on the keypad is being pressed.
  **/
 Input['KEY_2'] = 33;
 /**
- * SGF.Input.KEY_3 -> ?
+ * Input.KEY_3 -> ?
  *
  * Indicates that third button on the keypad is being pressed.
  **/
 Input['KEY_3'] = 34;
 /**
- * SGF.Input.KEY_4 -> ?
+ * Input.KEY_4 -> ?
  *
  * Indicates that fourth button on the keypad is being pressed.
  **/
@@ -1472,12 +1448,12 @@ var now = (function() {
 /** section: Core API
  * class Game
  *
- * Represents your game itself. That is, there's one instance of [[SGF.Game]] at
+ * Represents your game itself. That is, there's one instance of [[Game]] at
  * a time, but every game is it's own instance, and creation of this object is
  * automatic and behind the scenes. Most importantly, this class is in
  * charge of the "game loop". The methods you (as a game developer) will
- * probably be interested in are [[SGF.Game#addComponent]],
- * [[SGF.Game#removeComponent]], and [[SGF.Game#loadScript]]. But there are some
+ * probably be interested in are [[Game#addComponent]],
+ * [[Game#removeComponent]], and [[Game#loadScript]]. But there are some
  * more advances features for the adventurous.
  **/
 function Game(rootUrl, screen, options) {
@@ -1485,12 +1461,12 @@ function Game(rootUrl, screen, options) {
     var self = this;
     
     /**
-     * SGF.Game#addComponent(component) -> SGF.Game
-     * - component (SGF.Component): The top-level component to add to the game
+     * Game#addComponent(component) -> Game
+     * - component (Component): The top-level component to add to the game
      *                              loop and begin rendering.
      *                              
-     * Adds a [[SGF.Component]] to the game. It will be rendered onto the screen,
-     * and considered in the game loop. Returns the [[SGF.Game]] object (this),
+     * Adds a [[Component]] to the game. It will be rendered onto the screen,
+     * and considered in the game loop. Returns the [[Game]] object (this),
      * for chaining.
      **/
      /*
@@ -1509,12 +1485,12 @@ function Game(rootUrl, screen, options) {
     */
 
     /**
-     * SGF.Game#removeComponent(component) -> SGF.Game
-     * - component (SGF.Component): The top-level component to remove from the
+     * Game#removeComponent(component) -> Game
+     * - component (Component): The top-level component to remove from the
      *                              game loop and stop rendering.
      *                              
-     * Removes a [[SGF.Component]] that has previously been added to the game
-     * loop via [[SGF.Game#addComponent]].
+     * Removes a [[Component]] that has previously been added to the game
+     * loop via [[Game#addComponent]].
      **/
      /*
     self['removeComponent'] = function(component) {
@@ -1530,7 +1506,7 @@ function Game(rootUrl, screen, options) {
 
 
     /**
-     * SGF.Game#loadScript(filePath[, onLoad = null]) -> SGF.Game
+     * Game#loadScript(filePath[, onLoad = null]) -> Game
      * - filePath (String): The relative path, including filename of the game
      *                      script file to load.
      * - onLoad (Function): Optional. The `Function` to invoke when the script
@@ -1549,7 +1525,7 @@ function Game(rootUrl, screen, options) {
     */
 
     /**
-     * SGF.Game#observe(eventName, handler) -> SGF.Game
+     * Game#observe(eventName, handler) -> Game
      * - eventName (String): The name of the game event to attach a handler to.
      * - handler (Function): A reference to the `Function` that should be
      *                       executed when `eventName` occurs.
@@ -1563,7 +1539,7 @@ function Game(rootUrl, screen, options) {
      /*
     self['observe'] = function(eventName, handler) {
         if (!(eventName in listeners))
-            throw "SGF.Game#observe: '" + eventName + "' is not a recognized event name.";
+            throw "Game#observe: '" + eventName + "' is not a recognized event name.";
         if (typeof(handler) !== 'function') throw "'handler' must be a Function."
         listeners[eventName].push(handler);
         return self;
@@ -1664,7 +1640,7 @@ Game.prototype['updateCount'] = 0;
  * - updatesPerSecond (Number): The number of updates per second to set this
  *                              game.
  *                              
- * Sets the "Game Speed", or attempted times [[SGF.Game#update]] gets called
+ * Sets the "Game Speed", or attempted times [[Game#update]] gets called
  * per second. This can be changed at any point during gameplay. Note that
  * playing sounds and music speed do not get affected by changing this value.
  **/
@@ -1714,7 +1690,7 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
 }
 
 /**
- * SGF.Game#render(interpolation) -> undefined
+ * Game#render(interpolation) -> undefined
  * - interpolation (Number): The percentage (value between 0.0 and 1.0)
  *                           between the last call to update and the next
  *                           call to update this call to render is taking place.
@@ -1722,14 +1698,19 @@ Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
  *                           Components when the FPS are higher than UPS.
  *                           
  * The game render function that gets called automatically during each pass
- * in the game loop. Calls [[SGF.Component#render]] on all components added
- * through [[SGF.Game#addComponent]]. Afterwards, increments the
- * [[SGF.Game#renderCount]] value by 1. Game code should never have to call
+ * in the game loop. Calls [[Component#render]] on all components added
+ * through [[Game#addComponent]]. Afterwards, increments the
+ * [[Game#renderCount]] value by 1. Game code should never have to call
  * this method, however.
  **/
 Game.prototype['render'] = function() {
-    for (var i=0, component=null, renderCount = this['renderCount']++; i<this['components'].length; i++) {
-        component = this['components'][i];
+    for (var components = arrayClone(this['components']),
+            i=0,
+            component=null,
+            renderCount = this['renderCount']++,
+            length = components.length; i<length; i++) {
+        
+        component = components[i];
         if (component['render']) {
             component['render'](renderCount);
         }
@@ -1763,8 +1744,7 @@ Game.prototype['step'] = function() {
     // Sets the screen background color, screen width and height
     this['screen']['_r']();
 
-    // Renders all game components, taking the interpolation value
-    // to predict where the game objects will be placed.
+    // Renders all game components.
     this['render']();
 
     // Continue the game loop, as soon as the browser has time for it,
@@ -1788,15 +1768,20 @@ Game.prototype['stopped'] = function() {
 }
 
 /**
- * SGF.Game#update() -> undefined
- * The update function for the game loop. Calls [[SGF.Component#update]]
- * on all components added through [[SGF.Game#addComponent]]. Afterwards,
- * increments the [[SGF.Game#updateCount]] value by 1. Game code should
+ * Game#update() -> undefined
+ * The update function for the game loop. Calls [[Component#update]]
+ * on all components added through [[Game#addComponent]]. Afterwards,
+ * increments the [[Game#updateCount]] value by 1. Game code should
  * never have to call this method, however.
  **/
 Game.prototype['update'] = function() {
-    for (var i=0, component=null, updateCount=this['updateCount']++; i < this['components'].length; i++) {
-        component = this['components'][i];
+    for (var components = arrayClone(this['components']),
+            i=0,
+            component=null,
+            updateCount=this['updateCount']++,
+            length = components.length; i < length; i++) {
+        
+        component = components[i];
         if (component['update']) {
             component['update'](updateCount);
         }
@@ -2641,6 +2626,11 @@ modules['server'] = Server;
         for (var property in source)
             destination[property] = source[property];
         return destination;
+    }
+    
+    // Returns a clone of the array
+    function arrayClone(array) {
+        return slice.call(array, 0);
     }
     
     // Array Remove - By John Resig (MIT Licensed)

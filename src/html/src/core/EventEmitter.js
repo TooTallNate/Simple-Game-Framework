@@ -7,7 +7,7 @@ function EventEmitter() {
 
     // In order to get EventEmitter functionality on a Class that already
     // extends another Class, invoke `EventEmitter.call(this)` in the
-    // constructor without the call to `Class.prototype = new EventEmitter(true)`.
+    // constructor without the call to `SGF.inherits(Class, EventEmitter)`.
     // This is needed for Game, which directly extends Container, but also
     // needs EventEmitter functionality.
     if (!(self instanceof EventEmitter)) {
@@ -47,10 +47,11 @@ EventEmitter.prototype['removeAllListeners'] = function(eventName) {
 }
 
 EventEmitter.prototype['emit'] = function(eventName, args) {
-    var listeners = this['_l'][eventName], i=0;
-    args = args || [];
+    var listeners = this['_l'][eventName];
     if (listeners) {
-        for (; i<listeners.length; i++) {
+        listeners = arrayClone(listeners);
+        args = args || [];
+        for (var i=0, length = listeners.length; i<length; i++) {
             listeners[i].apply(this, args);
         }
     }

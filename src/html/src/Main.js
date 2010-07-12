@@ -70,7 +70,11 @@
     isIE7orLower =  isIE && parseFloat(navigator.userAgent.split("MSIE")[1]) <= 7,
     isWebKit = userAgent.indexOf('AppleWebKit/') > -1,
     isGecko = userAgent.indexOf('Gecko') > -1 && userAgent.indexOf('KHTML') === -1,
-    isMobileSafari = /Apple.*Mobile/.test(userAgent);
+    isMobileSafari = /Apple.*Mobile/.test(userAgent),
+    
+    // used in "arrayClone"
+    slice = Array.prototype['slice'];
+    
 
 
 
@@ -366,6 +370,11 @@
         for (var property in source)
             destination[property] = source[property];
         return destination;
+    }
+    
+    // Returns a clone of the array
+    function arrayClone(array) {
+        return slice.call(array, 0);
     }
     
     // Array Remove - By John Resig (MIT Licensed)

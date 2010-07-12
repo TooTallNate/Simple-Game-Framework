@@ -2,30 +2,29 @@
  * class Container < Component
  *
  * A `Container` is a concrete [[Component]] subclass, that acts
- * similar to the main [[SGF.Screen]] itself. That is, you can add
- * `SGF.Component`s into a container just like you would in your game.
+ * similar to the main [[Screen]] itself. That is, you can add
+ * `Component`s into a container just like you would in your game.
  * Components placed inside containers are rendered with their attributes
- * relative to the Container's attributes. `SGF.Container` supports
- * all the regular [[SGF.Component]] properties (i.e. `width`, `height`, `x`,
- * `y`, `dx`, `dy`, `opacity`, `rotation`, and `zIndex`) Changing the properties
+ * relative to the Container's attributes. `Container` supports
+ * all the regular [[Component]] properties (i.e. `width`, `height`, `x`,
+ * `y`, `opacity`, `rotation`, and `zIndex`). Changing the properties
  * on a Container affect the global properties of the Components placed inside.
  **/
 
-
 /**
- * new SGF.Container(components[, options])
- * - components (Array): An array of [[SGF.Component]]s that should initally
+ * new Container(components[, options])
+ * - components (Array): An array of [[Component]]s that should initally
  *                       be placed into the container. This is a required
  *                       argument, however it can be an empty array. Also
- *                       note that you can add or remove `SGF.Component`s
- *                       at any time via [[SGF.Container#addComponent]] and
- *                       [[SGF.Container#removeComponent]].
+ *                       note that you can add or remove `Component`s
+ *                       at any time via [[Container#addComponent]] and
+ *                       [[Container#removeComponent]].
  *                       
  * - options (Object): The optional 'options' object's properties are copied
- *                     this [[SGF.Container]] in the constructor. It allows all
- *                     the same default properties as [[SGF.Component]].
+ *                     this [[Container]] in the constructor. It allows all
+ *                     the same default properties as [[Component]].
  *
- * Instantiates a new [[SGF.Container]], adding the [[SGF.Component]]s found
+ * Instantiates a new [[Container]], adding the [[Component]]s found
  * in `components` initially.
  **/
 function Container(components, options) {
@@ -42,13 +41,13 @@ inherits(Container, Component);
 makePrototypeClassCompatible(Container);
 
 Container.prototype['update'] = function(updateCount) {
-    var self = this;
-    
-    // Not needed, since Component#update is empty
-    //Component.prototype.update.call(self, updateCount);
-    if (self['__shouldUpdateComponents']) {
-        for (var i=0, component=null; i < self['components'].length; i++) {
-            component = self['components'][i];
+    if (this['__shouldUpdateComponents']) {
+        for (var components = arrayClone(this['components']),
+                i=0,
+                component=null,
+                length = components['length']; i < length; i++) {
+
+            component = components[i];
             if (component['update']) {
                 component['update'](updateCount);
             }
@@ -57,15 +56,19 @@ Container.prototype['update'] = function(updateCount) {
 }
 
 Container.prototype['render'] = function(renderCount) {
-    Component.prototype['render'].call(this, renderCount);    
+    Component.prototype['render'].call(this, renderCount);
     if (this['__needsRender']) {
         this['__renderComponents'](renderCount);
     }
 }
 
 Container.prototype['__renderComponents'] = function(renderCount) {
-    for (var i=0, component = null; i < this['components'].length; i++) {
-        component = this['components'][i];
+    for (var components = arrayClone(this['components']),
+            i=0,
+            component = null,
+            length = components['length']; i < length; i++) {
+
+        component = components[i];
         if (component['render']) {
             component['render'](renderCount);
         }

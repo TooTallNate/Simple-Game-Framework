@@ -19,7 +19,7 @@ function Input(game) {
     
 
     /**
-     * Input.observe(eventName, handler) -> SGF.Input
+     * Input.observe(eventName, handler) -> Input
      * - eventName (String): The name of the input event to observe. See below.
      * - handler (Function): The function to execute when `eventName` occurs.
      *
@@ -30,7 +30,7 @@ function Input(game) {
      *               to be used loosley, as in, a game client that contains a
      *               keyboard should call this for each key pressed. If the client
      *               contains is a portable gaming device, this should be called
-     *               for each button pressed on the controller. The `SGF.Input.KEY_*`
+     *               for each button pressed on the controller. The `Input.KEY_*`
      *               values should be used as the "basic" keyCode values.
      *               Optionally, the `keyCode` property in the argument object
      *               can be used to determine more precisely which key was pressed.
@@ -55,69 +55,37 @@ function Input(game) {
      *               pressed released.
      *                 
      **/
-     /*
-    function observe(eventName, handler) {
-        if (!(eventName in listeners))
-            throw "SGF.Input.observe: '" + eventName + "' is not a recognized event name."
-        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
-        listeners[eventName].push(handler);
-        return this;
-    }
-    */
-
     /**
-     * SGF.Input.stopObserving(eventName, handler) -> SGF.Input
+     * Input.stopObserving(eventName, handler) -> Input
      * - eventName (String): The name of the input event to stop observing.
      * - handler (Function): The function to remove from execution.
      *
      * Detaches Function `handler` from event `eventName`. See the description
-     * and list of events in [[SGF.Input.observe]] for more information on the
+     * and list of events in [[Input.observe]] for more information on the
      * allowed `eventName` values.
      **/
-    /*
-    function stopObserving(eventName, handler) {
-        if (!(eventName in listeners))
-            throw "SGF.Input.stopObserving: '" + eventName + "' is not a recognized event name."
-        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
-        var index = listeners[eventName].indexOf(handler);
-        if (index > -1)
-            arrayRemove(listeners[eventName], index);
-        return this;
-    }
-    */
-
-
-
-
-        
-        // Public "Game" Methods
-        //observe: observe,
-        //stopObserving: stopObserving,
-        //isKeyDown: isKeyDown,
-
-        // Public "Game" Properties
-        /**
-         * SGF.Input.pointerX -> Number
-         *
-         * The current X coordinate of the mouse pointer.
-         **/
-        /**
-         * SGF.Input.pointerX -> Number
-         *
-         * The current Y coordinate of the mouse pointer.
-         **/
 }
 
 inherits(Input, EventEmitter);
 
+/**
+ * Input#pointerX -> Number
+ *
+ * The current X coordinate of the mouse pointer.
+ **/
 Input.prototype['pointerX'] = 0;
+/**
+ * Input#pointerY -> Number
+ *
+ * The current Y coordinate of the mouse pointer.
+ **/
 Input.prototype['pointerY'] = 0;
 /**
  * Input#isKeyDown(keyCode) -> Boolean
  * - keyCode (Number): The keyCode to check if it is being pressed.
  *
  * Returns `true` if the key `keyCode` is currently being pressed down, or
- * `false` otherwise. `keyCode` can be any of the `SGF.Input.KEY_*` values,
+ * `false` otherwise. `keyCode` can be any of the `Input.KEY_*` values,
  * or any other key code value for a input device with more keys (like a
  * full keyboard).
  **/
@@ -129,7 +97,7 @@ Input.prototype['toString'] = functionReturnString("[object Input]");
 
 // Constants
 /**
- * SGF.Input.MOUSE_PRIMARY -> ?
+ * Input.MOUSE_PRIMARY -> ?
  *
  * Indicates that the primary mouse button has been clicked. This is
  * usually the left mouse button for right-handed people, and the right
@@ -137,7 +105,7 @@ Input.prototype['toString'] = functionReturnString("[object Input]");
  **/
 Input['MOUSE_PRIMARY'] = 0;
 /**
- * SGF.Input.MOUSE_MIDDLE -> ?
+ * Input.MOUSE_MIDDLE -> ?
  *
  * Indicates that the middle button on the mouse has been clicked. Note
  * that not all mice have a middle button, so if you are planning on
@@ -146,7 +114,7 @@ Input['MOUSE_PRIMARY'] = 0;
  **/
 Input['MOUSE_MIDDLE'] = 1;
 /**
- * SGF.Input.MOUSE_SECONDARY -> ?
+ * Input.MOUSE_SECONDARY -> ?
  *
  * Indicates that the secondary mouse button has been clicked. This is
  * usually the right mouse button for right-handed people, and the left
@@ -154,31 +122,31 @@ Input['MOUSE_MIDDLE'] = 1;
  **/
 Input['MOUSE_SECONDARY'] = 2;
 /**
- * SGF.Input.KEY_DOWN -> ?
+ * Input.KEY_DOWN -> ?
  *
  * Indicates that the `down` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_DOWN'] = 40;
 /**
- * SGF.Input.KEY_UP -> ?
+ * Input.KEY_UP -> ?
  *
  * Indicates that the `up` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_UP'] = 38;
 /**
- * SGF.Input.KEY_LEFT -> ?
+ * Input.KEY_LEFT -> ?
  *
  * Indicates that the `left` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_LEFT'] = 37;
 /**
- * SGF.Input.KEY_RIGHT -> ?
+ * Input.KEY_RIGHT -> ?
  *
  * Indicates that the `right` arrow or button is being pressed on the keypad.
  **/
 Input['KEY_RIGHT'] = 39;
 /**
- * SGF.Input.KEY_1 -> ?
+ * Input.KEY_1 -> ?
  *
  * Indicates that first button on the keypad is being pressed. The "first
  * button" can be configurable to say a client with a keyboard, but if
@@ -186,19 +154,19 @@ Input['KEY_RIGHT'] = 39;
  **/
 Input['KEY_1'] = 32;
 /**
- * SGF.Input.KEY_2 -> ?
+ * Input.KEY_2 -> ?
  *
  * Indicates that second button on the keypad is being pressed.
  **/
 Input['KEY_2'] = 33;
 /**
- * SGF.Input.KEY_3 -> ?
+ * Input.KEY_3 -> ?
  *
  * Indicates that third button on the keypad is being pressed.
  **/
 Input['KEY_3'] = 34;
 /**
- * SGF.Input.KEY_4 -> ?
+ * Input.KEY_4 -> ?
  *
  * Indicates that fourth button on the keypad is being pressed.
  **/
