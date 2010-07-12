@@ -1062,7 +1062,7 @@ var Screen = function(game) {
 inherits(Screen, EventEmitter);
 
 Screen.prototype['_r'] = function() {
-    var self = this; color = self['color'], element = self['element'];
+    var self = this, color = self['color'], element = self['element'];
     self['width'] = self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth;
     self['height'] = self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight;
     if (color != self['_c']) {
@@ -1348,7 +1348,7 @@ function keyupHandler(event) {
 
         currentInput['_k'][event.keyCode] = false;
 
-        currentInput['emit']("keydown", [eventObj]);
+        currentInput['emit']("keyup", [eventObj]);
     }
 }
 
@@ -1895,8 +1895,12 @@ Font.prototype['toString'] = functionReturnString("[object Font]");
 
 modules['font'] = Font;
 
-// Dynamically load a script element, calling an optional callback
-// function once the script has finished loading.
+/** section: Resources API
+ * class Script
+ *
+ * The `Script` class is responsible for loading additional JavaScript source
+ * files.
+ **/
 function Script(game, scriptUrl, onLoad) {
     if (game instanceof Game) {
         scriptUrl = game['root'] + scriptUrl;
@@ -1921,17 +1925,30 @@ function Script(game, scriptUrl, onLoad) {
 
     script['onload'] = script['onreadystatechange'] = function() {
         if ((!script['readyState'] || script['readyState'] == "loaded" || script['readyState'] == "complete")) {
-			//log("readyState: " + script['readyState']);
+
+            // Remove script from the document.
+            if (script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
+            // Now remove all properties on the object
+            for (var prop in script) {
+                delete script[prop];
+            }
+            script = null;
+
+            //log("readyState: " + script['readyState']);
             self['loaded'] = true;
         	self['emit']("load");
         }
     }
 
-    self['self'] = script['src'] = scriptUrl;
+    script['src'] = scriptUrl;
 
     // Add the script element to the document head
     document.getElementsByTagName("head")[0].appendChild(script);
 
+    // Set our 'src' after appending to "head" so that the URL is absolute.
+    self['src'] = script['src'];
 }
 
 inherits(Script, EventEmitter);
@@ -1940,24 +1957,9 @@ makePrototypeClassCompatible(Script);
 Script.prototype['loaded'] = false;
 Script.prototype['toString'] = functionReturnString("[object Script]");
 
-
-// TODO: Remove?
-// Expects a <script> node reference, and removes it from the DOM, and
-// destroys the object in a memory leak free manner.
-function destroyScript(script) {
-    // If it's somewhere in the DOM, remove it!
-    if (script.parentNode)
-        script.parentNode.removeChild(script);
-    // Now remove all properties on the object
-    for (var prop in script)
-        delete script[prop];
-    return script;
-}
-Script['destroyScript'] = destroyScript;
-
 modules['script'] = Script;
 
-var Sound = function(path) {
+var Sound = function(game, path, callback) {
     var self = this;
 
     EventEmitter.call(self);
@@ -1968,35 +1970,52 @@ makePrototypeClassCompatible(Sound);
 
 Sound.prototype['toString'] = functionReturnString("[object Sound]");
 
-
 modules['sound'] = Sound;
 
-/** section: Components API
+/** section: Resources API
  * class Spriteset
  *
  * The `Spriteset` class is responsible for loading and keeping a
- * reference to the in-memory Image data for a Spriteset.
+ * reference to the in-memory Image data for a Spriteset. The actual type of
+ * Image resource supported depends on the SGF engine in use. However, `.jpg`
+ * `.png`, `.gif` are highly recommended to be implemented in every engine.
  **/
 
  /**
-  * new Spriteset(game, path, spriteWidth, spriteHeight[, onLoad])
-  * - game (Game): The relative path and filename of the Image to load.
-  * - path (String): The relative path and filename of the Image to load.
+  * new Spriteset(path, spriteWidth, spriteHeight[, onLoad])
+  * - path (String): The absolute or relative path of the Image resource to
+  *                  load. A relative path using `new` will be relative to the
+  *                  current page. To get a resource relative to your game
+  *                  root, use [[Game#getSpriteset]] instead.
   * - spriteWidth (Number): The width in pixels of each sprite on the spriteset.
   *                         If you are loading a single sprite, this should be
   *                         the width of the image itself.
   * - spriteHeight (Number): The height in pixels of each sprite on the spriteset.
   *                          If you are loading a single sprite, this should be
   *                          the height of the image itself.
+  * - onLoad (Function): Optional. The `Function` to call once the Image
+  *                      finishes loading. If a 404 or other error occurs
+  *                      while loading, an `Error` object will be passed as
+  *                      an argument to the function.
   *
-  * To create an instance of a [[SGF.Spriteset]], you must first know the
+  * To create an instance of a [[Spriteset]], you must first know the
   * relative path of the image file in your game folder, and you must know
-  * the width and height of each sprite in pixels on this [[SGF.Spriteset]].
+  * the width and height of each sprite in pixels on this [[Spriteset]].
   *
   * Once instantiated, there are no instance methods to call, you just need
-  * to pass the reference to this [[SGF.Spriteset]] to new [[SGF.Sprite]]s.
+  * to pass the [[Spriteset]] reference to new [[Sprite]]s.
   **/
 function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
+    if (game instanceof Game) {
+        path = game['root'] + path;
+    } else {
+        // Absolute URL was given...
+        onLoad = spriteHeight;
+        spriteHeight = spriteWidth;
+        spriteWidth = path;
+        path = game;
+    }
+
     var self = this;
     
     EventEmitter.call(self);
@@ -2020,7 +2039,8 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
     self['image'] = img;
 
     // Finally begin loading the image itself!
-    self['src'] = img['src'] = game['root'] + path;
+    img['src'] = path;
+    self['src'] = img['src'];
 }
 
 inherits(Spriteset, EventEmitter);
@@ -2030,55 +2050,52 @@ makePrototypeClassCompatible(Spriteset);
 /**
  * Spriteset#loaded -> Boolean
  *
- * `false` immediately after instantiation, `true` once the Image file
- * has been completely loaded into memory.
+ * Read-only. `false` immediately after instantiation, `true` once the Image
+ * file has been completely loaded into memory, just before the `load` event
+ * is fired.
  **/
 Spriteset.prototype['loaded'] = false;
 
 /**
- * SGF.Spriteset#width -> Number
+ * Spriteset#width -> Number
  *
- * Read-only. The total width of this [[SGF.Spriteset]]. The value of this
- * property is `-1` before it has loaded completely
- * (i.e. [[SGF.Spriteset#loaded]] == false).
+ * Read-only. The total width of this [[Spriteset]]. The value of this
+ * property is `NaN` before it has loaded completely
+ * (i.e. [[Spriteset#loaded]] == false).
  **/
-Spriteset.prototype['width'] = -1;
+Spriteset.prototype['width'] = NaN;
 
 /**
- * SGF.Spriteset#height -> Number
+ * Spriteset#height -> Number
  *
- * Read-only. The total height of this [[SGF.Spriteset]]. The value of this
- * property is `-1` before it has loaded completely
- * (i.e. [[SGF.Spriteset#loaded]] == false).
+ * Read-only. The total height of this [[Spriteset]]. The value of this
+ * property is `NaN` before it has loaded completely
+ * (i.e. [[Spriteset#loaded]] == false).
  **/
-Spriteset.prototype['height'] = -1;
+Spriteset.prototype['height'] = NaN;
 
 /**
- * SGF.Spriteset#spriteWidth -> Number
+ * Spriteset#spriteWidth -> Number
  *
- * Read-only. The width of each sprite on this [[SGF.Spriteset]]. This
+ * Read-only. The width of each sprite on this [[Spriteset]]. This
  * is the value that was set in the constructor.
  **/
-Spriteset.prototype['spriteWidth'] = -1;
+Spriteset.prototype['spriteWidth'] = NaN;
 
 /**
- * SGF.Spriteset#spriteHeight -> Number
+ * Spriteset#spriteHeight -> Number
  *
- * Read-only. The height of each sprite on this [[SGF.Spriteset]]. This
+ * Read-only. The height of each sprite on this [[Spriteset]]. This
  * is the value that was set in the constructor.
  **/
-Spriteset.prototype['spriteHeight'] = -1;
+Spriteset.prototype['spriteHeight'] = NaN;
 
 /**
  * Spriteset#src -> String
  * 
- * The absolute URL to the image resource.
+ * The absolute URL to the Image resource.
  **/
 Spriteset.prototype['src'] = null;
-
-Spriteset.prototype['toElement'] = function() {
-    return this['image'].cloneNode(true);
-}
 
 Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
 
@@ -2576,7 +2593,7 @@ modules['server'] = Server;
     
     function soundJsLoaded() {
         window['Sound']['swfPath'] = makeFullyQualified(params['soundjs-swf']);
-        //log("SoundJS SWF Path: " + window['Sound']['swfPath']);
+        debug("Setting SoundJS SWF Path: " + window['Sound']['swfPath']);
         libraryLoaded();
     }
     
@@ -2621,16 +2638,16 @@ modules['server'] = Server;
     // Borrowed respectfully from Prototype
     // TODO: Make public? "SGF.extend"?
     function extend(destination, source) {
-      for (var property in source)
-        destination[property] = source[property];
-      return destination;
+        for (var property in source)
+            destination[property] = source[property];
+        return destination;
     }
     
     // Array Remove - By John Resig (MIT Licensed)
     function arrayRemove(array, from, to) {
-      var rest = array.slice((to || from) + 1 || array.length);
-      array.length = from < 0 ? array.length + from : from;
-      return array.push.apply(array, rest);
+        var rest = array.slice((to || from) + 1 || array.length);
+        array.length = from < 0 ? array.length + from : from;
+        return array.push.apply(array, rest);
     }
 
     // Tests if the given path is fully qualified or relative.
@@ -2673,6 +2690,14 @@ modules['server'] = Server;
             return this[prop];
         }
     }
+    
+    // Same as SGF.log, but not public, and only actually outputs anything
+    // when the 'debug' param is present on the <script> node.
+    function debug() {
+        if (!!params['debug']) {
+            log.apply(SGF, arguments);
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////
     ////////////////////// "EVENT" FUNCTIONS /////////////////////////////
@@ -2704,7 +2729,7 @@ modules['server'] = Server;
     // files have finished their loading process. Once this happens, we can
     // define all the SGF classes, and afterwards invoke the 'load' listeners.
     function allLibrariesLoaded() {
-        //log("all libs loaded!");
+        debug("All dependant libraries loaded!");
                 
         Input['grab']();
         
@@ -2718,7 +2743,7 @@ modules['server'] = Server;
     function sgfLoaded() {
 
         var loadEndTime = new Date();
-        //log("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
+        debug("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
 
         if (params['game']) {
             if (params['screen']) {

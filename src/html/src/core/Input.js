@@ -267,7 +267,7 @@ function keyupHandler(event) {
 
         currentInput['_k'][event.keyCode] = false;
 
-        currentInput['emit']("keydown", [eventObj]);
+        currentInput['emit']("keyup", [eventObj]);
     }
 }
 

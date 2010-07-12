@@ -318,7 +318,7 @@
     
     function soundJsLoaded() {
         window['Sound']['swfPath'] = makeFullyQualified(params['soundjs-swf']);
-        //log("SoundJS SWF Path: " + window['Sound']['swfPath']);
+        debug("Setting SoundJS SWF Path: " + window['Sound']['swfPath']);
         libraryLoaded();
     }
     
@@ -363,16 +363,16 @@
     // Borrowed respectfully from Prototype
     // TODO: Make public? "SGF.extend"?
     function extend(destination, source) {
-      for (var property in source)
-        destination[property] = source[property];
-      return destination;
+        for (var property in source)
+            destination[property] = source[property];
+        return destination;
     }
     
     // Array Remove - By John Resig (MIT Licensed)
     function arrayRemove(array, from, to) {
-      var rest = array.slice((to || from) + 1 || array.length);
-      array.length = from < 0 ? array.length + from : from;
-      return array.push.apply(array, rest);
+        var rest = array.slice((to || from) + 1 || array.length);
+        array.length = from < 0 ? array.length + from : from;
+        return array.push.apply(array, rest);
     }
 
     // Tests if the given path is fully qualified or relative.
@@ -415,6 +415,14 @@
             return this[prop];
         }
     }
+    
+    // Same as SGF.log, but not public, and only actually outputs anything
+    // when the 'debug' param is present on the <script> node.
+    function debug() {
+        if (!!params['debug']) {
+            log.apply(SGF, arguments);
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////
     ////////////////////// "EVENT" FUNCTIONS /////////////////////////////
@@ -446,7 +454,7 @@
     // files have finished their loading process. Once this happens, we can
     // define all the SGF classes, and afterwards invoke the 'load' listeners.
     function allLibrariesLoaded() {
-        //log("all libs loaded!");
+        debug("All dependant libraries loaded!");
                 
         Input['grab']();
         
@@ -460,7 +468,7 @@
     function sgfLoaded() {
 
         var loadEndTime = new Date();
-        //log("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
+        debug("Load Time: "+(loadEndTime.getTime() - loadStartTime.getTime())+" ms");
 
         if (params['game']) {
             if (params['screen']) {

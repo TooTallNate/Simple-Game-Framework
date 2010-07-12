@@ -105,7 +105,7 @@ var Screen = function(game) {
 inherits(Screen, EventEmitter);
 
 Screen.prototype['_r'] = function() {
-    var self = this; color = self['color'], element = self['element'];
+    var self = this, color = self['color'], element = self['element'];
     self['width'] = self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth;
     self['height'] = self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight;
     if (color != self['_c']) {

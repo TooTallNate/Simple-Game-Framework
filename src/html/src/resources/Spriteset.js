@@ -1,29 +1,47 @@
-/** section: Components API
+/** section: Resources API
  * class Spriteset
  *
  * The `Spriteset` class is responsible for loading and keeping a
- * reference to the in-memory Image data for a Spriteset.
+ * reference to the in-memory Image data for a Spriteset. The actual type of
+ * Image resource supported depends on the SGF engine in use. However, `.jpg`
+ * `.png`, `.gif` are highly recommended to be implemented in every engine.
  **/
 
  /**
-  * new Spriteset(game, path, spriteWidth, spriteHeight[, onLoad])
-  * - game (Game): The relative path and filename of the Image to load.
-  * - path (String): The relative path and filename of the Image to load.
+  * new Spriteset(path, spriteWidth, spriteHeight[, onLoad])
+  * - path (String): The absolute or relative path of the Image resource to
+  *                  load. A relative path using `new` will be relative to the
+  *                  current page. To get a resource relative to your game
+  *                  root, use [[Game#getSpriteset]] instead.
   * - spriteWidth (Number): The width in pixels of each sprite on the spriteset.
   *                         If you are loading a single sprite, this should be
   *                         the width of the image itself.
   * - spriteHeight (Number): The height in pixels of each sprite on the spriteset.
   *                          If you are loading a single sprite, this should be
   *                          the height of the image itself.
+  * - onLoad (Function): Optional. The `Function` to call once the Image
+  *                      finishes loading. If a 404 or other error occurs
+  *                      while loading, an `Error` object will be passed as
+  *                      an argument to the function.
   *
-  * To create an instance of a [[SGF.Spriteset]], you must first know the
+  * To create an instance of a [[Spriteset]], you must first know the
   * relative path of the image file in your game folder, and you must know
-  * the width and height of each sprite in pixels on this [[SGF.Spriteset]].
+  * the width and height of each sprite in pixels on this [[Spriteset]].
   *
   * Once instantiated, there are no instance methods to call, you just need
-  * to pass the reference to this [[SGF.Spriteset]] to new [[SGF.Sprite]]s.
+  * to pass the [[Spriteset]] reference to new [[Sprite]]s.
   **/
 function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
+    if (game instanceof Game) {
+        path = game['root'] + path;
+    } else {
+        // Absolute URL was given...
+        onLoad = spriteHeight;
+        spriteHeight = spriteWidth;
+        spriteWidth = path;
+        path = game;
+    }
+
     var self = this;
     
     EventEmitter.call(self);
@@ -47,7 +65,8 @@ function Spriteset(game, path, spriteWidth, spriteHeight, onLoad) {
     self['image'] = img;
 
     // Finally begin loading the image itself!
-    self['src'] = img['src'] = game['root'] + path;
+    img['src'] = path;
+    self['src'] = img['src'];
 }
 
 inherits(Spriteset, EventEmitter);
@@ -57,55 +76,52 @@ makePrototypeClassCompatible(Spriteset);
 /**
  * Spriteset#loaded -> Boolean
  *
- * `false` immediately after instantiation, `true` once the Image file
- * has been completely loaded into memory.
+ * Read-only. `false` immediately after instantiation, `true` once the Image
+ * file has been completely loaded into memory, just before the `load` event
+ * is fired.
  **/
 Spriteset.prototype['loaded'] = false;
 
 /**
- * SGF.Spriteset#width -> Number
+ * Spriteset#width -> Number
  *
- * Read-only. The total width of this [[SGF.Spriteset]]. The value of this
- * property is `-1` before it has loaded completely
- * (i.e. [[SGF.Spriteset#loaded]] == false).
+ * Read-only. The total width of this [[Spriteset]]. The value of this
+ * property is `NaN` before it has loaded completely
+ * (i.e. [[Spriteset#loaded]] == false).
  **/
-Spriteset.prototype['width'] = -1;
+Spriteset.prototype['width'] = NaN;
 
 /**
- * SGF.Spriteset#height -> Number
+ * Spriteset#height -> Number
  *
- * Read-only. The total height of this [[SGF.Spriteset]]. The value of this
- * property is `-1` before it has loaded completely
- * (i.e. [[SGF.Spriteset#loaded]] == false).
+ * Read-only. The total height of this [[Spriteset]]. The value of this
+ * property is `NaN` before it has loaded completely
+ * (i.e. [[Spriteset#loaded]] == false).
  **/
-Spriteset.prototype['height'] = -1;
+Spriteset.prototype['height'] = NaN;
 
 /**
- * SGF.Spriteset#spriteWidth -> Number
+ * Spriteset#spriteWidth -> Number
  *
- * Read-only. The width of each sprite on this [[SGF.Spriteset]]. This
+ * Read-only. The width of each sprite on this [[Spriteset]]. This
  * is the value that was set in the constructor.
  **/
-Spriteset.prototype['spriteWidth'] = -1;
+Spriteset.prototype['spriteWidth'] = NaN;
 
 /**
- * SGF.Spriteset#spriteHeight -> Number
+ * Spriteset#spriteHeight -> Number
  *
- * Read-only. The height of each sprite on this [[SGF.Spriteset]]. This
+ * Read-only. The height of each sprite on this [[Spriteset]]. This
  * is the value that was set in the constructor.
  **/
-Spriteset.prototype['spriteHeight'] = -1;
+Spriteset.prototype['spriteHeight'] = NaN;
 
 /**
  * Spriteset#src -> String
  * 
- * The absolute URL to the image resource.
+ * The absolute URL to the Image resource.
  **/
 Spriteset.prototype['src'] = null;
-
-Spriteset.prototype['toElement'] = function() {
-    return this['image'].cloneNode(true);
-}
 
 Spriteset.prototype['toString'] = functionReturnString("[object Spriteset]");
 
