@@ -1,4 +1,4 @@
-var Sound = function(game, path, callback) {
+function Sound(game, path, callback) {
     var self = this;
 
     EventEmitter.call(self);

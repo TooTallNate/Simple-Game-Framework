@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+DOC_DIR="doc";
+SOURCE_FILE="src/html/dist/SGF.debug.js";
+HTML_TEMPLATE="templates/html";
+
+rm -rf $DOC_DIR;
+
+./vendor/pdoc/bin/pdoc -t $HTML_TEMPLATE -o $DOC_DIR $SOURCE_FILE;

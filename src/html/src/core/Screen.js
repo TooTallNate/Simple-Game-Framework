@@ -1,7 +1,7 @@
 var REQUIRED_OVERFLOW = "hidden";
 
 /** section: Core API
- * SGF.Screen
+ * Screen
  *
  * Contains information about the screen the game is being rendered to.
  **/
@@ -24,7 +24,7 @@ var Screen = function(game) {
         Element['makePositioned'](element);
         Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
 
-        // If SGF.Screen#bind has been called prevously, then this call has to
+        // If Screen#bind has been called prevously, then this call has to
         // essentially move all game elements to the new Screen element
         if (self['element'] !== null && Object['isElement'](self['element'])) {
             Element['immediateDescendants'](self['element'])['invoke']("remove")['each'](element['insert'], element);
@@ -86,7 +86,7 @@ var Screen = function(game) {
      *
      *   - `wait`: A busy icon. Useful for loading script files or other dependencies.
      *
-     *   - `none` or `false`: Invisible mouse cursor. Note that all mouse movement and button click event will still be fired. This is very useful if your game doesn't use the mouse, or if your game uses a custom mouse cursor (possibly via a [[SGF.Sprite]]).
+     *   - `none` or `false`: Invisible mouse cursor. Note that all mouse movement and button click event will still be fired. This is very useful if your game doesn't use the mouse, or if your game uses a custom mouse cursor (possibly via a [[Sprite]]).
      **/
     /**
      * Screen#width -> Number

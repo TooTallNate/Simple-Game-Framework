@@ -30,7 +30,7 @@ function Server() {
 }
 
 /**
- * SGF.Server#start() -> undefined
+ * Server#start() -> undefined
  *
  * Starts the underlying WebSocket server listening on the currently
  * configured port number.
@@ -38,23 +38,23 @@ function Server() {
 // start:null,
 
 /**
- * SGF.Server#stop() -> undefined
+ * Server#stop() -> undefined
  *
  * Stops the server from listening on the specified port. If the server is
- * currently running, then [[SGF.Server#onClientClose]] will be called for
+ * currently running, then [[Server#onClientClose]] will be called for
  * all current connections.
  **/
 // stop:null,
 
 /**
- * SGF.Server#connections() -> Array
+ * Server#connections() -> Array
  *
- * Gets an [[SGF.Client]] array of the currerntly connected clients. These
+ * Gets an [[Client]] array of the currerntly connected clients. These
  * instances can be used to individually send messages or close a client.
  **/
  
 /**
- * SGF.Server#sendToAll(message) -> undefined
+ * Server#sendToAll(message) -> undefined
  * - message (String): The message to send to all current connections.
  *
  * Sends `message` to all currently connected game clients.
@@ -62,9 +62,9 @@ function Server() {
 // sendToAll:null,
 
 /**
- * SGF.Server#onClientOpen(client) -> undefined
- * - client (SGF.Client): The connection instance, in case you would like to
- *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
+ * Server#onClientOpen(client) -> undefined
+ * - client (Client): The connection instance, in case you would like to
+ *                        [[Client#send]] or [[Client#close]] this
  *                        connection specifically.
  *
  * Event handler that is called every time a WebSocket client makes a
@@ -74,24 +74,24 @@ function Server() {
 // onClientOpen:null,
 
 /**
- * SGF.Server#onClientClose(client) -> undefined
- * - client (SGF.Client): The connection instance. Note that the connection
+ * Server#onClientClose(client) -> undefined
+ * - client (Client): The connection instance. Note that the connection
  *                        to the client has been closed at this point, and
- *                        calling [[SGF.Client#send]] or [[SGF.Client#close]]
+ *                        calling [[Client#send]] or [[Client#close]]
  *                        will throw an exception.
  *
  * Event handler that is called every time a WebSocket client disconnects
  * from this server. This function should be overridden in a  subclass to
- * actually be any useful. Be careful not to call [[SGF.Client#send]] or
- * [[SGF.Client#close]] on the `client` instance, since it's socket
+ * actually be any useful. Be careful not to call [[Client#send]] or
+ * [[Client#close]] on the `client` instance, since it's socket
  * connection has been closed.
  **/
 // onClientClose:null,
 
 /**
- * SGF.Server#onClientMessage(client, message) -> undefined
- * - client (SGF.Client): The connection instance, in case you would like to
- *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
+ * Server#onClientMessage(client, message) -> undefined
+ * - client (Client): The connection instance, in case you would like to
+ *                        [[Client#send]] or [[Client#close]] this
  *                        connection specifically.
  * - message (String): The String value of the message sent from `client`.
  *

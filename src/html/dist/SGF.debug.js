@@ -147,7 +147,7 @@
  **/
 
 /** section: Components API
- * class SGF.Component
+ * class Component
  *
  * An abstract base class for game components. It cannot be instantiated
  * directly, but its subclasses are the building blocks for SGF games.
@@ -158,7 +158,7 @@ function Component(options) {
 }
 
 /*
- * SGF.Component#getElement() -> Element
+ * Component#getElement() -> Element
  * Internal method. Game developers need not be aware.
  **/
 Component.prototype['getElement'] = (function() {
@@ -173,36 +173,36 @@ Component.prototype['getElement'] = (function() {
 Component.prototype['toElement'] = returnThisProp("element");
 
 /**
- * SGF.Component#left() -> Number
+ * Component#left() -> Number
  * 
  * Returns the number of pixels from left side of the screen to the left
- * side of the [[SGF.Component]].
+ * side of the [[Component]].
  **/
 Component.prototype['left'] = returnThisProp("x");
 
 /**
- * SGF.Component#top() -> Number
+ * Component#top() -> Number
  *
  * Returns the number of pixels from the top of the screen to the top
- * of the [[SGF.Component]].
+ * of the [[Component]].
  **/
 Component.prototype['top'] = returnThisProp("y");
 
 /**
- * SGF.Component#right() -> Number
+ * Component#right() -> Number
  *
  * Returns the number of pixels from left side of the screen to the right
- * side of the [[SGF.Component]].
+ * side of the [[Component]].
  **/
 Component.prototype['right'] = function() {
     return this['x'] + this['width'] - 1;
 }
 
 /**
- * SGF.Component#bottom() -> Number
+ * Component#bottom() -> Number
  * 
  * Returns the number of pixels from the top side of the screen to the
- * bottom of the [[SGF.Component]].
+ * bottom of the [[Component]].
  **/
 Component.prototype['bottom'] = function() {
     return this['y'] + this['height'] - 1;
@@ -210,17 +210,17 @@ Component.prototype['bottom'] = function() {
 
 /**
  * Component#render(renderCount) -> undefined
- * - renderCount (Number): The total number of times that [[SGF.Game#render]]
+ * - renderCount (Number): The total number of times that [[Game#render]]
  *                         has been called for this game. This value has nothing
- *                         to do with the number of times this [[SGF.Component]]
+ *                         to do with the number of times this [[Component]]
  *                         has been rendered.
  * 
- * Renders the individual [[SGF.Component]]. This is called automatically in
- * the game loop once this component has been added through [[SGF.Game#addComponent]].
+ * Renders the individual [[Component]]. This is called automatically in
+ * the game loop once this component has been added through [[Game#addComponent]].
  *
- * Subclasses of [[SGF.Component]] override this method, and render how it
+ * Subclasses of [[Component]] override this method, and render how it
  * should be rendered. This default implementation does nothing, since
- * a [[SGF.Component]] itself cannot be rendered/instantiated.
+ * a [[Component]] itself cannot be rendered/instantiated.
  **/
 Component.prototype['render'] = function(renderCount) {
     var self = this;
@@ -262,17 +262,17 @@ Component.prototype['render'] = function(renderCount) {
 }
 
 /**
- * SGF.Component#update(updateCount) -> undefined
- * - updateCount (Number): The total number of times that [[SGF.Game#update]]
+ * Component#update(updateCount) -> undefined
+ * - updateCount (Number): The total number of times that [[Game#update]]
  *                         has been called for this game. This value has nothing
- *                         to do with the number of times this [[SGF.Component]]
+ *                         to do with the number of times this [[Component]]
  *                         has been updated.
  *
- * Updates the state of the individual [[SGF.Component]]. This is called in
+ * Updates the state of the individual [[Component]]. This is called in
  * the game loop once this component has been added through
- * [[SGF.Game#addComponent]].
+ * [[Game#addComponent]].
  *
- * This function should be thought of as the "logic" function for the [[SGF.Component]].
+ * This function should be thought of as the "logic" function for the [[Component]].
  **/
 Component.prototype['update'] = function() {
 
@@ -286,36 +286,36 @@ Component.prototype['__fixZIndex'] = function() {
 }
 
 /**
- * SGF.Component#width -> Number
+ * Component#width -> Number
  *
- * The width of the [[SGF.Component]]. This is a readable and writable
- * property. That is, if you would like to reize the [[SGF.Component]],
+ * The width of the [[Component]]. This is a readable and writable
+ * property. That is, if you would like to reize the [[Component]],
  * you could try something like:
  *
  *     this.width = this.width * 2;
  *
- * To double the current width of the [[SGF.Component]].
+ * To double the current width of the [[Component]].
  **/
 Component.prototype['width'] = 10;
 
 /**
- * SGF.Component#height -> Number
+ * Component#height -> Number
  *
- * The height of the [[SGF.Component]]. This is a readable and writable
- * property. That is, if you would like to reize the [[SGF.Component]],
+ * The height of the [[Component]]. This is a readable and writable
+ * property. That is, if you would like to reize the [[Component]],
  * you could try something like:
  *
- *     this.height = SGF.Screen.height;
+ *     this.height = Screen.height;
  *
- * To set the height of this [[SGF.Component]] to the current height of the
+ * To set the height of this [[Component]] to the current height of the
  * game screen.
  **/
 Component.prototype['height'] = 10;
 
 /**
- * SGF.Component#x -> Number
+ * Component#x -> Number
  *
- * The X coordinate of the top-left point of the [[SGF.Component]] from the
+ * The X coordinate of the top-left point of the [[Component]] from the
  * top-left of the game screen.
  *
  *     update: function($super) {
@@ -323,60 +323,56 @@ Component.prototype['height'] = 10;
  *         $super();
  *     }
  *
- * This is an example of overwritting the [[SGF.Component#update]] method,
+ * This is an example of overwritting the [[Component#update]] method,
  * and incrementing the X coordinate every step through the game loop.
- * This will smoothly pan the [[SGF.Component]] across the game screen at
- * the [[SGF.Game]]'s set game speed.
+ * This will smoothly pan the [[Component]] across the game screen at
+ * the [[Game]]'s set game speed.
  **/
 Component.prototype['x'] = 0;
 
 /**
- * SGF.Component#y -> Number
+ * Component#y -> Number
  *
- * The Y coordinate of the top-left point of the [[SGF.Component]] from the
+ * The Y coordinate of the top-left point of the [[Component]] from the
  * top-left of the game screen.
  **/
 Component.prototype['y'] = 0;
 /**
- * SGF.Component#opacity -> Number
+ * Component#opacity -> Number
  *
  * A percentage value (between 0.0 and 1.0, inclusive) that describes the
- * [[SGF.Component]]'s opacity. Setting this value to 1.0 (default) will
- * make the [[SGF.Component]] fully opaque. Setting to 0.0 will make it
+ * [[Component]]'s opacity. Setting this value to 1.0 (default) will
+ * make the [[Component]] fully opaque. Setting to 0.0 will make it
  * fully transparent, or invisible. Setting to 0.5 will make it 50%
  * transparent. You get the idea...
  **/
 Component.prototype['opacity'] = 1.0;
 /**
- * SGF.Component#rotation -> Number
+ * Component#rotation -> Number
  *
- * The rotation value of the [[SGF.Component]] in degrees. Note that the
- * [[SGF.Component#x]], [[SGF.Component#y]] properties, and values returned
- * from [[SGF.Component#left]], [[SGF.Component#right]], [[SGF.Component#top]],
- * and [[SGF.Component#bottom]] are not affected by this value. Therefore,
+ * The rotation value of the [[Component]] in degrees. Note that the
+ * [[Component#x]], [[Component#y]] properties, and values returned
+ * from [[Component#left]], [[Component#right]], [[Component#top]],
+ * and [[Component#bottom]] are not affected by this value. Therefore,
  * any calculations that require the rotation to be a factor, your game code
  * must calculate itself.
  **/
 Component.prototype['rotation'] = 0;
 
 /**
- * SGF.Component#zIndex -> Number
+ * Component#zIndex -> Number
  *
- * The Z index of this [[SGF.Component]]. Setting this value higher than
- * other [[SGF.Component]]s will render this [[SGF.Component]] above ones
+ * The Z index of this [[Component]]. Setting this value higher than
+ * other [[Component]]s will render this [[Component]] above ones
  * with a lower **zIndex**.
  **/
 Component.prototype['zIndex'] = 0;
 
 /**
- * Component#parent -> Container | null
+ * Component#parent -> Container
  *  
  * A reference to the current parent component of this component, or `null`
  * if the component is not currently placed inside any containing component.
- *
- * If the component is a top-level component (added through
- * [[SGF.Game#addComponent]]) then [[SGF.Component#parent]] will be
- * [[SGF.Game.current]] (your game instance).
  **/
 Component.prototype['parent'] = null;
 Component.prototype['element'] = null;
@@ -519,19 +515,19 @@ Container.prototype['toString'] = functionReturnString("[object Container]");
 modules['container'] = Container;
 
 /** section: Components API
- * class SGF.DumbContainer < SGF.Container
+ * class DumbContainer < Container
  *
- * There are plenty of cases where a large amount of [[SGF.Component]]s are going
- * to be placed inside of a [[SGF.Container]], BUT NEVER CHANGE. This scenario
- * can be brought up by creating a tile based map using [[SGF.Sprite]]. Map's don't
+ * There are plenty of cases where a large amount of [[Component]]s are going
+ * to be placed inside of a [[Container]], BUT NEVER CHANGE. This scenario
+ * can be brought up by creating a tile based map using [[Sprite]]. Map's don't
  * change beyond their initialization (usually), so it's a waste of CPU to
  * re-render and check for updates of each individual tile, because we know that
- * they will never need to change. That very scenario is why [[SGF.DumbContainer]]
+ * they will never need to change. That very scenario is why [[DumbContainer]]
  * exists. Using a `DumbContainer`, all the tile sprites that were added to the
  * container will only be rendered once, and then re-blitted to the screen for
  * maximum speed.
  *
- * So in short, use [[SGF.DumbContainer]] when the components inside will never
+ * So in short, use [[DumbContainer]] when the components inside will never
  * need to be changed, and save a lot of processing power.
  **/
 function DumbContainer(components, options) {
@@ -691,28 +687,28 @@ extend(Label, {
 modules['label'] = Label;
 
 /** section: Components API
- * class SGF.Sprite < SGF.Component
+ * class Sprite < Component
  *
  * Probably the most used Class in SGF to develop your games. Represents a single
- * sprite state on a spriteset as a [[SGF.Component]]. The state of the sprite
+ * sprite state on a spriteset as a [[Component]]. The state of the sprite
  * can be changed at any time.
  **/
 
 
 /**
- * new SGF.Sprite(spriteset[, options])
- * - spriteset (SGF.Spriteset): The spriteset for this Sprite to use. This is
+ * new Sprite(spriteset[, options])
+ * - spriteset (Spriteset): The spriteset for this Sprite to use. This is
  *                              final once instantiated, and cannot be changed.
  * - options (Object): The optional 'options' object's properties are copied
- *                     this [[SGF.Sprite]] in the constructor. It allows all
- *                     the same default properties as [[SGF.Component]], but
- *                     also adds [[SGF.Sprite#spriteX]] and [[SGF.Sprite#spriteY]].
+ *                     this [[Sprite]] in the constructor. It allows all
+ *                     the same default properties as [[Component]], but
+ *                     also adds [[Sprite#spriteX]] and [[Sprite#spriteY]].
  *
- * Instantiates a new [[SGF.Sprite]] based on the given [[SGF.Spriteset]].
- * It's more common, however, to make your own subclass of [[SGF.Sprite]] in
+ * Instantiates a new [[Sprite]] based on the given [[Spriteset]].
+ * It's more common, however, to make your own subclass of [[Sprite]] in
  * your game code. For example:
  *
- *     var AlienClass = Class.create(SGF.Sprite, {
+ *     var AlienClass = Class.create(Sprite, {
  *         initialize: function($super, options) {
  *             $super(AlienClass.sharedSpriteset, options);
  *         },
@@ -722,11 +718,11 @@ modules['label'] = Label;
  *         }
  *     });
  *
- *     AlienClass.sharedSpriteset = new SGF.Spriteset("alien.png", 25, 25);
+ *     AlienClass.sharedSpriteset = new Spriteset("alien.png", 25, 25);
  *
- * Here we are creating a [[SGF.Sprite]] subclass called **AlienClass** that
- * reuses the same [[SGF.Spriteset]] object for all instances, and centralizes
- * logic code by overriding the [[SGF.Component#update]] method.
+ * Here we are creating a [[Sprite]] subclass called **AlienClass** that
+ * reuses the same [[Spriteset]] object for all instances, and centralizes
+ * logic code by overriding the [[Component#update]] method.
  **/
 function Sprite(spriteset, options) {
     this['spriteset'] = spriteset;
@@ -770,19 +766,19 @@ Sprite.prototype['resetSpriteset'] = function() {
 }
 
 /**
- * SGF.Sprite#spriteX -> Number
+ * Sprite#spriteX -> Number
  *
  * The X coordinate of the sprite to use from the spriteset. The units are
- * whole [[SGF.Sprite]] widths. So to use the 3rd sprite across on the spriteset,
+ * whole [[Sprite]] widths. So to use the 3rd sprite across on the spriteset,
  * set this value to 3.
  **/
 Sprite.prototype['spriteX'] = 0;
 
 /**
- * SGF.Sprite#spriteY -> Number
+ * Sprite#spriteY -> Number
  *
  * The Y coordinate of the sprite to use from the spriteset. The units are
- * whole [[SGF.Sprite]] heights. So to use the 4th sprite down on the spriteset,
+ * whole [[Sprite]] heights. So to use the 4th sprite down on the spriteset,
  * set this value to 4.
  **/
 Sprite.prototype['spriteY'] = 0;
@@ -795,20 +791,20 @@ modules['sprite'] = Sprite;
  * class Shape < Component
  *
  * Another abstract class, not meant to be instantiated directly. All "shape"
- * type [[SGF.Component]] classes use this class as a base class. The only
- * functionality that this class itself adds to a regular [[SGF.Component]] is
- * [[SGF.Shape#color]], since all shapes can have a color set for them.
+ * type [[Component]] classes use this class as a base class. The only
+ * functionality that this class itself adds to a regular [[Component]] is
+ * [[Shape#color]], since all shapes can have a color set for them.
  **/
 
 /**
- * new SGF.Shape([options])
+ * new Shape([options])
  * - options (Object): The optional 'options' object's properties are copied
- *                     this [[SGF.Shape]] in the constructor. It allows all
- *                     the same default properties as [[SGF.Component]], but
- *                     also adds [[SGF.Shape#color]].
+ *                     this [[Shape]] in the constructor. It allows all
+ *                     the same default properties as [[Component]], but
+ *                     also adds [[Shape#color]].
  *
  * This will never be called directly in your code, use one of the subclasses
- * to instantiate [[SGF.Shape]]s.
+ * to instantiate [[Shape]]s.
  **/
 function Shape(options) {
     Component.call(this, options);
@@ -828,9 +824,9 @@ Shape.prototype['render'] = function(renderCount) {
 }
 
 /**
- * SGF.Shape#color -> String
+ * Shape#color -> String
  *
- * The color of the [[SGF.Shape]]. The String value is expected to be like
+ * The color of the [[Shape]]. The String value is expected to be like
  * a CSS color string. So it should be a **six** (not three) character
  * String formatted in `RRGGBB` form. Each color is a 2-digit hex number
  * between 0 and 255.
@@ -869,7 +865,13 @@ modules['rectangle'] = Rectangle;
 
 //components/Circle.js remove for now
 
-    /* EventEmitter is an internal class that a lot of main SGF classes inherit 
+    /**
+ * == Core API ==
+ * The lowest level functions and classes. The `Core API` contains objects
+ * automatically generated when the engine and game are loaded.
+ **/
+
+/* EventEmitter is an internal class that a lot of main SGF classes inherit 
  * from. The class implements the common listener pattern used throughout SGF.
  */
 function EventEmitter() {
@@ -966,7 +968,7 @@ modules['eventemitter'] = EventEmitter;
 var REQUIRED_OVERFLOW = "hidden";
 
 /** section: Core API
- * SGF.Screen
+ * Screen
  *
  * Contains information about the screen the game is being rendered to.
  **/
@@ -989,7 +991,7 @@ var Screen = function(game) {
         Element['makePositioned'](element);
         Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
 
-        // If SGF.Screen#bind has been called prevously, then this call has to
+        // If Screen#bind has been called prevously, then this call has to
         // essentially move all game elements to the new Screen element
         if (self['element'] !== null && Object['isElement'](self['element'])) {
             Element['immediateDescendants'](self['element'])['invoke']("remove")['each'](element['insert'], element);
@@ -1051,7 +1053,7 @@ var Screen = function(game) {
      *
      *   - `wait`: A busy icon. Useful for loading script files or other dependencies.
      *
-     *   - `none` or `false`: Invisible mouse cursor. Note that all mouse movement and button click event will still be fired. This is very useful if your game doesn't use the mouse, or if your game uses a custom mouse cursor (possibly via a [[SGF.Sprite]]).
+     *   - `none` or `false`: Invisible mouse cursor. Note that all mouse movement and button click event will still be fired. This is very useful if your game doesn't use the mouse, or if your game uses a custom mouse cursor (possibly via a [[Sprite]]).
      **/
     /**
      * Screen#width -> Number
@@ -1433,28 +1435,38 @@ Input['release'] = function() {
 }
 
 modules['input'] = Input;
+// Returns the current timestamp in milliseconds, opting
+// for the native 'Date.now' function if available.
 var now = (function() {
-        if ("now" in Date) {
-            return Date['now'];
-        } else {
-            return function() {
-                return (new Date).getTime();
-            };
-        }
-    })(),
-    currentGame = null,
-    runningGameInstances = [];
+    if ("now" in Date) {
+        return Date['now'];
+    } else {
+        return function() {
+            return (new Date).getTime();
+        };
+    }
+})(),
+// A private variable containing the 'current' game. Used
+// internally by `Game.getInstance()`.
+currentGame = null,
+// An private array of the currently running SGF games.
+// More than 1 are able to be displayed on a single HTML
+// page by calling `SGF.startWithDiv()` multiple times.
+runningGameInstances = [];
+
 
 /** section: Core API
  * class Game
  *
- * Represents your game itself. That is, there's one instance of [[Game]] at
- * a time, but every game is it's own instance, and creation of this object is
- * automatic and behind the scenes. Most importantly, this class is in
- * charge of the "game loop". The methods you (as a game developer) will
- * probably be interested in are [[Game#addComponent]],
- * [[Game#removeComponent]], and [[Game#loadScript]]. But there are some
- * more advances features for the adventurous.
+ * Represents your game itself. That is, an instance of [[Game]] is
+ * automatically created every time an SGF game is loaded. The
+ * [[Game]] class is in charge of the "game loop", and invokes it's
+ * own [[Game#update]] and [[Game#render]] functions to execute the
+ * game.
+ *
+ * The [[Game]] class is a subclass of [[Container]], and will be the
+ * top-level [[Container]] that you will be inserting [[Components]]
+ * into.
  **/
 function Game(rootUrl, screen, options) {
 
@@ -1469,20 +1481,6 @@ function Game(rootUrl, screen, options) {
      * and considered in the game loop. Returns the [[Game]] object (this),
      * for chaining.
      **/
-     /*
-    self['addComponent'] = function(component) {
-        var currentParent = component['parent'];
-        if (currentParent !== self) {
-            if (currentParent)
-                currentParent['removeComponent'](component);
-            components.push(component);
-            self['screen']['element']['insert'](component);
-            component['parent'] = self;
-            component['__fixZIndex']();
-        }
-        return self;
-    }
-    */
 
     /**
      * Game#removeComponent(component) -> Game
@@ -1492,60 +1490,6 @@ function Game(rootUrl, screen, options) {
      * Removes a [[Component]] that has previously been added to the game
      * loop via [[Game#addComponent]].
      **/
-     /*
-    self['removeComponent'] = function(component) {
-        var index = components.indexOf(component);
-        if (index > -1) {
-            arrayRemove(components, index);
-            component['toElement']()['remove']();
-            component['parent'] = null;
-        }
-        return self;
-    }
-    */
-
-
-    /**
-     * Game#loadScript(filePath[, onLoad = null]) -> Game
-     * - filePath (String): The relative path, including filename of the game
-     *                      script file to load.
-     * - onLoad (Function): Optional. The `Function` to invoke when the script
-     *                      file has finished loading and executing.
-     *                      
-     * Loads a script file from the game's folder into the game environment. The
-     * script is immediately executed once it has finished loading. Afterwards,
-     * the optional `onLoad` function is called.
-     **/
-     /*
-    self['loadScript'] = function(relativeUrl, onComplete) {
-        loadScript(self['root'] + relativeUrl,
-            Object.isFunction(onComplete) ? onComplete.bind(self) : emptyFunction);
-        return self;
-    }
-    */
-
-    /**
-     * Game#observe(eventName, handler) -> Game
-     * - eventName (String): The name of the game event to attach a handler to.
-     * - handler (Function): A reference to the `Function` that should be
-     *                       executed when `eventName` occurs.
-     *
-     * Attaches `handler` to one of the allowed `eventName`s. When `eventName`
-     * occurs in the execition environment, `handler` will be executed. Multiple
-     * handlers are allowed to be attached to a single event (via subsequent calls
-     * to `observe`) and they will  be executed in the order they were observed
-     * when the event occurs.
-     **/
-     /*
-    self['observe'] = function(eventName, handler) {
-        if (!(eventName in listeners))
-            throw "Game#observe: '" + eventName + "' is not a recognized event name.";
-        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
-        listeners[eventName].push(handler);
-        return self;
-    }
-    */
-
 
 
 
@@ -1566,16 +1510,23 @@ function Game(rootUrl, screen, options) {
 
     // 'root' is the path to the folder containing the Game's 'main.js' file.
     if (rootUrl['endsWith']("main.js")) rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("main.js"));
+    
+    /**
+     * Game#root -> String
+     *  
+     * Read-only. The absolute path to the root directory (where `main.js`
+     * resides) of the SGF game. Trailing slash is included.
+     **/
     self['root'] = rootUrl['endsWith']('/') ? rootUrl : rootUrl + '/';
     
     // Set the initial game speed. This can be changed during gameplay.
     self['setGameSpeed'](self['gameSpeed']);
 
     // Init some standard properties
-    self['loaded'] = self['running'] = false;
+    self['running'] = false;
     self['startTime'] = NaN;
 
-    // Set as currentGame for Game.getInstance
+    // Set as currentGame for `Game.getInstance()`
     currentGame = self;
 
     // A binded 'step' function
@@ -1584,7 +1535,7 @@ function Game(rootUrl, screen, options) {
     }
 
     // Last step of initialization is to load the Game's 'main.js' file
-    new Script(self, "main.js", function() {
+    self['getScript']("main.js", function() {
         self['loaded'] = true;
         // Notify all the game's 'load' listeners
         self['emit']('load');
@@ -1598,37 +1549,46 @@ makePrototypeClassCompatible(Game);
 /**
  * Game#gameSpeed -> Number
  *  
- * The current target updates per seconds the game is attepting to achieve.
- * This is meant to be read-only. If you must dynamically change the game
- * speed, use [[Game#setGameSpeed]] instead.
+ * Read-only. The current target updates-per-second the game is attepting
+ * to achieve. If you must dynamically change the game speed during
+ * runtime, use [[Game#setGameSpeed]] instead.
  *  
- * The default game speed attempted is 30 (thirty) updates per second.
- */
+ * The default game speed attempted is **30** (thirty) updates per second.
+ **/
 Game.prototype['gameSpeed'] = 30;
+
+/**
+ * Game#loaded -> Boolean
+ *  
+ * Read-only. `false` immediately after instantiation. `true` once the
+ * ___main.js___ file has finished loading and has been executed.
+ **/
+Game.prototype['loaded'] = false;
 
 /**
  * Game#maxFrameSkips -> Number
  *  
- * The maximum allowed number of updates to call in between render calls
- * if the game's demand is more than current harware is capable of.
+ * Read and write. The maximum allowed number of times [[Game#update]] may
+ * be called in between [[Game#render]] calls if the game's demand is more
+ * than current harware is capable of.
  * 
- * The default value is 5 (five).
- */
+ * The default value is **5** (five).
+ **/
 Game.prototype['maxFrameSkips'] = 5;
 
 /**
  * Game#renderCount -> Number
  *
- * The total number of times that [[Game#render]] has been called
- * throughout the lifetime of the game.
+ * Read-only. The total number of times that [[Game#render]] has been
+ * called throughout the lifetime of the game.
  **/
 Game.prototype['renderCount'] = 0;
  
  /**
   * Game#updateCount -> Number
   *
-  * The total number of times that [[Game#update]] has been called
-  * throughout the lifetime of the game.
+  * Read-only. The total number of times that [[Game#update]] has been
+  * called throughout the lifetime of the game.
   **/
 Game.prototype['updateCount'] = 0;
 
@@ -1637,12 +1597,12 @@ Game.prototype['updateCount'] = 0;
 
 /**
  * Game#setGameSpeed(updatesPerSecond) -> Game
- * - updatesPerSecond (Number): The number of updates per second to set this
- *                              game.
+ * - updatesPerSecond (Number): The number of updates-per-second the
+ *                              game should attempt to achieve.
  *                              
  * Sets the "Game Speed", or attempted times [[Game#update]] gets called
- * per second. This can be changed at any point during gameplay. Note that
- * playing sounds and music speed do not get affected by changing this value.
+ * per second. This can be called at any point during gameplay. Note that
+ * sounds and music playback speed do not get affected by this value.
  **/
 Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
     this['gameSpeed'] = updatesPerSecond;
@@ -1653,10 +1613,10 @@ Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
 }
 
 Game.prototype['start'] = function() {
-    //log("Starting " + this.root);
+    debug('Starting "' + this.root + '"');
 
     // The 'running' flag is used by step() to determine if the loop should
-    // continue or end. No not set directly, use stop() to kill game loop.
+    // continue or end. Do not set directly, use stop() to kill game loop.
     this['running'] = true;
 
     runningGameInstances.push(this);
@@ -1673,35 +1633,84 @@ Game.prototype['start'] = function() {
     this['emit']("start");
 }
 
-Game.prototype['getFont'] = function(relativeUrl, onLoad) {
-    return new modules['font'](this, relativeUrl, onLoad);
-}
-
-Game.prototype['getScript'] = function(relativeUrl, onLoad) {
-    return new modules['script'](this, relativeUrl, onLoad);
-}
-
-Game.prototype['getSound'] = function(relativeUrl, onLoad) {
-    return new modules['sound'](this, relativeUrl, onLoad);
-}
-
-Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
-    return new modules['spriteset'](this, relativeUrl, width, height, onLoad);
+/**
+ * Game#getFont(relativeUrl[, callback = null]) -> Font
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of a font
+ *                         resource to load.
+ * - callback (Function): Optional. A `Function` to invoke when the font
+ *                        loading process has completed, successfully or
+ *                        not. If an error occured (ex: file not found),
+ *                        an `Error` object will be passed as the first
+ *                        argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Font]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getFont'] = function(relativeUrl, callback) {
+    return new modules['font'](this, relativeUrl, callback);
 }
 
 /**
- * Game#render(interpolation) -> undefined
- * - interpolation (Number): The percentage (value between 0.0 and 1.0)
- *                           between the last call to update and the next
- *                           call to update this call to render is taking place.
- *                           This number is used to "predict" locations of
- *                           Components when the FPS are higher than UPS.
+ * Game#getScript(relativeUrl[, callback = null]) -> Script
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of a
+ *                         JavaScript source file to load.
+ * - callback (Function): Optional. A `Function` to invoke when the script
+ *                        loading and executing process has completed,
+ *                        successfully or not. If an error occured (ex:
+ *                        file not found), an `Error` object will be passed
+ *                        as the first argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Script]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getScript'] = function(relativeUrl, callback) {
+    return new modules['script'](this, relativeUrl, callback);
+}
+
+/**
+ * Game#getSound(relativeUrl[, callback = null]) -> Sound
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of sound
+ *                         file to load.
+ * - callback (Function): Optional. A `Function` to invoke when the sound
+ *                        loading process has completed, successfully or
+ *                        not. If an error occured (ex: file not found),
+ *                        an `Error` object will be passed as the first
+ *                        argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Sound]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getSound'] = function(relativeUrl, callback) {
+    return new modules['sound'](this, relativeUrl, callback);
+}
+
+/**
+ * Game#getSpriteset(relativeUrl[, callback = null]) -> Spriteset
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of an
+ *                         image resource to load.
+ * - callback (Function): Optional. A `Function` to invoke when the image
+ *                        loading process has completed, successfully or
+ *                        not. If an error occured (ex: file not found),
+ *                        an `Error` object will be passed as the first
+ *                        argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Spriteset]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getSpriteset'] = function(relativeUrl, width, height, callback) {
+    return new modules['spriteset'](this, relativeUrl, width, height, callback);
+}
+
+/**
+ * Game#render() -> undefined
  *                           
  * The game render function that gets called automatically during each pass
  * in the game loop. Calls [[Component#render]] on all components added
- * through [[Game#addComponent]]. Afterwards, increments the
- * [[Game#renderCount]] value by 1. Game code should never have to call
- * this method, however.
+ * through [[Container#addComponent]]. Afterwards, increments the
+ * [[Game#renderCount]] value by _1_.
+ * 
+ * SGF game code should never have to call this method, it is handled
+ * automatically by the game loop.
  **/
 Game.prototype['render'] = function() {
     for (var components = arrayClone(this['components']),
@@ -1769,10 +1778,14 @@ Game.prototype['stopped'] = function() {
 
 /**
  * Game#update() -> undefined
- * The update function for the game loop. Calls [[Component#update]]
- * on all components added through [[Game#addComponent]]. Afterwards,
- * increments the [[Game#updateCount]] value by 1. Game code should
- * never have to call this method, however.
+ *                           
+ * The game update function that gets called automatically during each pass
+ * in the game loop. Calls [[Component#update]] on all components added
+ * through [[Container#addComponent]]. Afterwards, increments the
+ * [[Game#updateCount]] value by _1_.
+ * 
+ * SGF game code should never have to call this method, it is handled
+ * automatically by the game loop.
  **/
 Game.prototype['update'] = function() {
     for (var components = arrayClone(this['components']),
@@ -1805,7 +1818,8 @@ Game.prototype['toString'] = functionReturnString("[object Game]");
 /**
  * Game.getInstance() -> Game
  *
- * Gets the `Game` instance for your game.
+ * Gets the `Game` instance for your game. This will likely be one
+ * of the first lines of code in your SGF game's `main.js` file.
  **/
 Game['getInstance'] = function() {
     return currentGame;
@@ -1814,7 +1828,15 @@ Game['getInstance'] = function() {
 modules['game'] = Game;
 
 
-    /** section: Resources API
+    /**
+ * == Resources API ==
+ * The `Resources API` is meant for loading various types of external
+ * game resources into your SGF game environment. Game resources include
+ * additional JavaScript source files ([[Script]]), image files ([[Spriteset]]),
+ * music and sounds ([[Sound]]), and more.
+ **/
+
+/** section: Resources API
  * class Font
  * 99% of games use some sort of text in the game. Whether to display a score
  * or dialog from a character, rendering text on the game screen begins with
@@ -1829,11 +1851,11 @@ modules['game'] = Game;
   *                        encoded TTF font file. Alternatively, the name
   *                        of a locally installed font can be used.
   *
-  * To create an instance of a [[SGF.Label]], you must first have an
-  * [[SGF.Font]] instance that contains the information regarding which
+  * To create an instance of a [[Label]], you must first have an
+  * [[Font]] instance that contains the information regarding which
   * font face should be used in the label.
   *
-  * An [[SGF.Font]] instance can contain the path to a TrueType font file,
+  * An [[Font]] instance can contain the path to a TrueType font file,
   * or contain the name of a locally installed font on the client computer.
   **/
 
@@ -1884,7 +1906,7 @@ modules['font'] = Font;
  * class Script
  *
  * The `Script` class is responsible for loading additional JavaScript source
- * files.
+ * files into your SGF game's JavaScript environment.
  **/
 function Script(game, scriptUrl, onLoad) {
     if (game instanceof Game) {
@@ -1944,7 +1966,7 @@ Script.prototype['toString'] = functionReturnString("[object Script]");
 
 modules['script'] = Script;
 
-var Sound = function(game, path, callback) {
+function Sound(game, path, callback) {
     var self = this;
 
     EventEmitter.call(self);
@@ -1967,7 +1989,7 @@ modules['sound'] = Sound;
  **/
 
  /**
-  * new Spriteset(path, spriteWidth, spriteHeight[, onLoad])
+  * new Spriteset(path, spriteWidth, spriteHeight[, callback = null])
   * - path (String): The absolute or relative path of the Image resource to
   *                  load. A relative path using `new` will be relative to the
   *                  current page. To get a resource relative to your game
@@ -1978,10 +2000,11 @@ modules['sound'] = Sound;
   * - spriteHeight (Number): The height in pixels of each sprite on the spriteset.
   *                          If you are loading a single sprite, this should be
   *                          the height of the image itself.
-  * - onLoad (Function): Optional. The `Function` to call once the Image
-  *                      finishes loading. If a 404 or other error occurs
-  *                      while loading, an `Error` object will be passed as
-  *                      an argument to the function.
+  * - callback (Function): Optional. A `Function` to invoke when the image
+  *                        loading process has completed, successfully or
+  *                        not. If an error occured (ex: file not found),
+  *                        an `Error` object will be passed as the first
+  *                        argument to `callback`.
   *
   * To create an instance of a [[Spriteset]], you must first know the
   * relative path of the image file in your game folder, and you must know
@@ -2078,7 +2101,7 @@ Spriteset.prototype['spriteHeight'] = NaN;
 /**
  * Spriteset#src -> String
  * 
- * The absolute URL to the Image resource.
+ * Read-only. The absolute URL to the image resource.
  **/
 Spriteset.prototype['src'] = null;
 
@@ -2139,13 +2162,13 @@ modules['spriteset'] = Spriteset;
  * - url (String): The WebSocket URL to the server to connect to. This should
  *                 use the `ws` protocol, port 80 by default. Ex: `ws://mygame.com:8080`
  * - options (Object): The optional `options` object's properties are copied
- *                     to the [[SGF.Client]] instance. Allows all the same
- *                     values as found in [[SGF.Client.DEFAULTS]].
+ *                     to the [[Client]] instance. Allows all the same
+ *                     values as found in [[Client.DEFAULTS]].
  *
- * Instantiates a new [[SGF.Client]], using the options found in the
+ * Instantiates a new [[Client]], using the options found in the
  * `options` parameter to configure. Clients do not make a socket connection
  * during construction (unlike the WebSocket API in HTML 5). To connect to
- * the server, the [[SGF.Client#connect]] method must be called first.
+ * the server, the [[Client#connect]] method must be called first.
  **/
 function Client(url, options) {
     var self = this;
@@ -2167,20 +2190,20 @@ inherits(Client, EventEmitter);
 makePrototypeClassCompatible(Client);
 
 /**
- * SGF.Client#onOpen() -> undefined
+ * Client#onOpen() -> undefined
  *
- * Event handler that is called after an invokation to [[SGF.Client#connect]]
+ * Event handler that is called after an invokation to [[Client#connect]]
  * has been successful, and a proper WebSocket connection has been established.
  * You must implement this function in a subclass to be useful.
  **/
 //onOpen: Prototype['emptyFunction'],
 
 /**
- * SGF.Client#onClose() -> undefined
+ * Client#onClose() -> undefined
  *
- * Event handler that is called after an invokation to [[SGF.Client#close]]
+ * Event handler that is called after an invokation to [[Client#close]]
  * has been called, resulting in a socket being closed. That is, if you call
- * [[SGF.Client#close]] on an instance that is already closed, then this
+ * [[Client#close]] on an instance that is already closed, then this
  * event will not be called.
  * Perhaps more importantly, this event will be called if the server closes
  * the connection (either directly through code or otherwise).
@@ -2189,7 +2212,7 @@ makePrototypeClassCompatible(Client);
 //onClose: Prototype['emptyFunction'],
 
 /**
- * SGF.Client#onMessage(message) -> undefined
+ * Client#onMessage(message) -> undefined
  * - message (String): The String value of the message sent from the server.
  *
  * Event handler that is called after the server sends a message to this
@@ -2199,11 +2222,11 @@ makePrototypeClassCompatible(Client);
 //onMessage: Prototype['emptyFunction'],
 
 /**
- * SGF.Client#connect() -> undefined
+ * Client#connect() -> undefined
  *
- * Makes this [[SGF.Client]] instance attempt to connect to the currently
+ * Makes this [[Client]] instance attempt to connect to the currently
  * set WebSocket server. This function will connect the underlying socket
- * connection on a network level, and call the [[SGF.Client#onOpen]] event
+ * connection on a network level, and call the [[Client#onOpen]] event
  * when the connection is properly established, and the WebSocket handshake
  * is successful.
  **/
@@ -2216,10 +2239,10 @@ Client.prototype['connect'] = function() {
 }
 
 /**
- * SGF.Client#close() -> undefined
+ * Client#close() -> undefined
  *
  * Closes the underlying socket connection from the server, if there is a
- * connection, and calls the [[SGF.Client#onClose]] event when complete.
+ * connection, and calls the [[Client#onClose]] event when complete.
  * If the connection is already closed, then this function does nothing, and
  * the `onClose` event is not fired.
  **/
@@ -2230,13 +2253,13 @@ Client.prototype['close'] = function() {
 }
 
 /**
- * SGF.Client#send(message) -> undefined
+ * Client#send(message) -> undefined
  * - message (String): The String that you will be sending to the server.
  *
  * Sends `message` to the currently connected server if it is connected.
- * If this [[SGF.Client]] instance is not connected when this is called,
+ * If this [[Client]] instance is not connected when this is called,
  * then an exception is thrown. As such, it's a good idea to place calls
- * to [[SGF.Client#send]] inside of a try catch block:
+ * to [[Client#send]] inside of a try catch block:
  *
  *     try {
  *         client.send("hello server!");
@@ -2245,7 +2268,7 @@ Client.prototype['close'] = function() {
  *     }
  *
  * A use case when an exception is thrown would be to add `message` to some
- * sort of queue that gets sent during the [[SGF.Client#onOpen]] event.
+ * sort of queue that gets sent during the [[Client#onOpen]] event.
  **/
 Client.prototype['send'] = function(message) {
     this['_w']['send'](message);
@@ -2307,7 +2330,7 @@ function Server() {
 }
 
 /**
- * SGF.Server#start() -> undefined
+ * Server#start() -> undefined
  *
  * Starts the underlying WebSocket server listening on the currently
  * configured port number.
@@ -2315,23 +2338,23 @@ function Server() {
 // start:null,
 
 /**
- * SGF.Server#stop() -> undefined
+ * Server#stop() -> undefined
  *
  * Stops the server from listening on the specified port. If the server is
- * currently running, then [[SGF.Server#onClientClose]] will be called for
+ * currently running, then [[Server#onClientClose]] will be called for
  * all current connections.
  **/
 // stop:null,
 
 /**
- * SGF.Server#connections() -> Array
+ * Server#connections() -> Array
  *
- * Gets an [[SGF.Client]] array of the currerntly connected clients. These
+ * Gets an [[Client]] array of the currerntly connected clients. These
  * instances can be used to individually send messages or close a client.
  **/
  
 /**
- * SGF.Server#sendToAll(message) -> undefined
+ * Server#sendToAll(message) -> undefined
  * - message (String): The message to send to all current connections.
  *
  * Sends `message` to all currently connected game clients.
@@ -2339,9 +2362,9 @@ function Server() {
 // sendToAll:null,
 
 /**
- * SGF.Server#onClientOpen(client) -> undefined
- * - client (SGF.Client): The connection instance, in case you would like to
- *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
+ * Server#onClientOpen(client) -> undefined
+ * - client (Client): The connection instance, in case you would like to
+ *                        [[Client#send]] or [[Client#close]] this
  *                        connection specifically.
  *
  * Event handler that is called every time a WebSocket client makes a
@@ -2351,24 +2374,24 @@ function Server() {
 // onClientOpen:null,
 
 /**
- * SGF.Server#onClientClose(client) -> undefined
- * - client (SGF.Client): The connection instance. Note that the connection
+ * Server#onClientClose(client) -> undefined
+ * - client (Client): The connection instance. Note that the connection
  *                        to the client has been closed at this point, and
- *                        calling [[SGF.Client#send]] or [[SGF.Client#close]]
+ *                        calling [[Client#send]] or [[Client#close]]
  *                        will throw an exception.
  *
  * Event handler that is called every time a WebSocket client disconnects
  * from this server. This function should be overridden in a  subclass to
- * actually be any useful. Be careful not to call [[SGF.Client#send]] or
- * [[SGF.Client#close]] on the `client` instance, since it's socket
+ * actually be any useful. Be careful not to call [[Client#send]] or
+ * [[Client#close]] on the `client` instance, since it's socket
  * connection has been closed.
  **/
 // onClientClose:null,
 
 /**
- * SGF.Server#onClientMessage(client, message) -> undefined
- * - client (SGF.Client): The connection instance, in case you would like to
- *                        [[SGF.Client#send]] or [[SGF.Client#close]] this
+ * Server#onClientMessage(client, message) -> undefined
+ * - client (Client): The connection instance, in case you would like to
+ *                        [[Client#send]] or [[Client#close]] this
  *                        connection specifically.
  * - message (String): The String value of the message sent from `client`.
  *
@@ -2414,11 +2437,11 @@ modules['server'] = Server;
     //////////////////// "SGF" PUBLIC FUNCTIONS //////////////////////////
     //////////////////////////////////////////////////////////////////////
     function log() {
-        var args = arguments;
-        if (window['console'] && console['log']) {
+        var args = arguments, cnsl = window['console'];
+        if (cnsl && cnsl['log']) {
             // Function.prototype.apply.call is necessary for IE, which
             // doesn't support console.log.apply. 
-            Function.prototype.apply.call(console['log'], console, args);
+            Function.prototype.apply.call(cnsl['log'], cnsl, args);
         }
         // Optionally listen for 'log' events from the SGF object, which you
         // could then write to a <textarea> or something for a custom debug

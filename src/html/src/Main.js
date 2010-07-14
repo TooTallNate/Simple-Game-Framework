@@ -158,11 +158,11 @@
     //////////////////// "SGF" PUBLIC FUNCTIONS //////////////////////////
     //////////////////////////////////////////////////////////////////////
     function log() {
-        var args = arguments;
-        if (window['console'] && console['log']) {
+        var args = arguments, cnsl = window['console'];
+        if (cnsl && cnsl['log']) {
             // Function.prototype.apply.call is necessary for IE, which
             // doesn't support console.log.apply. 
-            Function.prototype.apply.call(console['log'], console, args);
+            Function.prototype.apply.call(cnsl['log'], cnsl, args);
         }
         // Optionally listen for 'log' events from the SGF object, which you
         // could then write to a <textarea> or something for a custom debug

@@ -8,7 +8,7 @@
  **/
 
  /**
-  * new Spriteset(path, spriteWidth, spriteHeight[, onLoad])
+  * new Spriteset(path, spriteWidth, spriteHeight[, callback = null])
   * - path (String): The absolute or relative path of the Image resource to
   *                  load. A relative path using `new` will be relative to the
   *                  current page. To get a resource relative to your game
@@ -19,10 +19,11 @@
   * - spriteHeight (Number): The height in pixels of each sprite on the spriteset.
   *                          If you are loading a single sprite, this should be
   *                          the height of the image itself.
-  * - onLoad (Function): Optional. The `Function` to call once the Image
-  *                      finishes loading. If a 404 or other error occurs
-  *                      while loading, an `Error` object will be passed as
-  *                      an argument to the function.
+  * - callback (Function): Optional. A `Function` to invoke when the image
+  *                        loading process has completed, successfully or
+  *                        not. If an error occured (ex: file not found),
+  *                        an `Error` object will be passed as the first
+  *                        argument to `callback`.
   *
   * To create an instance of a [[Spriteset]], you must first know the
   * relative path of the image file in your game folder, and you must know
@@ -119,7 +120,7 @@ Spriteset.prototype['spriteHeight'] = NaN;
 /**
  * Spriteset#src -> String
  * 
- * The absolute URL to the Image resource.
+ * Read-only. The absolute URL to the image resource.
  **/
 Spriteset.prototype['src'] = null;
 

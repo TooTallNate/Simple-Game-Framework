@@ -2,7 +2,7 @@
  * class Script
  *
  * The `Script` class is responsible for loading additional JavaScript source
- * files.
+ * files into your SGF game's JavaScript environment.
  **/
 function Script(game, scriptUrl, onLoad) {
     if (game instanceof Game) {

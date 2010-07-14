@@ -1,25 +1,35 @@
+// Returns the current timestamp in milliseconds, opting
+// for the native 'Date.now' function if available.
 var now = (function() {
-        if ("now" in Date) {
-            return Date['now'];
-        } else {
-            return function() {
-                return (new Date).getTime();
-            };
-        }
-    })(),
-    currentGame = null,
-    runningGameInstances = [];
+    if ("now" in Date) {
+        return Date['now'];
+    } else {
+        return function() {
+            return (new Date).getTime();
+        };
+    }
+})(),
+// A private variable containing the 'current' game. Used
+// internally by `Game.getInstance()`.
+currentGame = null,
+// An private array of the currently running SGF games.
+// More than 1 are able to be displayed on a single HTML
+// page by calling `SGF.startWithDiv()` multiple times.
+runningGameInstances = [];
+
 
 /** section: Core API
  * class Game
  *
- * Represents your game itself. That is, there's one instance of [[Game]] at
- * a time, but every game is it's own instance, and creation of this object is
- * automatic and behind the scenes. Most importantly, this class is in
- * charge of the "game loop". The methods you (as a game developer) will
- * probably be interested in are [[Game#addComponent]],
- * [[Game#removeComponent]], and [[Game#loadScript]]. But there are some
- * more advances features for the adventurous.
+ * Represents your game itself. That is, an instance of [[Game]] is
+ * automatically created every time an SGF game is loaded. The
+ * [[Game]] class is in charge of the "game loop", and invokes it's
+ * own [[Game#update]] and [[Game#render]] functions to execute the
+ * game.
+ *
+ * The [[Game]] class is a subclass of [[Container]], and will be the
+ * top-level [[Container]] that you will be inserting [[Components]]
+ * into.
  **/
 function Game(rootUrl, screen, options) {
 
@@ -34,20 +44,6 @@ function Game(rootUrl, screen, options) {
      * and considered in the game loop. Returns the [[Game]] object (this),
      * for chaining.
      **/
-     /*
-    self['addComponent'] = function(component) {
-        var currentParent = component['parent'];
-        if (currentParent !== self) {
-            if (currentParent)
-                currentParent['removeComponent'](component);
-            components.push(component);
-            self['screen']['element']['insert'](component);
-            component['parent'] = self;
-            component['__fixZIndex']();
-        }
-        return self;
-    }
-    */
 
     /**
      * Game#removeComponent(component) -> Game
@@ -57,60 +53,6 @@ function Game(rootUrl, screen, options) {
      * Removes a [[Component]] that has previously been added to the game
      * loop via [[Game#addComponent]].
      **/
-     /*
-    self['removeComponent'] = function(component) {
-        var index = components.indexOf(component);
-        if (index > -1) {
-            arrayRemove(components, index);
-            component['toElement']()['remove']();
-            component['parent'] = null;
-        }
-        return self;
-    }
-    */
-
-
-    /**
-     * Game#loadScript(filePath[, onLoad = null]) -> Game
-     * - filePath (String): The relative path, including filename of the game
-     *                      script file to load.
-     * - onLoad (Function): Optional. The `Function` to invoke when the script
-     *                      file has finished loading and executing.
-     *                      
-     * Loads a script file from the game's folder into the game environment. The
-     * script is immediately executed once it has finished loading. Afterwards,
-     * the optional `onLoad` function is called.
-     **/
-     /*
-    self['loadScript'] = function(relativeUrl, onComplete) {
-        loadScript(self['root'] + relativeUrl,
-            Object.isFunction(onComplete) ? onComplete.bind(self) : emptyFunction);
-        return self;
-    }
-    */
-
-    /**
-     * Game#observe(eventName, handler) -> Game
-     * - eventName (String): The name of the game event to attach a handler to.
-     * - handler (Function): A reference to the `Function` that should be
-     *                       executed when `eventName` occurs.
-     *
-     * Attaches `handler` to one of the allowed `eventName`s. When `eventName`
-     * occurs in the execition environment, `handler` will be executed. Multiple
-     * handlers are allowed to be attached to a single event (via subsequent calls
-     * to `observe`) and they will  be executed in the order they were observed
-     * when the event occurs.
-     **/
-     /*
-    self['observe'] = function(eventName, handler) {
-        if (!(eventName in listeners))
-            throw "Game#observe: '" + eventName + "' is not a recognized event name.";
-        if (typeof(handler) !== 'function') throw "'handler' must be a Function."
-        listeners[eventName].push(handler);
-        return self;
-    }
-    */
-
 
 
 
@@ -131,16 +73,23 @@ function Game(rootUrl, screen, options) {
 
     // 'root' is the path to the folder containing the Game's 'main.js' file.
     if (rootUrl['endsWith']("main.js")) rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("main.js"));
+    
+    /**
+     * Game#root -> String
+     *  
+     * Read-only. The absolute path to the root directory (where `main.js`
+     * resides) of the SGF game. Trailing slash is included.
+     **/
     self['root'] = rootUrl['endsWith']('/') ? rootUrl : rootUrl + '/';
     
     // Set the initial game speed. This can be changed during gameplay.
     self['setGameSpeed'](self['gameSpeed']);
 
     // Init some standard properties
-    self['loaded'] = self['running'] = false;
+    self['running'] = false;
     self['startTime'] = NaN;
 
-    // Set as currentGame for Game.getInstance
+    // Set as currentGame for `Game.getInstance()`
     currentGame = self;
 
     // A binded 'step' function
@@ -149,7 +98,7 @@ function Game(rootUrl, screen, options) {
     }
 
     // Last step of initialization is to load the Game's 'main.js' file
-    new Script(self, "main.js", function() {
+    self['getScript']("main.js", function() {
         self['loaded'] = true;
         // Notify all the game's 'load' listeners
         self['emit']('load');
@@ -163,37 +112,46 @@ makePrototypeClassCompatible(Game);
 /**
  * Game#gameSpeed -> Number
  *  
- * The current target updates per seconds the game is attepting to achieve.
- * This is meant to be read-only. If you must dynamically change the game
- * speed, use [[Game#setGameSpeed]] instead.
+ * Read-only. The current target updates-per-second the game is attepting
+ * to achieve. If you must dynamically change the game speed during
+ * runtime, use [[Game#setGameSpeed]] instead.
  *  
- * The default game speed attempted is 30 (thirty) updates per second.
- */
+ * The default game speed attempted is **30** (thirty) updates per second.
+ **/
 Game.prototype['gameSpeed'] = 30;
+
+/**
+ * Game#loaded -> Boolean
+ *  
+ * Read-only. `false` immediately after instantiation. `true` once the
+ * ___main.js___ file has finished loading and has been executed.
+ **/
+Game.prototype['loaded'] = false;
 
 /**
  * Game#maxFrameSkips -> Number
  *  
- * The maximum allowed number of updates to call in between render calls
- * if the game's demand is more than current harware is capable of.
+ * Read and write. The maximum allowed number of times [[Game#update]] may
+ * be called in between [[Game#render]] calls if the game's demand is more
+ * than current harware is capable of.
  * 
- * The default value is 5 (five).
- */
+ * The default value is **5** (five).
+ **/
 Game.prototype['maxFrameSkips'] = 5;
 
 /**
  * Game#renderCount -> Number
  *
- * The total number of times that [[Game#render]] has been called
- * throughout the lifetime of the game.
+ * Read-only. The total number of times that [[Game#render]] has been
+ * called throughout the lifetime of the game.
  **/
 Game.prototype['renderCount'] = 0;
  
  /**
   * Game#updateCount -> Number
   *
-  * The total number of times that [[Game#update]] has been called
-  * throughout the lifetime of the game.
+  * Read-only. The total number of times that [[Game#update]] has been
+  * called throughout the lifetime of the game.
   **/
 Game.prototype['updateCount'] = 0;
 
@@ -202,12 +160,12 @@ Game.prototype['updateCount'] = 0;
 
 /**
  * Game#setGameSpeed(updatesPerSecond) -> Game
- * - updatesPerSecond (Number): The number of updates per second to set this
- *                              game.
+ * - updatesPerSecond (Number): The number of updates-per-second the
+ *                              game should attempt to achieve.
  *                              
  * Sets the "Game Speed", or attempted times [[Game#update]] gets called
- * per second. This can be changed at any point during gameplay. Note that
- * playing sounds and music speed do not get affected by changing this value.
+ * per second. This can be called at any point during gameplay. Note that
+ * sounds and music playback speed do not get affected by this value.
  **/
 Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
     this['gameSpeed'] = updatesPerSecond;
@@ -218,10 +176,10 @@ Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
 }
 
 Game.prototype['start'] = function() {
-    //log("Starting " + this.root);
+    debug('Starting "' + this.root + '"');
 
     // The 'running' flag is used by step() to determine if the loop should
-    // continue or end. No not set directly, use stop() to kill game loop.
+    // continue or end. Do not set directly, use stop() to kill game loop.
     this['running'] = true;
 
     runningGameInstances.push(this);
@@ -238,35 +196,84 @@ Game.prototype['start'] = function() {
     this['emit']("start");
 }
 
-Game.prototype['getFont'] = function(relativeUrl, onLoad) {
-    return new modules['font'](this, relativeUrl, onLoad);
-}
-
-Game.prototype['getScript'] = function(relativeUrl, onLoad) {
-    return new modules['script'](this, relativeUrl, onLoad);
-}
-
-Game.prototype['getSound'] = function(relativeUrl, onLoad) {
-    return new modules['sound'](this, relativeUrl, onLoad);
-}
-
-Game.prototype['getSpriteset'] = function(relativeUrl, width, height, onLoad) {
-    return new modules['spriteset'](this, relativeUrl, width, height, onLoad);
+/**
+ * Game#getFont(relativeUrl[, callback = null]) -> Font
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of a font
+ *                         resource to load.
+ * - callback (Function): Optional. A `Function` to invoke when the font
+ *                        loading process has completed, successfully or
+ *                        not. If an error occured (ex: file not found),
+ *                        an `Error` object will be passed as the first
+ *                        argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Font]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getFont'] = function(relativeUrl, callback) {
+    return new modules['font'](this, relativeUrl, callback);
 }
 
 /**
- * Game#render(interpolation) -> undefined
- * - interpolation (Number): The percentage (value between 0.0 and 1.0)
- *                           between the last call to update and the next
- *                           call to update this call to render is taking place.
- *                           This number is used to "predict" locations of
- *                           Components when the FPS are higher than UPS.
+ * Game#getScript(relativeUrl[, callback = null]) -> Script
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of a
+ *                         JavaScript source file to load.
+ * - callback (Function): Optional. A `Function` to invoke when the script
+ *                        loading and executing process has completed,
+ *                        successfully or not. If an error occured (ex:
+ *                        file not found), an `Error` object will be passed
+ *                        as the first argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Script]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getScript'] = function(relativeUrl, callback) {
+    return new modules['script'](this, relativeUrl, callback);
+}
+
+/**
+ * Game#getSound(relativeUrl[, callback = null]) -> Sound
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of sound
+ *                         file to load.
+ * - callback (Function): Optional. A `Function` to invoke when the sound
+ *                        loading process has completed, successfully or
+ *                        not. If an error occured (ex: file not found),
+ *                        an `Error` object will be passed as the first
+ *                        argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Sound]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getSound'] = function(relativeUrl, callback) {
+    return new modules['sound'](this, relativeUrl, callback);
+}
+
+/**
+ * Game#getSpriteset(relativeUrl[, callback = null]) -> Spriteset
+ * - relativeUrl (String): A URL relative to the [[Game#root]] of an
+ *                         image resource to load.
+ * - callback (Function): Optional. A `Function` to invoke when the image
+ *                        loading process has completed, successfully or
+ *                        not. If an error occured (ex: file not found),
+ *                        an `Error` object will be passed as the first
+ *                        argument to `callback`.
+ *                              
+ * A convienience function that returns a `new` [[Spriteset]], but forcing the
+ * URL to be relative to [[Game#root]], instead of the default.
+ **/
+Game.prototype['getSpriteset'] = function(relativeUrl, width, height, callback) {
+    return new modules['spriteset'](this, relativeUrl, width, height, callback);
+}
+
+/**
+ * Game#render() -> undefined
  *                           
  * The game render function that gets called automatically during each pass
  * in the game loop. Calls [[Component#render]] on all components added
- * through [[Game#addComponent]]. Afterwards, increments the
- * [[Game#renderCount]] value by 1. Game code should never have to call
- * this method, however.
+ * through [[Container#addComponent]]. Afterwards, increments the
+ * [[Game#renderCount]] value by _1_.
+ * 
+ * SGF game code should never have to call this method, it is handled
+ * automatically by the game loop.
  **/
 Game.prototype['render'] = function() {
     for (var components = arrayClone(this['components']),
@@ -334,10 +341,14 @@ Game.prototype['stopped'] = function() {
 
 /**
  * Game#update() -> undefined
- * The update function for the game loop. Calls [[Component#update]]
- * on all components added through [[Game#addComponent]]. Afterwards,
- * increments the [[Game#updateCount]] value by 1. Game code should
- * never have to call this method, however.
+ *                           
+ * The game update function that gets called automatically during each pass
+ * in the game loop. Calls [[Component#update]] on all components added
+ * through [[Container#addComponent]]. Afterwards, increments the
+ * [[Game#updateCount]] value by _1_.
+ * 
+ * SGF game code should never have to call this method, it is handled
+ * automatically by the game loop.
  **/
 Game.prototype['update'] = function() {
     for (var components = arrayClone(this['components']),
@@ -370,7 +381,8 @@ Game.prototype['toString'] = functionReturnString("[object Game]");
 /**
  * Game.getInstance() -> Game
  *
- * Gets the `Game` instance for your game.
+ * Gets the `Game` instance for your game. This will likely be one
+ * of the first lines of code in your SGF game's `main.js` file.
  **/
 Game['getInstance'] = function() {
     return currentGame;

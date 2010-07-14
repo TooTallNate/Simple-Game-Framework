@@ -13,11 +13,11 @@
   *                        encoded TTF font file. Alternatively, the name
   *                        of a locally installed font can be used.
   *
-  * To create an instance of a [[SGF.Label]], you must first have an
-  * [[SGF.Font]] instance that contains the information regarding which
+  * To create an instance of a [[Label]], you must first have an
+  * [[Font]] instance that contains the information regarding which
   * font face should be used in the label.
   *
-  * An [[SGF.Font]] instance can contain the path to a TrueType font file,
+  * An [[Font]] instance can contain the path to a TrueType font file,
   * or contain the name of a locally installed font on the client computer.
   **/
 
