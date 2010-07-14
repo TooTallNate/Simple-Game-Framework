@@ -67,12 +67,18 @@ function compileSrc(files) {
 
     javac.stdout.setEncoding("utf8");
     javac.stdout.addListener('data', function(data) {
-        sys.print(data.replace(/\n/g, "\nJAVAC:\t"));
+        data.split("\n").forEach(function(d) {
+            if (d.length>0)
+                sys.puts("JAVAC:\t" + d);
+        });
     });
 
     javac.stderr.setEncoding("utf8");
     javac.stderr.addListener('data', function(data) {
-        sys.print(data.replace(/\n/g, "\nJAVAC:\t"));
+        data.split("\n").forEach(function(d) {
+            if (d.length>0)
+                sys.puts("JAVAC:\t" + d);
+        });
     });
 
     javac.addListener('exit', function(code) {
@@ -117,12 +123,18 @@ function jar() {
 
     jar.stdout.setEncoding("utf8");
     jar.stdout.addListener('data', function(data) {
-        sys.print(data.replace(/\n/g, "\nJAR:\t"));
+        data.split("\n").forEach(function(d) {
+            if (d.length>0)
+                sys.puts("JAR:\t" + d);
+        });
     });
 
     jar.stderr.setEncoding("utf8");
     jar.stderr.addListener('data', function(data) {
-        sys.print(data.replace(/\n/g, "\nJAR:\t"));
+        data.split("\n").forEach(function(d) {
+            if (d.length>0)
+                sys.puts("JAR:\t" + d);
+        });
     });
 
     jar.addListener('exit', function(code) {
