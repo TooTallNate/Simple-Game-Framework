@@ -54,6 +54,18 @@
                     .addListener("mousedown",  this.bindedCreateRect)
                     .addListener("mouseup",    this.bindedCreateRect)
                     .addListener("mousemove",  this.bindedCreateRect)
+                    .addListener("touchstart", function(e) {
+                        new SpriteFollow.Rect({
+                            x: e.touches[0].pageX,
+                            y: e.touches[0].pageY
+                        });
+                    })
+                    .addListener("touchmove", function(e) {
+                        new SpriteFollow.Rect({
+                            x: e.touches[0].pageX,
+                            y: e.touches[0].pageY
+                        });
+                    })
                     .addListener("keydown",    this.bindedCreateRect)
                     .addListener("keyup",      this.bindedCreateRect);
         },

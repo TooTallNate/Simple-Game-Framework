@@ -1068,7 +1068,13 @@ var Screen = function(game) {
             style['webkitUserSelect'] = "none";
         }
         Element['makePositioned'](element);
-        Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
+        for (var i=0, nodes=element.childNodes, l=nodes.length, node=null; i<l ;i++) {
+            node = nodes[i];
+            if (node && (node.id != "webSocketContainer")) {
+                element.removeChild(node);
+            }
+        }
+        //Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
 
         // If Screen#bind has been called prevously, then this call has to
         // essentially move all game elements to the new Screen element
@@ -1365,7 +1371,7 @@ function contextmenuHandler(event) {
         if (eventObj.x >= 0 && eventObj.y >= 0 &&
             eventObj.x <= currentScreen.width &&
             eventObj.y <= currentScreen.height) {
-            event.stop();
+            event['stop']();
         }
     }
 }
@@ -1373,14 +1379,14 @@ function contextmenuHandler(event) {
 function keypressHandler(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (currentInput) {
-        event.stop();
+        event['stop']();
     }
 }
 
 function keydownHandler(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (currentInput) {
-        event.stop();
+        event['stop']();
         if (currentInput['_k'][event.keyCode] === true) return;
         var eventObj = {
                 'keyCode': event.keyCode,
@@ -1396,7 +1402,7 @@ function keydownHandler(event) {
 function keyupHandler(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (currentInput) {
-        event.stop();
+        event['stop']();
         if (currentInput['_k'][event.keyCode] === false) return;
         var eventObj = {
                 keyCode: event.keyCode,
@@ -1418,7 +1424,7 @@ function mousedownHandler(event) {
             eventObj.y <= currentScreen.height) {
             
             focus(currentInput);
-            event.stop();
+            event['stop']();
             window.focus();
 
             //downMouseButtons[event.button] = true;
@@ -1438,7 +1444,7 @@ function mousedownHandler(event) {
         ,   pointerX = event['pointerX']()
         ,   pointerY = event['pointerY']();
         while (i--) {
-            element = runningGameInstances[i]['screen']['element'];
+            element = runningGameInstances[i]['element'];
             offset = element['cumulativeOffset']();
             
             if (pointerX >= (offset['left'])
@@ -1461,7 +1467,7 @@ function mouseupHandler(event) {
             eventObj.x <= currentScreen.width &&
             eventObj.y <= currentScreen.height) {
 
-            event.stop();
+            event['stop']();
 
             //downMouseButtons[event.button] = false;
 
@@ -1481,13 +1487,85 @@ function mousemoveHandler(event) {
             eventObj.y <= currentScreen.height &&
             (currentInput['pointerX'] !== eventObj['x'] || currentInput['pointerY'] !== eventObj['y'])) {
 
-            event.stop();
+            event['stop']();
 
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
             
             currentInput['emit']("mousemove", [eventObj]);
         }
+    }
+}
+
+function touchstartHandler(event) {
+    if (currentInput) {
+
+        var currentScreen = currentInput['game']['screen'];
+        for (var i=0; i<event['touches'].length; i++) {
+        }
+        
+        /*if (eventObj.x >= 0 && eventObj.y >= 0 &&
+            eventObj.x <= currentScreen.width &&
+            eventObj.y <= currentScreen.height) {*/
+            
+            focus(currentInput);
+            event['stop']();
+            window.focus();
+
+            //currentInput['pointerX'] = eventObj.x;
+            //currentInput['pointerY'] = eventObj.y;
+
+            currentInput['emit']("touchstart", [event]);
+        /*} else {
+            blur();
+            mousedownHandler(event);
+        }*/
+
+    } else {
+        var i = runningGameInstances.length
+        ,   game = null
+        ,   element = null
+        ,   offset = null
+        ,   pointerX = null
+        ,   pointerY = null;
+
+        while (i--) {
+            game = runningGameInstances[i];
+            element = game['element'];
+            offset = element['cumulativeOffset']();
+
+            for (var j=0, l=event['changedTouches'].length; j<l; j++) {
+
+                pointerX = event['changedTouches'][j]['pageX'];
+                pointerY = event['changedTouches'][j]['pageY'];
+
+                if (pointerX >= (offset['left'])
+                    && pointerX <= (offset['left'] + game['screen']['width'])
+                    && pointerY >= (offset['top'])
+                    && pointerY <= (offset['top'] + game['screen']['height'])) {
+                 
+                    currentInput = game['input'];
+                    touchstartHandler(event);
+                }
+            }
+        }
+    }
+}
+
+function touchmoveHandler(event) {
+    if (currentInput) {
+        event['stop']();
+
+        currentInput['pointerX'] = event['touches'][0].x;
+        currentInput['pointerY'] = event['touches'][0].y;
+        
+        currentInput['emit']("touchmove", [event]);
+    }
+}
+
+function touchendHandler(event) {
+    if (currentInput) {
+        event['stop']();
     }
 }
 
@@ -1498,6 +1576,9 @@ Input['grab'] = function() {
             ['observe']("mousemove", mousemoveHandler)
             ['observe']("mousedown", mousedownHandler)
             ['observe']("mouseup", mouseupHandler)
+            ['observe']("touchstart", touchstartHandler)
+            ['observe']("touchmove", touchmoveHandler)
+            ['observe']("touchend", touchendHandler)
             ['observe']("contextmenu", contextmenuHandler);
     Input.grabbed = true;
 }
@@ -1509,6 +1590,9 @@ Input['release'] = function() {
             ['stopObserving']("mousemove", mousemoveHandler)
             ['stopObserving']("mousedown", mousedownHandler)
             ['stopObserving']("mouseup", mouseupHandler)
+            ['stopObserving']("touchstart", touchstartHandler)
+            ['stopObserving']("touchmove", touchmoveHandler)
+            ['stopObserving']("touchend", touchendHandler)
             ['stopObserving']("contextmenu", contextmenuHandler);
     Input.grabbed = false;
 }
@@ -1544,8 +1628,19 @@ runningGameInstances = [];
  * game.
  *
  * The [[Game]] class is a subclass of [[Container]], and will be the
- * top-level [[Container]] that you will be inserting [[Components]]
- * into.
+ * top-level [[Container]] that you will be inserting custom [[Component]]
+ * instances into.
+ *  
+ * [[Game]] is an [[EventEmitter]], which emits the following events:
+ *
+ *  - `load`: Fired immediately after the game's _main.js_ file finishes
+ *            loading and executing into the game environment.
+ *  
+ *  - 'start': 
+ *  
+ *  - 'stopping':
+ *  
+ *  - 'stopped' :
  **/
 function Game(rootUrl, screen, options) {
 
@@ -1692,7 +1787,7 @@ Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
 }
 
 Game.prototype['start'] = function() {
-    debug('Starting "' + this.root + '"');
+    debug('Starting "' + this['root'] + '"');
 
     // The 'running' flag is used by step() to determine if the loop should
     // continue or end. Do not set directly, use stop() to kill game loop.

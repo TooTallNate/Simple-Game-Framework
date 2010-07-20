@@ -28,8 +28,19 @@ runningGameInstances = [];
  * game.
  *
  * The [[Game]] class is a subclass of [[Container]], and will be the
- * top-level [[Container]] that you will be inserting [[Components]]
- * into.
+ * top-level [[Container]] that you will be inserting custom [[Component]]
+ * instances into.
+ *  
+ * [[Game]] is an [[EventEmitter]], which emits the following events:
+ *
+ *  - `load`: Fired immediately after the game's _main.js_ file finishes
+ *            loading and executing into the game environment.
+ *  
+ *  - 'start': 
+ *  
+ *  - 'stopping':
+ *  
+ *  - 'stopped' :
  **/
 function Game(rootUrl, screen, options) {
 
@@ -176,7 +187,7 @@ Game.prototype['setGameSpeed'] = function(updatesPerSecond) {
 }
 
 Game.prototype['start'] = function() {
-    debug('Starting "' + this.root + '"');
+    debug('Starting "' + this['root'] + '"');
 
     // The 'running' flag is used by step() to determine if the loop should
     // continue or end. Do not set directly, use stop() to kill game loop.

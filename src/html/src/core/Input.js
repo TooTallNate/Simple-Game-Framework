@@ -195,7 +195,7 @@ function contextmenuHandler(event) {
         if (eventObj.x >= 0 && eventObj.y >= 0 &&
             eventObj.x <= currentScreen.width &&
             eventObj.y <= currentScreen.height) {
-            event.stop();
+            event['stop']();
         }
     }
 }
@@ -203,14 +203,14 @@ function contextmenuHandler(event) {
 function keypressHandler(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (currentInput) {
-        event.stop();
+        event['stop']();
     }
 }
 
 function keydownHandler(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (currentInput) {
-        event.stop();
+        event['stop']();
         if (currentInput['_k'][event.keyCode] === true) return;
         var eventObj = {
                 'keyCode': event.keyCode,
@@ -226,7 +226,7 @@ function keydownHandler(event) {
 function keyupHandler(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (currentInput) {
-        event.stop();
+        event['stop']();
         if (currentInput['_k'][event.keyCode] === false) return;
         var eventObj = {
                 keyCode: event.keyCode,
@@ -248,7 +248,7 @@ function mousedownHandler(event) {
             eventObj.y <= currentScreen.height) {
             
             focus(currentInput);
-            event.stop();
+            event['stop']();
             window.focus();
 
             //downMouseButtons[event.button] = true;
@@ -268,7 +268,7 @@ function mousedownHandler(event) {
         ,   pointerX = event['pointerX']()
         ,   pointerY = event['pointerY']();
         while (i--) {
-            element = runningGameInstances[i]['screen']['element'];
+            element = runningGameInstances[i]['element'];
             offset = element['cumulativeOffset']();
             
             if (pointerX >= (offset['left'])
@@ -291,7 +291,7 @@ function mouseupHandler(event) {
             eventObj.x <= currentScreen.width &&
             eventObj.y <= currentScreen.height) {
 
-            event.stop();
+            event['stop']();
 
             //downMouseButtons[event.button] = false;
 
@@ -311,13 +311,85 @@ function mousemoveHandler(event) {
             eventObj.y <= currentScreen.height &&
             (currentInput['pointerX'] !== eventObj['x'] || currentInput['pointerY'] !== eventObj['y'])) {
 
-            event.stop();
+            event['stop']();
 
             currentInput['pointerX'] = eventObj.x;
             currentInput['pointerY'] = eventObj.y;
             
             currentInput['emit']("mousemove", [eventObj]);
         }
+    }
+}
+
+function touchstartHandler(event) {
+    if (currentInput) {
+
+        var currentScreen = currentInput['game']['screen'];
+        for (var i=0; i<event['touches'].length; i++) {
+        }
+        
+        /*if (eventObj.x >= 0 && eventObj.y >= 0 &&
+            eventObj.x <= currentScreen.width &&
+            eventObj.y <= currentScreen.height) {*/
+            
+            focus(currentInput);
+            event['stop']();
+            window.focus();
+
+            //currentInput['pointerX'] = eventObj.x;
+            //currentInput['pointerY'] = eventObj.y;
+
+            currentInput['emit']("touchstart", [event]);
+        /*} else {
+            blur();
+            mousedownHandler(event);
+        }*/
+
+    } else {
+        var i = runningGameInstances.length
+        ,   game = null
+        ,   element = null
+        ,   offset = null
+        ,   pointerX = null
+        ,   pointerY = null;
+
+        while (i--) {
+            game = runningGameInstances[i];
+            element = game['element'];
+            offset = element['cumulativeOffset']();
+
+            for (var j=0, l=event['changedTouches'].length; j<l; j++) {
+
+                pointerX = event['changedTouches'][j]['pageX'];
+                pointerY = event['changedTouches'][j]['pageY'];
+
+                if (pointerX >= (offset['left'])
+                    && pointerX <= (offset['left'] + game['screen']['width'])
+                    && pointerY >= (offset['top'])
+                    && pointerY <= (offset['top'] + game['screen']['height'])) {
+                 
+                    currentInput = game['input'];
+                    touchstartHandler(event);
+                }
+            }
+        }
+    }
+}
+
+function touchmoveHandler(event) {
+    if (currentInput) {
+        event['stop']();
+
+        currentInput['pointerX'] = event['touches'][0].x;
+        currentInput['pointerY'] = event['touches'][0].y;
+        
+        currentInput['emit']("touchmove", [event]);
+    }
+}
+
+function touchendHandler(event) {
+    if (currentInput) {
+        event['stop']();
     }
 }
 
@@ -328,6 +400,9 @@ Input['grab'] = function() {
             ['observe']("mousemove", mousemoveHandler)
             ['observe']("mousedown", mousedownHandler)
             ['observe']("mouseup", mouseupHandler)
+            ['observe']("touchstart", touchstartHandler)
+            ['observe']("touchmove", touchmoveHandler)
+            ['observe']("touchend", touchendHandler)
             ['observe']("contextmenu", contextmenuHandler);
     Input.grabbed = true;
 }
@@ -339,6 +414,9 @@ Input['release'] = function() {
             ['stopObserving']("mousemove", mousemoveHandler)
             ['stopObserving']("mousedown", mousedownHandler)
             ['stopObserving']("mouseup", mouseupHandler)
+            ['stopObserving']("touchstart", touchstartHandler)
+            ['stopObserving']("touchmove", touchmoveHandler)
+            ['stopObserving']("touchend", touchendHandler)
             ['stopObserving']("contextmenu", contextmenuHandler);
     Input.grabbed = false;
 }

@@ -22,7 +22,13 @@ var Screen = function(game) {
             style['webkitUserSelect'] = "none";
         }
         Element['makePositioned'](element);
-        Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
+        for (var i=0, nodes=element.childNodes, l=nodes.length, node=null; i<l ;i++) {
+            node = nodes[i];
+            if (node && (node.id != "webSocketContainer")) {
+                element.removeChild(node);
+            }
+        }
+        //Element['immediateDescendants'](element)['without']($("webSocketContainer"))['invoke']("remove");
 
         // If Screen#bind has been called prevously, then this call has to
         // essentially move all game elements to the new Screen element
