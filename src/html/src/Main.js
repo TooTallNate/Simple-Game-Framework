@@ -73,7 +73,27 @@
     isMobileSafari = /Apple.*Mobile/.test(userAgent),
     
     // used in "arrayClone"
-    slice = Array.prototype['slice'];
+    slice = Array.prototype['slice'],
+    
+    // inherits an object's prototype onto another object
+    inherits = null;
+    if ("create" in Object) {
+        inherits = function(ctor, superCtor) {
+            ctor.prototype = Object['create'](superCtor.prototype, {
+                "constructor": {
+                    "value": ctor,
+                    "enumerable": false
+                }
+            });
+        }
+    } else {
+        var klass = function() {};
+        inherits = function(ctor, superCtor) {
+            klass.prototype = superCtor.prototype;
+            ctor.prototype = new klass;
+            ctor.prototype['constructor'] = ctor;
+        }
+    }
     
 
 
@@ -149,7 +169,14 @@
     
     
     
-    // The main SGF namespace.
+    /** section: Core API
+     * SGF
+     *
+     * The `SGF` namespace is the single global object that gets exported to
+     * the global scope of `Simple Game Framework`'s JavaScript environment.
+     *
+     * [[SGF.require]] will be the most used throughout your SGF game code.
+     **/
     var SGF = new EventEmitter();
     SGF['toString'] = functionReturnString("[object SGF]");
     window['SGF'] = SGF;
@@ -157,6 +184,19 @@
     //////////////////////////////////////////////////////////////////////
     //////////////////// "SGF" PUBLIC FUNCTIONS //////////////////////////
     //////////////////////////////////////////////////////////////////////
+    /**
+     * SGF.log(arg1) -> undefined
+     *
+     * SGF's logging function, which accepts a variable number of arbitrary
+     * arguments to log for debugging purposes.
+     *
+     * The objects passed as arguments will be passed to the SGF Engine's
+     * terminal or console (`System.out.print` on the Java Engine,
+     * `console.log` for the HTML Engine, for example).
+     *
+     * The `SGF` namespace itself will also emit a `log` event, for game code
+     * too optionally hook into.
+     **/
     function log() {
         var args = arguments, cnsl = window['console'];
         if (cnsl && cnsl['log']) {
@@ -170,15 +210,36 @@
         SGF['emit']("log", args);
     }
     SGF['log'] = log;
-    
-    function inherits(ctor, superCtor) {
-        var klass = function() {};
-        klass.prototype = superCtor.prototype;
-        ctor.prototype = new klass;
-        ctor.prototype['constructor'] = ctor;
-    }
+
+    /**
+     * SGF.inherits(constructor, superConstructor) -> undefined
+     * - constructor (Function): A "constructor" Function that will inherit
+     *                           from `superConstructor`.
+     * - superConstructor (Function): A "constructor" Function that
+     *                               `constructor` will inherit from.
+     *
+     * Convienience function to make a "constructor" Function's `prototype`
+     * inherit from another "constructor" function.
+     * 
+     * In other words, after calling this:
+     *
+     *     (new constructor) instanceof superConstructor
+     *         // true
+     **/
     SGF['inherits'] = inherits;
     
+    /**
+     * SGF.require(moduleName) -> Object
+     * - moduleName (String): The name of the internal SGF module that is
+     *                        attempted to be imported. Module names are
+     *                        case-insensitive.
+     *  
+     * All of SGF's classes are hidden by default, to avoid unnecessary
+     * variable leakage into the global scope. In order to get access to one,
+     * it must first be "_imported_" via `SGF.require`.
+     *  
+     *     var component = SGF.require("component");
+     **/
     function require(moduleName) {
         if (typeof moduleName == "string") {
             moduleName = String(moduleName).toLowerCase();

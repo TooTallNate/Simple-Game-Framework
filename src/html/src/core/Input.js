@@ -1,7 +1,7 @@
 var currentInput = null;
 
 /** section: Core API
- * Input
+ * class Input
  *
  * Contains information and utility methods concerning player input for games.
  * This covers mouse movement, mouse clicks, and key presses.

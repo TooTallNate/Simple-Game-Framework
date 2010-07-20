@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>  v API documentation | new Font</title>
+  <title>SGF  API Specification v0.1 | new Font</title>
   <meta name="generator" content="PDoc" />
   
   <script charset="utf-8" src="../../../javascripts/pdoc/prototype.js" type="text/javascript"></script>
@@ -44,9 +44,11 @@
 <li><div class="menu-item"><a class="class" href="../../../components api/Rectangle/index.html" title="Rectangle (class)">Rectangle</a></div></li>
 <li><div class="menu-item"><a class="class" href="../../../components api/Shape/index.html" title="Shape (class)">Shape</a></div></li>
 <li><div class="menu-item"><a class="class" href="../../../components api/Sprite/index.html" title="Sprite (class)">Sprite</a></div></li></ul></li>
-<li><div class="menu-item"><a class="section" href="../../../core api/index.html" title="Core API section">Core API section</a></div><ul class="menu-section"><li><div class="menu-item"><a class="class" href="../../../core api/Game/index.html" title="Game (class)">Game</a></div></li>
-<li><div class="menu-item"><a class="namespace" href="../../../core api/Input/index.html" title="Input (namespace)">Input</a></div></li>
-<li><div class="menu-item"><a class="namespace" href="../../../core api/Screen/index.html" title="Screen (namespace)">Screen</a></div></li></ul></li>
+<li><div class="menu-item"><a class="section" href="../../../core api/index.html" title="Core API section">Core API section</a></div><ul class="menu-section"><li><div class="menu-item"><a class="class" href="../../../core api/EventEmitter/index.html" title="EventEmitter (class)">EventEmitter</a></div></li>
+<li><div class="menu-item"><a class="class" href="../../../core api/Game/index.html" title="Game (class)">Game</a></div></li>
+<li><div class="menu-item"><a class="class" href="../../../core api/Input/index.html" title="Input (class)">Input</a></div></li>
+<li><div class="menu-item"><a class="class" href="../../../core api/Screen/index.html" title="Screen (class)">Screen</a></div></li>
+<li><div class="menu-item"><a class="namespace" href="../../../core api/SGF/index.html" title="SGF (namespace)">SGF</a></div></li></ul></li>
 <li><div class="menu-item"><a class="section current-parent" href="../../../resources api/index.html" title="Resources API section">Resources API section</a></div><ul class="menu-section"><li><div class="menu-item"><a class="class current-parent" href="../../../resources api/Font/index.html" title="Font (class)">Font</a></div><ul><li><div class="menu-item"><a class="constructor current" href="../../../resources api/Font/new/index.html" title="new Font (constructor)">new</a></div></li></ul></li>
 <li><div class="menu-item"><a class="class" href="../../../resources api/Script/index.html" title="Script (class)">Script</a></div></li>
 <li><div class="menu-item"><a class="class" href="../../../resources api/Spriteset/index.html" title="Spriteset (class)">Spriteset</a></div></li></ul></li>
@@ -80,6 +82,8 @@
 </ul>
 
 
+  <p id="src_code_href"><a href="http://github.com/TooTallNate/Simple-Game-Framework/blob/1146020/src/html/dist/SGF.debug.js#LID1943">src code</a></p>
+
 
 <h2 class="page-title">
   <span class="type">constructor</span> new Font
@@ -94,7 +98,7 @@
   <div class="section-content">
     <div class="method-description">
       
-        <pre class="syntax"><code class="ebnf">new Font(game, path)</code></pre>
+        <pre class="syntax"><code class="ebnf">new Font(path[, options = null, callback = null])</code></pre>
 
   <ul class="argument-list">
     
@@ -103,21 +107,30 @@
         
           <span class="argument-types">(<code>String</code>)</span>
         
-         &ndash; The path and filename of the Font to load. This can be either a path relative to your game root, an absolute path, or an entire data URI of an encoded TTF font file. Alternatively, the name of a locally installed font can be used.
-
+         &ndash; The relative or absolute path to a font resource. The path should omit the file extension, and supply a <code>formats</code> property in the <code>options</code> argument.
+      </li>
+    
+      <li>
+        <code class="argument-name">options</code>
+        
+          <span class="argument-types">(<code>Object</code>)</span>
+        
+         &ndash; Optional. An object containing the instance properties that need to be changed from the default. With <code><a href="../../../resources api/Font/index.html" title="Font (class)">Font</a></code>, a <code>formats</code> Array options will most likely be specified to inform the engine which different file types are available for use.
+      </li>
+    
+      <li>
+        <code class="argument-name">callback</code>
+        
+          <span class="argument-types">(<code>Function</code>)</span>
+        
+         &ndash; Optional. The function to invoke when the <code>load</code> event is emitted.
       </li>
     
   </ul> <!-- .argument-list -->
 
       
 
-      <p>To create an instance of a Label, you must first have an
-<code><a href="../../../resources api/Font/index.html" title="Font (class)">Font</a></code> instance that contains the information regarding which
-font face should be used in the label.</p>
-
-<p>An <code><a href="../../../resources api/Font/index.html" title="Font (class)">Font</a></code> instance can contain the path to a TrueType font file,
-or contain the name of a locally installed font on the client computer.</p>
-
+      
       
       
 
@@ -132,15 +145,15 @@ or contain the name of a locally installed font on the client computer.</p>
       </div> <!-- #main -->
       
       <div id="footer">
-        <p><a href=""></a> v API documentation.</p>
+        <p><a href="http://www.simplegameframework.com">Simple Game Framework</a>  API Specification v0.1.</p>
         <p>
           
-            Last updated on July 14, 2010 at 19:26 UTC.
+            Last updated on July 20, 2010 at 00:54 UTC.
           
           Generated by <a href="http://pdoc.org">PDoc</a>.
           Uses <a href="http://famfamfam.com/lab/icons/silk/" title="famfamfam.com: Silk Icons">Silk Icons</a> and portions of <a href="http://github.com/280north/aristo/tree/master" title="280north's aristo at master - GitHub">Aristo</a>.
         </p>
-        
+        <p>footer...</p>
       </div> <!-- #footer -->
 
     </div> <!-- #page -->

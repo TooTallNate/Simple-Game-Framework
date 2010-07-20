@@ -73,7 +73,27 @@
     isMobileSafari = /Apple.*Mobile/.test(userAgent),
     
     // used in "arrayClone"
-    slice = Array.prototype['slice'];
+    slice = Array.prototype['slice'],
+    
+    // inherits an object's prototype onto another object
+    inherits = null;
+    if ("create" in Object) {
+        inherits = function(ctor, superCtor) {
+            ctor.prototype = Object['create'](superCtor.prototype, {
+                "constructor": {
+                    "value": ctor,
+                    "enumerable": false
+                }
+            });
+        }
+    } else {
+        var klass = function() {};
+        inherits = function(ctor, superCtor) {
+            klass.prototype = superCtor.prototype;
+            ctor.prototype = new klass;
+            ctor.prototype['constructor'] = ctor;
+        }
+    }
     
 
 
@@ -318,15 +338,16 @@ Component.prototype['height'] = 10;
  * The X coordinate of the top-left point of the [[Component]] from the
  * top-left of the game screen.
  *
- *     update: function($super) {
+ *     var component = SGF.require("component");
+ *     var instance = new component();
+ *     instance.update = function() {
  *         this.x++;
- *         $super();
  *     }
  *
  * This is an example of overwritting the [[Component#update]] method,
- * and incrementing the X coordinate every step through the game loop.
+ * and incrementing the `x` coordinate every step through the game loop.
  * This will smoothly pan the [[Component]] across the game screen at
- * the [[Game]]'s set game speed.
+ * the game's [[Game#gameSpeed]].
  **/
 Component.prototype['x'] = 0;
 
@@ -337,6 +358,7 @@ Component.prototype['x'] = 0;
  * top-left of the game screen.
  **/
 Component.prototype['y'] = 0;
+
 /**
  * Component#opacity -> Number
  *
@@ -347,10 +369,11 @@ Component.prototype['y'] = 0;
  * transparent. You get the idea...
  **/
 Component.prototype['opacity'] = 1.0;
+
 /**
  * Component#rotation -> Number
  *
- * The rotation value of the [[Component]] in degrees. Note that the
+ * The rotation value of the [[Component]] in radians. Note that the
  * [[Component#x]], [[Component#y]] properties, and values returned
  * from [[Component#left]], [[Component#right]], [[Component#top]],
  * and [[Component#bottom]] are not affected by this value. Therefore,
@@ -404,12 +427,11 @@ modules['component'] = Component;
  *                       note that you can add or remove `Component`s
  *                       at any time via [[Container#addComponent]] and
  *                       [[Container#removeComponent]].
- *                       
  * - options (Object): The optional 'options' object's properties are copied
  *                     this [[Container]] in the constructor. It allows all
  *                     the same default properties as [[Component]].
  *
- * Instantiates a new [[Container]], adding the [[Component]]s found
+ * Creates a new [[Container]] instance, adding the [[Component]]s found
  * in `components` initially.
  **/
 function Container(components, options) {
@@ -466,7 +488,8 @@ Container.prototype['__renderComponents'] = function(renderCount) {
  *                              container.
  *
  * Adds a [[Component]] into the container. `component`'s attributes
- * will be rendered to the screen in relation to the attributes of this `Container`.
+ * will be rendered to the screen in relation to the attributes of this
+ * `Container`.
  **/
 Container.prototype['addComponent'] = function(component) {
     if (component.parent !== this) {
@@ -483,11 +506,11 @@ Container.prototype['addComponent'] = function(component) {
 
 /**
  * Container#removeComponent(component) -> Container
- * - component (Component): The `Component` instance to remove frmo this
+ * - component (Component): The [[Component]] instance to remove from this
  *                          container.
  *
  * Removes a [[Component]] from the container that has previously been
- * added to this container via [[Container#addComponent]].
+ * added via [[Container#addComponent]].
  **/
 Container.prototype['removeComponent'] = function(component) {
     var index = this['components'].indexOf(component);
@@ -505,7 +528,7 @@ Container.prototype['__computeChildZIndex'] = function(zIndex) {
 
 Container.prototype['__fixZIndex'] = function() {
     Component.prototype['__fixZIndex'].call(this);
-    for (var i=0; i < this['components'].length; i++) {
+    for (var i=0, l=this['components'].length; i < l; i++) {
         this['components'][i]['__fixZIndex']();
     }
 }
@@ -871,9 +894,28 @@ modules['rectangle'] = Rectangle;
  * automatically generated when the engine and game are loaded.
  **/
 
-/* EventEmitter is an internal class that a lot of main SGF classes inherit 
- * from. The class implements the common listener pattern used throughout SGF.
- */
+/** section: Core API
+ * class EventEmitter
+ *
+ * A base class that implements the
+ * [observer pattern](http://en.wikipedia.org/wiki/Observer_pattern) commonly
+ * used throughout the `Resources API` classes, [[Game]] and [[Input]], to
+ * name just a few.
+ *
+ * If you are writing a custom class that fires "events",
+ * `EventEmitter` may be subclassed by calling the constructor
+ * function inside your class' constructor function, and
+ * inheriting `EventEmitter`'s _prototype_ via [[SGF.inherits]]:
+ *
+ *     var EventEmitter = SGF.require("EventEmitter");
+ *     
+ *     function MySubclass() {
+ *         // Sets up instance properties
+ *         EventEmitter.call(this);
+ *     }
+ *     // Make MySubclass.prototype inherit from EventEmitter.prototype
+ *     SGF.inherits(MySubclass, EventEmitter);
+ **/
 function EventEmitter() {
     var self = this;
     self['_l'] = {};
@@ -890,23 +932,43 @@ function EventEmitter() {
     }
 }
 
-EventEmitter.prototype['addListener'] = function(eventName, func) {
+/**
+ * EventEmitter#addListener(eventName, listener) -> this
+ * - eventName (String): The name of the event that needs to be emitted
+ *                       in order for `listener` to be invoked.
+ * - listener (Function): The `function` to call when `eventName` is
+ *                        fired. The arguments to the function are passed
+ *                        from [[EventEmitter#emit]].
+ *                              
+ * Adds a listener `function` for the specified event name. If `eventName`
+ * is fired using [[EventEmitter#emit]], then `listener` will be invoked,
+ * with the `EventEmitter` instance as `this`. Any number of listeners
+ * may be attached to a single `eventName`.
+ **/
+EventEmitter.prototype['addListener'] = function(eventName, listener) {
     var listeners = this['_l'];
-    if (typeof func != "function") {
-        throw new Error("EventEmitter#addListener expects a Function as a second argument");
-    }
     if (eventName in listeners) {
-        listeners[eventName]['push'](func);
+        listeners[eventName]['push'](listener);
     } else {
-        listeners[eventName] = [ func ];
+        listeners[eventName] = [ listener ];
     }
     return this;
 }
 
-EventEmitter.prototype['removeListener'] = function(eventName, func) {
+/**
+ * EventEmitter#removeListener(eventName, listener) -> this
+ * - eventName (String): The name of the event in which `listener` needs
+ *                       to be removed.
+ * - listener (Function): The `function` to remove from the array of
+ *                        listeners for `eventName`.
+ *                              
+ * Removes a single listener for `eventName`. If `listener` is not found
+ * in `eventName`'s list of listeners, then this function does nothing.
+ **/
+EventEmitter.prototype['removeListener'] = function(eventName, listener) {
     var listeners = this['_l'][eventName];
     if (listeners) {
-        var index = listeners['indexOf'](func);
+        var index = listeners['indexOf'](listener);
         if (index >= 0) {
             arrayRemove(listeners, index);
         }
@@ -914,11 +976,28 @@ EventEmitter.prototype['removeListener'] = function(eventName, func) {
     return this;
 }
 
+/**
+ * EventEmitter#removeAllListeners(eventName) -> this
+ * - eventName (String): The name of the event in which all listeners
+ *                       need to be removed.
+ *                              
+ * Removes all listeners for `eventName`.
+ **/
 EventEmitter.prototype['removeAllListeners'] = function(eventName) {
     delete this['_l'][eventName];
     return this;
 }
 
+/**
+ * EventEmitter#emit(eventName, args) -> this
+ * - eventName (String): The name of the event to emit.
+ * - args (Array): Optional. An array of arguments for the listeners
+ *                 of the event.
+ *                              
+ * Fires event `eventName` on the `EventEmitter` instance. If a
+ * second argument is passed, it will be the contents of `arguments`
+ * inside the listener functions.
+ **/
 EventEmitter.prototype['emit'] = function(eventName, args) {
     var listeners = this['_l'][eventName];
     if (listeners) {
@@ -968,7 +1047,7 @@ modules['eventemitter'] = EventEmitter;
 var REQUIRED_OVERFLOW = "hidden";
 
 /** section: Core API
- * Screen
+ * class Screen
  *
  * Contains information about the screen the game is being rendered to.
  **/
@@ -1092,7 +1171,7 @@ modules['screen'] = Screen;
 var currentInput = null;
 
 /** section: Core API
- * Input
+ * class Input
  *
  * Contains information and utility methods concerning player input for games.
  * This covers mouse movement, mouse clicks, and key presses.
@@ -1456,7 +1535,7 @@ runningGameInstances = [];
 
 
 /** section: Core API
- * class Game
+ * class Game < Container
  *
  * Represents your game itself. That is, an instance of [[Game]] is
  * automatically created every time an SGF game is loaded. The
@@ -1808,11 +1887,6 @@ Game.prototype['__computeChildZIndex'] = function(zIndex) {
     return ((parseInt(zIndex)||0)+1) * 1000;
 }
 
-/**
- * Game#toString -> String
- *
- * String representation of the `Game` class.
- **/
 Game.prototype['toString'] = functionReturnString("[object Game]");
 
 /**
@@ -1841,24 +1915,31 @@ modules['game'] = Game;
  * 99% of games use some sort of text in the game. Whether to display a score
  * or dialog from a character, rendering text on the game screen begins with
  * an [[Font]] instance, to specify which font will be used with the text.
+ *
+ * [[Font]] is an [[EventEmitter]], which emits the following events:
+ *
+ *  - `load`: Fired when the font resource has completed it's loading process,
+ *  either successfully or with an error (i.e. file not found). If
+ *  an error occured, a native `Error` will be the first argument
+ *  passed to any load listeners.
  **/
 
- /**
-  * new Font(game, path)
-  * - path (String): The path and filename of the Font to load. This
-  *                        can be either a path relative to your game root,
-  *                        an absolute path, or an entire data URI of an
-  *                        encoded TTF font file. Alternatively, the name
-  *                        of a locally installed font can be used.
-  *
-  * To create an instance of a [[Label]], you must first have an
-  * [[Font]] instance that contains the information regarding which
-  * font face should be used in the label.
-  *
-  * An [[Font]] instance can contain the path to a TrueType font file,
-  * or contain the name of a locally installed font on the client computer.
-  **/
 
+ /**
+  * new Font(path[, options = null, callback = null])
+  * - path (String): The relative or absolute path to a font resource. The
+  *                  path should omit the file extension, and supply a `formats`
+  *                  property in the `options` argument.
+  * - options (Object): Optional. An object containing the instance properties
+  *                     that need to be changed from the default. With [[Font]],
+  *                     a `formats` Array options will most likely be specified
+  *                     to inform the engine which different file types are
+  *                     available for use.
+  * - callback (Function): Optional. The function to invoke when the `load`
+  *                        event is emitted.
+  *
+  * 
+  **/
 function Font(game, path, onLoad) {
 
     var self = this;
@@ -1868,7 +1949,7 @@ function Font(game, path, onLoad) {
     if (game instanceof Game) {
         // We're trying to load a font living inside the game folder.
         path = game['root'] + path;
-        self['__fontName'] = "SGF_font"+(Math.random() * 10000).round();
+        self['__fontName'] = "SGF_font"+Math.round(Math.random() * 10000);
         self['__styleNode'] = embedCss(
             '@font-face {'+
             '  font-family: "' + self['__fontName'] + '";'+
@@ -2428,7 +2509,14 @@ modules['server'] = Server;
     
     
     
-    // The main SGF namespace.
+    /** section: Core API
+     * SGF
+     *
+     * The `SGF` namespace is the single global object that gets exported to
+     * the global scope of `Simple Game Framework`'s JavaScript environment.
+     *
+     * [[SGF.require]] will be the most used throughout your SGF game code.
+     **/
     var SGF = new EventEmitter();
     SGF['toString'] = functionReturnString("[object SGF]");
     window['SGF'] = SGF;
@@ -2436,6 +2524,19 @@ modules['server'] = Server;
     //////////////////////////////////////////////////////////////////////
     //////////////////// "SGF" PUBLIC FUNCTIONS //////////////////////////
     //////////////////////////////////////////////////////////////////////
+    /**
+     * SGF.log(arg1) -> undefined
+     *
+     * SGF's logging function, which accepts a variable number of arbitrary
+     * arguments to log for debugging purposes.
+     *
+     * The objects passed as arguments will be passed to the SGF Engine's
+     * terminal or console (`System.out.print` on the Java Engine,
+     * `console.log` for the HTML Engine, for example).
+     *
+     * The `SGF` namespace itself will also emit a `log` event, for game code
+     * too optionally hook into.
+     **/
     function log() {
         var args = arguments, cnsl = window['console'];
         if (cnsl && cnsl['log']) {
@@ -2449,15 +2550,36 @@ modules['server'] = Server;
         SGF['emit']("log", args);
     }
     SGF['log'] = log;
-    
-    function inherits(ctor, superCtor) {
-        var klass = function() {};
-        klass.prototype = superCtor.prototype;
-        ctor.prototype = new klass;
-        ctor.prototype['constructor'] = ctor;
-    }
+
+    /**
+     * SGF.inherits(constructor, superConstructor) -> undefined
+     * - constructor (Function): A "constructor" Function that will inherit
+     *                           from `superConstructor`.
+     * - superConstructor (Function): A "constructor" Function that
+     *                               `constructor` will inherit from.
+     *
+     * Convienience function to make a "constructor" Function's `prototype`
+     * inherit from another "constructor" function.
+     * 
+     * In other words, after calling this:
+     *
+     *     (new constructor) instanceof superConstructor
+     *         // true
+     **/
     SGF['inherits'] = inherits;
     
+    /**
+     * SGF.require(moduleName) -> Object
+     * - moduleName (String): The name of the internal SGF module that is
+     *                        attempted to be imported. Module names are
+     *                        case-insensitive.
+     *  
+     * All of SGF's classes are hidden by default, to avoid unnecessary
+     * variable leakage into the global scope. In order to get access to one,
+     * it must first be "_imported_" via `SGF.require`.
+     *  
+     *     var component = SGF.require("component");
+     **/
     function require(moduleName) {
         if (typeof moduleName == "string") {
             moduleName = String(moduleName).toLowerCase();

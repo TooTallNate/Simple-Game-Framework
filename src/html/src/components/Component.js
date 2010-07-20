@@ -170,15 +170,16 @@ Component.prototype['height'] = 10;
  * The X coordinate of the top-left point of the [[Component]] from the
  * top-left of the game screen.
  *
- *     update: function($super) {
+ *     var component = SGF.require("component");
+ *     var instance = new component();
+ *     instance.update = function() {
  *         this.x++;
- *         $super();
  *     }
  *
  * This is an example of overwritting the [[Component#update]] method,
- * and incrementing the X coordinate every step through the game loop.
+ * and incrementing the `x` coordinate every step through the game loop.
  * This will smoothly pan the [[Component]] across the game screen at
- * the [[Game]]'s set game speed.
+ * the game's [[Game#gameSpeed]].
  **/
 Component.prototype['x'] = 0;
 
@@ -189,6 +190,7 @@ Component.prototype['x'] = 0;
  * top-left of the game screen.
  **/
 Component.prototype['y'] = 0;
+
 /**
  * Component#opacity -> Number
  *
@@ -199,10 +201,11 @@ Component.prototype['y'] = 0;
  * transparent. You get the idea...
  **/
 Component.prototype['opacity'] = 1.0;
+
 /**
  * Component#rotation -> Number
  *
- * The rotation value of the [[Component]] in degrees. Note that the
+ * The rotation value of the [[Component]] in radians. Note that the
  * [[Component#x]], [[Component#y]] properties, and values returned
  * from [[Component#left]], [[Component#right]], [[Component#top]],
  * and [[Component#bottom]] are not affected by this value. Therefore,

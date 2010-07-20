@@ -19,12 +19,11 @@
  *                       note that you can add or remove `Component`s
  *                       at any time via [[Container#addComponent]] and
  *                       [[Container#removeComponent]].
- *                       
  * - options (Object): The optional 'options' object's properties are copied
  *                     this [[Container]] in the constructor. It allows all
  *                     the same default properties as [[Component]].
  *
- * Instantiates a new [[Container]], adding the [[Component]]s found
+ * Creates a new [[Container]] instance, adding the [[Component]]s found
  * in `components` initially.
  **/
 function Container(components, options) {
@@ -81,7 +80,8 @@ Container.prototype['__renderComponents'] = function(renderCount) {
  *                              container.
  *
  * Adds a [[Component]] into the container. `component`'s attributes
- * will be rendered to the screen in relation to the attributes of this `Container`.
+ * will be rendered to the screen in relation to the attributes of this
+ * `Container`.
  **/
 Container.prototype['addComponent'] = function(component) {
     if (component.parent !== this) {
@@ -98,11 +98,11 @@ Container.prototype['addComponent'] = function(component) {
 
 /**
  * Container#removeComponent(component) -> Container
- * - component (Component): The `Component` instance to remove frmo this
+ * - component (Component): The [[Component]] instance to remove from this
  *                          container.
  *
  * Removes a [[Component]] from the container that has previously been
- * added to this container via [[Container#addComponent]].
+ * added via [[Container#addComponent]].
  **/
 Container.prototype['removeComponent'] = function(component) {
     var index = this['components'].indexOf(component);
@@ -120,7 +120,7 @@ Container.prototype['__computeChildZIndex'] = function(zIndex) {
 
 Container.prototype['__fixZIndex'] = function() {
     Component.prototype['__fixZIndex'].call(this);
-    for (var i=0; i < this['components'].length; i++) {
+    for (var i=0, l=this['components'].length; i < l; i++) {
         this['components'][i]['__fixZIndex']();
     }
 }

@@ -1,7 +1,7 @@
 var REQUIRED_OVERFLOW = "hidden";
 
 /** section: Core API
- * Screen
+ * class Screen
  *
  * Contains information about the screen the game is being rendered to.
  **/

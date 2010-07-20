@@ -19,7 +19,7 @@ runningGameInstances = [];
 
 
 /** section: Core API
- * class Game
+ * class Game < Container
  *
  * Represents your game itself. That is, an instance of [[Game]] is
  * automatically created every time an SGF game is loaded. The
@@ -371,11 +371,6 @@ Game.prototype['__computeChildZIndex'] = function(zIndex) {
     return ((parseInt(zIndex)||0)+1) * 1000;
 }
 
-/**
- * Game#toString -> String
- *
- * String representation of the `Game` class.
- **/
 Game.prototype['toString'] = functionReturnString("[object Game]");
 
 /**
