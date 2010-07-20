@@ -1,9 +1,50 @@
-#!/usr/bin/env sh
+#!/usr/bin/env ruby
 
-DOC_DIR="doc";
-SOURCE_FILE="src/html/dist/SGF.debug.js";
-HTML_TEMPLATE="templates/html";
+# "gem install polyglot bluecloth open4"
+# "easy_install pygments"
 
-rm -rf $DOC_DIR;
+ROOT_DIR      = File.expand_path(File.dirname(__FILE__))
+DOC_DIR       = File.join(ROOT_DIR, 'doc')
 
-./vendor/pdoc/bin/pdoc -t $HTML_TEMPLATE -o $DOC_DIR $SOURCE_FILE;
+# First ensure that PDoc has been checked out
+begin
+  require "./vendor/pdoc/lib/pdoc"
+rescue LoadError => e
+  puts "ERROR: Missing PDoc, please first run:"
+  puts "\tgit submodule init"
+  puts "\tgit submodule update"
+  exit
+end
+
+# Force the DOC_DIR to be empty
+system('rm -rf "' + DOC_DIR + '"')
+system('mkdir -p "' + DOC_DIR + '"')
+
+# Invoke PDoc itself!
+index_header = <<EOF
+<!--<h1 style="margin-top: 31px; height: 75px; padding: 1px 0; background: url(images/header-stripe-small.png) repeat-x;">
+  <a href="http://www.simplegameframework.com" style="padding-left: 120px;">
+    <img src="images/header-logo-small.png" alt='"Simple Game Framework" API Reference' />
+</a>
+</h1>-->
+EOF
+PDoc.run({
+  :source_files => Dir[File.join('src', 'html', 'dist', 'SGF.debug.js')],
+  :destination => DOC_DIR,
+  :index_page => 'README.md',
+  :syntax_highlighter => :pygments,
+  :markdown_parser => :bluecloth,
+  :src_code_href => proc { |obj|
+    "http://github.com/TooTallNate/Simple-Game-Framework/blob/#{hash}/#{obj.file}#LID#{obj.line_number}"
+  },
+  :pretty_urls => false,
+  :bust_cache => false,
+  :name => 'Simple Game Framework',
+  :short_name => 'SGF',
+  :home_url => 'http://www.simplegameframework.com',
+  :version => '0.1',
+  :index_header => index_header,
+  :footer => 'footer...',
+  :assets => 'doc_assets',
+  :templates => 'templates/html'
+})
