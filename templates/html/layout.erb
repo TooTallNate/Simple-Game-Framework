@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title><%= @short_name %>  v<%= @version %> API documentation | <%= @title %></title>
+  <title><%= @short_name %>  API Specification v<%= @version %> | <%= @title %></title>
   <meta name="generator" content="PDoc" />
   
   <%= javascript_include_tag "pdoc/prototype" %>
@@ -51,7 +51,7 @@
       </div> <!-- #main -->
       
       <div id="footer">
-        <p><a href="<%= @home_url %>"><%= @name %></a> v<%= @version %> API documentation.</p>
+        <p><a href="<%= @home_url %>"><%= @name %></a>  API Specification v<%= @version %>.</p>
         <p>
           <% if @timestamp %>
             Last updated on <%= @timestamp.strftime('%B %d, %Y at %H:%M UTC') %>.
