@@ -30,8 +30,8 @@ Label.prototype['getElement'] = (function() {
         this['_c'] = this['color'];
         setStyleImportant(el, "font-family", this['font']['__fontName']);
         this['_f'] = this['font'];
-        setStyleImportant(el, "font-size", this['size'] + "px");
-        setStyleImportant(el, "line-height", this['size'] + "px");
+        setStyleImportant(el, "font-size", (this['size'] / devicePixelRatio) + "px");
+        setStyleImportant(el, "line-height", (this['size'] / devicePixelRatio) + "px");
         this['_s'] = this['size'];
         return el;
     }
@@ -53,7 +53,7 @@ Label.prototype['render'] = function(renderCount) {
     }
 
     if (self['__size'] !== self['size']) {
-        var val = self['size'] + "px";
+        var val = (self['size'] / devicePixelRatio) + "px";
         setStyleImportant(self['element'], "font-size", val);
         setStyleImportant(self['element'], "line-height", val);            
         self['__size'] = self['size'];

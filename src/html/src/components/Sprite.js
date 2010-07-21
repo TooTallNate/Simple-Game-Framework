@@ -69,10 +69,10 @@ Sprite.prototype['render'] = function(renderCount) {
 
 Sprite.prototype['resetSpriteset'] = function() {
     var self = this, image = self['spritesetImg'];
-    setStyleImportant(image, "width", (self['spriteset']['width'] * (self['width']/self['spriteset']['spriteWidth'])) + "px");
-    setStyleImportant(image, "height", (self['spriteset']['height'] * (self['height']/self['spriteset']['spriteHeight'])) + "px");
-    setStyleImportant(image, "top", -(self['height'] * self['spriteY']) + "px");
-    setStyleImportant(image, "left", -(self['width'] * self['spriteX']) + "px");
+    setStyleImportant(image, "width", (self['spriteset']['width'] * (self['width']/self['spriteset']['spriteWidth']) / devicePixelRatio) + "px");
+    setStyleImportant(image, "height", (self['spriteset']['height'] * (self['height']/self['spriteset']['spriteHeight']) / devicePixelRatio) + "px");
+    setStyleImportant(image, "top", -(self['height'] * self['spriteY'] / devicePixelRatio) + "px");
+    setStyleImportant(image, "left", -(self['width'] * self['spriteX'] / devicePixelRatio) + "px");
     self['__spriteX'] = self['spriteX'];
     self['__spriteY'] = self['spriteY'];
 }

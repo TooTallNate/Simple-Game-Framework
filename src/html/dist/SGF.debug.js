@@ -13,6 +13,10 @@
     // Needed to determine the relative locations of library files.
     ,   engineRoot = null
     
+    // The 'devicePixelRatio' is used on devices where the pixels are not
+    // average size. SGF needs to factor this value in.
+    ,   devicePixelRatio = window['devicePixelRatio'] || 1
+    
     // 'hasCanvas' and 'hasCanvasText' need to be true in order for the canvas
     // renderer to kick in, otherwise SGF will fall back to a DOM based
     // renderer. To force the DOM renderer on modern browsers, pass a
@@ -261,23 +265,23 @@ Component.prototype['render'] = function(renderCount) {
     }
 
     if (self['__width'] != self['width']) {
-        setStyleImportant(self['element'], "width", self['width'] + "px");
+        setStyleImportant(self['element'], "width", (self['width'] / devicePixelRatio) + "px");
         self['__width'] = self['width'];
     }
     
     if (self['__height'] != self['height']) {
-        setStyleImportant(self['element'], "height", self['height'] + "px");
+        setStyleImportant(self['element'], "height", (self['height'] / devicePixelRatio) + "px");
         self['__height'] = self['height'];
     }
 
     if (self['__x'] != self['x']) {
-        setStyleImportant(self['element'], "left", self['x'] + "px");
+        setStyleImportant(self['element'], "left", (self['x'] / devicePixelRatio) + "px");
         self['__x'] = self['x'];
     }
 
     if (self['__y'] != self['y']) {
         self['__y'] = self['y'];
-        setStyleImportant(self['element'], "top", self['y'] + "px");
+        setStyleImportant(self['element'], "top", (self['y'] / devicePixelRatio) + "px");
     }
 }
 
@@ -626,8 +630,8 @@ Label.prototype['getElement'] = (function() {
         this['_c'] = this['color'];
         setStyleImportant(el, "font-family", this['font']['__fontName']);
         this['_f'] = this['font'];
-        setStyleImportant(el, "font-size", this['size'] + "px");
-        setStyleImportant(el, "line-height", this['size'] + "px");
+        setStyleImportant(el, "font-size", (this['size'] / devicePixelRatio) + "px");
+        setStyleImportant(el, "line-height", (this['size'] / devicePixelRatio) + "px");
         this['_s'] = this['size'];
         return el;
     }
@@ -649,7 +653,7 @@ Label.prototype['render'] = function(renderCount) {
     }
 
     if (self['__size'] !== self['size']) {
-        var val = self['size'] + "px";
+        var val = (self['size'] / devicePixelRatio) + "px";
         setStyleImportant(self['element'], "font-size", val);
         setStyleImportant(self['element'], "line-height", val);            
         self['__size'] = self['size'];
@@ -780,10 +784,10 @@ Sprite.prototype['render'] = function(renderCount) {
 
 Sprite.prototype['resetSpriteset'] = function() {
     var self = this, image = self['spritesetImg'];
-    setStyleImportant(image, "width", (self['spriteset']['width'] * (self['width']/self['spriteset']['spriteWidth'])) + "px");
-    setStyleImportant(image, "height", (self['spriteset']['height'] * (self['height']/self['spriteset']['spriteHeight'])) + "px");
-    setStyleImportant(image, "top", -(self['height'] * self['spriteY']) + "px");
-    setStyleImportant(image, "left", -(self['width'] * self['spriteX']) + "px");
+    setStyleImportant(image, "width", (self['spriteset']['width'] * (self['width']/self['spriteset']['spriteWidth']) / devicePixelRatio) + "px");
+    setStyleImportant(image, "height", (self['spriteset']['height'] * (self['height']/self['spriteset']['spriteHeight']) / devicePixelRatio) + "px");
+    setStyleImportant(image, "top", -(self['height'] * self['spriteY'] / devicePixelRatio) + "px");
+    setStyleImportant(image, "left", -(self['width'] * self['spriteX'] / devicePixelRatio) + "px");
     self['__spriteX'] = self['spriteX'];
     self['__spriteY'] = self['spriteY'];
 }
@@ -1158,8 +1162,11 @@ inherits(Screen, EventEmitter);
 
 Screen.prototype['_r'] = function() {
     var self = this, color = self['color'], element = self['element'];
-    self['width'] = self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth;
-    self['height'] = self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight;
+    self['_browserWidth'] = (self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth);
+    self['_browserHeight'] = (self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight);
+    self['width'] = self['_browserWidth'] * devicePixelRatio;
+    self['height'] = self['_browserHeight'] * devicePixelRatio;
+    
     if (color != self['_c']) {
         element['style']['backgroundColor'] = "#" + color;
         self['_c'] = color;
@@ -1501,7 +1508,7 @@ function touchstartHandler(event) {
     if (currentInput) {
 
         var currentScreen = currentInput['game']['screen'];
-        for (var i=0; i<event['touches'].length; i++) {
+        for (var i=0, l=event['touches'].length; i<l; i++) {
         }
         
         /*if (eventObj.x >= 0 && eventObj.y >= 0 &&
@@ -1517,8 +1524,10 @@ function touchstartHandler(event) {
 
             currentInput['emit']("touchstart", [event]);
         /*} else {
+            // Blur the current input
             blur();
-            mousedownHandler(event);
+            // Check for any other game instances' touches
+            touchstartHandler(event);
         }*/
 
     } else {

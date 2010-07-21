@@ -112,8 +112,11 @@ inherits(Screen, EventEmitter);
 
 Screen.prototype['_r'] = function() {
     var self = this, color = self['color'], element = self['element'];
-    self['width'] = self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth;
-    self['height'] = self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight;
+    self['_browserWidth'] = (self['isFullScreen'] && document.documentElement.clientWidth !== 0 ? document.documentElement.clientWidth : self['element'].clientWidth);
+    self['_browserHeight'] = (self['isFullScreen'] && document.documentElement.clientHeight !== 0 ? document.documentElement.clientHeight : self['element'].clientHeight);
+    self['width'] = self['_browserWidth'] * devicePixelRatio;
+    self['height'] = self['_browserHeight'] * devicePixelRatio;
+    
     if (color != self['_c']) {
         element['style']['backgroundColor'] = "#" + color;
         self['_c'] = color;

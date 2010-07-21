@@ -325,7 +325,7 @@ function touchstartHandler(event) {
     if (currentInput) {
 
         var currentScreen = currentInput['game']['screen'];
-        for (var i=0; i<event['touches'].length; i++) {
+        for (var i=0, l=event['touches'].length; i<l; i++) {
         }
         
         /*if (eventObj.x >= 0 && eventObj.y >= 0 &&
@@ -341,8 +341,10 @@ function touchstartHandler(event) {
 
             currentInput['emit']("touchstart", [event]);
         /*} else {
+            // Blur the current input
             blur();
-            mousedownHandler(event);
+            // Check for any other game instances' touches
+            touchstartHandler(event);
         }*/
 
     } else {

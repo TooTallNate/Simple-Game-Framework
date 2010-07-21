@@ -93,23 +93,23 @@ Component.prototype['render'] = function(renderCount) {
     }
 
     if (self['__width'] != self['width']) {
-        setStyleImportant(self['element'], "width", self['width'] + "px");
+        setStyleImportant(self['element'], "width", (self['width'] / devicePixelRatio) + "px");
         self['__width'] = self['width'];
     }
     
     if (self['__height'] != self['height']) {
-        setStyleImportant(self['element'], "height", self['height'] + "px");
+        setStyleImportant(self['element'], "height", (self['height'] / devicePixelRatio) + "px");
         self['__height'] = self['height'];
     }
 
     if (self['__x'] != self['x']) {
-        setStyleImportant(self['element'], "left", self['x'] + "px");
+        setStyleImportant(self['element'], "left", (self['x'] / devicePixelRatio) + "px");
         self['__x'] = self['x'];
     }
 
     if (self['__y'] != self['y']) {
         self['__y'] = self['y'];
-        setStyleImportant(self['element'], "top", self['y'] + "px");
+        setStyleImportant(self['element'], "top", (self['y'] / devicePixelRatio) + "px");
     }
 }
 

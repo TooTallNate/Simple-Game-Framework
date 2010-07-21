@@ -13,6 +13,10 @@
     // Needed to determine the relative locations of library files.
     ,   engineRoot = null
     
+    // The 'devicePixelRatio' is used on devices where the pixels are not
+    // average size. SGF needs to factor this value in.
+    ,   devicePixelRatio = window['devicePixelRatio'] || 1
+    
     // 'hasCanvas' and 'hasCanvasText' need to be true in order for the canvas
     // renderer to kick in, otherwise SGF will fall back to a DOM based
     // renderer. To force the DOM renderer on modern browsers, pass a
