@@ -1,4 +1,4 @@
-(function(window, document) {
+(function(window, document, undefined) {
 
     // The absolute URL of the SGF file currently executing. Used
     // to get the <script> reference for parameter parsing, and to
