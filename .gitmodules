@@ -4,3 +4,6 @@
 [submodule "vendor/Java-WebSocket"]
 	path = vendor/Java-WebSocket
 	url = git://github.com/TooTallNate/Java-WebSocket.git
+[submodule "vendor/connect"]
+	path = vendor/connect
+	url = git://github.com/senchalabs/connect.git
