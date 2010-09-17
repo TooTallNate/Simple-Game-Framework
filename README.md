@@ -1,30 +1,39 @@
 Simple Game Framework
 =====================
 
-#### An object-oriented JavaScript framework to develop simple, shape and sprite based games ####
+#### An object-oriented JavaScript framework to develop simple, shape and sprite based games
 
 `Simple Game Framework`, or `SGF` for short, is an abstract JavaScript
-based API to develop retro 2D shape and sprite based games. The idea is that
-the game developer writes games using one code base, written in JavaScript,
-and incorporating the SGF API. That code base can then be deployed to any
-number of SGF game engine clients.
+based API to develop, well, _simple_ 2D shape and sprite based games. It's
+a "specification", if you will... The idea is that the game developer (you)
+writes games using one code base, written in JavaScript, and incorporating
+the `SGF` API. That code base can then be deployed to any number of SGF game
+engine implementations.
+
+This repository contains the "specification" itself, not any implementation:
+
+ * Contains the Markdown files that define the SGF "specification".
+ * Contains helper scripts to generate the spec into "html" and
+   "roff" (man) formats.
+ * Contains the [www.simplegameframework.com](http://www.simplegameframework.com)
+   HTML files.
+ * Contains `example` games written using the SGF API, that can be used to
+   try out SGF itself, or when creating an SGF engine implementation, etc.
 
 Game Engines
 ------------
 
-### Currently Being Developed ###
+### Official Implementations:
 
- * `HTML/DOM`: An engine that uses web browsers' native JavaScript engine
-   to execute the game code, and the API manipulates DOM nodes to "render"
-   your game. The HTML/DOM game engine can be found in `src/html/`.
+ * [`SGF-HTML-Engine`: Uses the browsers' native JavaScript engine to execute
+   your game code, and manipulates DOM nodes to "render" your
+   game.](http://github.com/TooTallNate/SGF-HTML-Engine)
 
- * `Java`: In conjunction with [Rhino](http://www.mozilla.org/rhino/), Java
-   interprets your JavaScript game code, and uses Java2D or JOGL to render the
-   game. The current version found in `src/java/` uses Java2D to render
-   SGF games.
+ * [`SGF-Java-Engine`: Java interprets your JavaScript game code, and uses Java2D
+   to render your SGF games.](http://github.com/TooTallNate/SGF-Java-Engine)
 
 
-### Future Thoughts ###
+### Possibilities:
 
  * `iOS`: A game engine for Apple's line of hardware is
    high on the list of future plans. Apple allows JavaScript code to be
@@ -84,16 +93,3 @@ Additional Links
 
  * ["Simple Game Framework" Google Group](http://groups.google.com/group/simple-game-framework) - The official mailing list  dedicated to discussion of SGF game and engine development.
  * [GitHub SGF Wiki](http://wiki.github.com/TooTallNate/Simple-Game-Framework) - The official Wiki for SGF, with community written guides/tutorials/examples and good-to-know SGF info.
-
-License
--------
-
-SGF itself isn't really a code base, more like a concept or abstraction.
-If you know Java, then SGF itself is an abstract class, and all the game
-engine clients are the concrete implementations. As such, it doesn't really
-make sense to license SGF itself, but rather each game engine client should
-specify a license for its own code.
-
-Furthermore, every game that is written with the SGF API and released to
-the masses should specify its own license. This is more related to software
-development in general, and not specifically SGF.
