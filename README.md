@@ -20,6 +20,7 @@ This repository contains the "specification" itself, not any implementation:
  * Contains `example` games written using the SGF API, that can be used to
    try out SGF itself, or when creating an SGF engine implementation, etc.
 
+
 Game Engines
 ------------
 
@@ -35,40 +36,26 @@ Game Engines
 
 ### Possibilities:
 
- * `iOS`: A game engine for Apple's line of hardware is
-   high on the list of future plans. Apple allows JavaScript code to be
-   executed in a native app as long as it's running through a WebKit instance.
-   The plan is to render the game through Objective-C and OpenGL ES, and
-   execute your game code through a WebKit instance inside a native app. This
-   strategy (similar to [PhoneGap](http://www.phonegap.com/)'s model) allows
-   your SGF game to be accepted to the AppStore, even with Apple's revised
-   4.0 SDK License Agreement!
+ * `C or C++ Based Engine`: For a pure speed solution, there could be a
+   SGF game engine written in C++. It could use V8 to interpret game code,
+   SDL to implement the SGF APIs, and GTK+ to use as a GUI. This would be the
+   fastest version of an SGF game engine, by far.
+
+ * `iOS Engine`: Apple allows JavaScript code to be downloaded and executed in
+   a native app as long as it's running through a WebKit instance.
+   The plan would be to render the game through Objective-C and OpenGL ES, and
+   execute your game code through a WebKit instance inside a native app.
    
- * `Android`: Native Android apps can also contain a WebKit instance, which
-   will execute game code, and render to the device screen through OpenGL ES
-   and Dalvik. In principal, the Android engine would be very similar to the
-   Apple engine.
-
- * `HTML/Canvas2D`: Using a lot of the same code as the `HTML/DOM` client, and
-   rewriting the rendering code, we could create a client the renders to a
-   `<canvas>` element using the 2D context. This would probably be slower than
-   the `HTML/DOM` version, but I might make it at some point for demonstration
-   purposes.
-
- * `HTML/WebGL`: For probably the best speed in the web browser, we could
-   create a client that renders the game using the draft WebGL. I've never
-   touched OpenGL, but might look into this one once WebGL is more standard.
-
- * `C or C++ Based Player`: For a pure speed solution, there could be a
-   SGF game engine written in C or C++, and using V8/Nitro/SpiderMonkey to
-   interpret game code. This would be the fastest version of the game
-   engine. However, I (TooTallNate) have never programmed in C++, let alone
-   developed games, so I probably won't be touching this one.
+ * `Android Engine`: Native Android apps can also contain a WebKit instance,
+   which would execute game code, and render to the device screen through OpenGL
+   ES and Dalvik. In principal, the Android engine would be very similar to the
+   iOS engine.
 
  * `Any other platform with a JavaScript Interpreter`: In theory,
    your game written using the SGF API is reusable anywhere that JavaScript
    can be implemented! That's the beauty of developing your game in an
    interpreted language.
+
 
 Game Development
 ----------------
@@ -87,6 +74,7 @@ root game folder (the folder where `main.js` is located).
 
 You can view the full [Simple Game Framework API Docs](http://api.simplegameframework.com)
 to learn it all!
+
 
 Additional Links
 ----------------
